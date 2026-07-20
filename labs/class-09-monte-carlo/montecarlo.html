@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 09 · Monte Carlo &amp; the Law of Large Numbers — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=1">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so a literal $ (currency) is never
+     mistaken for a delimiter; display math uses $$ … $$ inside
+     <pre class="equation">. Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents -->
+<aside class="toc">
+  <div class="toc-title">Class 09 · Monte Carlo</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#wlln">The weak law</a></li>
+    <li><a href="#montecarlo">Averaging a function</a></li>
+    <li><a href="#pi">Throwing darts at π</a></li>
+    <li><a href="#rate">The 1/√n rule</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 09 · Sep 24</div>
+    <h1>Monte Carlo &amp; the Law of Large Numbers</h1>
+    <div class="subtitle">Why averaging random draws answers questions you cannot integrate by hand</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">You want the average price of a used car, or the value of an integral, or the number \(\pi\) — and you cannot or would rather not compute it exactly. The <strong>Monte Carlo</strong> recipe is the same every time: draw random numbers, apply a simple rule to each, and average. The <strong>weak law of large numbers</strong> is the promise that this average settles on the true answer, and it even tells you how fast.</p>
+
+  <div class="cite">
+    Built on the Class 09 notebooks
+    <a href="#">08_1_wlln</a> (weak law of large numbers, via Chebyshev)
+    and <a href="#">08_2_monte_carlo</a> (Monte Carlo for a function, a region, and \(\pi\)).
+    Data: 92 used-car listings scraped from Charlottesville Craigslist
+    (<code>cville_cars.csv</code>), prices in thousands of dollars.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+  <p>The 92 car prices below have a true average of about <strong>$8.59k</strong>. Pretend you do not know that. Instead, draw prices one at a time, at random, and keep a running average. Press <strong>Play</strong> and watch the <span class="gloss" data-gloss="sample-mean">running average</span> wander wildly at first, then home in on the true <span class="gloss" data-gloss="expected-value">expected value</span>.</p>
+
+  <div class="viz" id="viz-try-it">
+    <div class="viz-title">Running average · <code>cville_cars</code></div>
+    <div class="viz-description">The jagged line is the average of the first \(k\) random draws. The dashed line is the true mean \(\mu\). The shaded ribbon is the \(\pm 1\) <span class="gloss" data-gloss="standard-error">standard-error</span> band \(\mu \pm \sigma/\sqrt{k}\); notice it pinches inward as \(k\) grows — that is the law of large numbers as a picture.</div>
+    <div class="mc-board"></div>
+    <div class="mc-controls"></div>
+    <div class="mc-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers reproduce this exact trajectory in ~120 lines of pure stdlib, using the same seeded generator as the widget.</div>
+  </div>
+
+  <p>Every point on that line is one number — an average — computed by the same three-step recipe you will write by the end of this lab: draw, apply a rule, average. The rest of the page is where that recipe comes from and how far you can trust it.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="wlln">The weak law of large numbers</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>why the wobble shrinks</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The running average above swings hard at \(k=2\) but barely moves at \(k=400\). Each new draw is just as random as the first. So what changes as \(k\) grows that makes the average steadier? Write down, in one sentence, what a single new draw can do to an average of 400 numbers versus an average of 2.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare sentences. Did you both land on "one new number is diluted by everything already in the average"? Whose phrasing was sharper?</li>
+        <li><span class="tps-phase">Share · 2 min</span>As a table, predict how the <em>width</em> of the wobble should scale with \(k\) — linearly? As \(1/k\)? As \(1/\sqrt{k}\)? Carry your guess into the derivation below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Take \(n\) draws \(X_1, \dots, X_n\) that are <span class="gloss" data-gloss="iid">iid</span> — same distribution, drawn independently — and average them into the sample mean \(\bar{X}_n\). Two facts about that average are exact, and together they explain the pinching ribbon.</p>
+
+  <p>First, the sample mean is <em>right on average</em>: its expected value is exactly the quantity you are chasing.</p>
+
+  <pre class="equation">$$\mathbb{E}[\bar{X}_n] = \mathbb{E}\!\left[\frac{1}{n}\sum_{i=1}^n X_i\right] = \mu$$</pre>
+
+  <p>Second, and this is the engine, the sample mean's variance shrinks as you add draws. Averaging \(n\) independent copies divides the variance by \(n\):</p>
+
+  <pre class="equation">$$\operatorname{Var}(\bar{X}_n) = \frac{\sigma^2}{n} \qquad\Longrightarrow\qquad \operatorname{sd}(\bar{X}_n) = \frac{\sigma}{\sqrt{n}}$$</pre>
+
+  <p>That standard deviation of the estimate has its own name — the <strong>standard error</strong> — and its \(1/\sqrt{n}\) shape is exactly the ribbon you saw narrow. Chebyshev's inequality turns the shrinking variance into a probability statement: the chance the average is more than a distance \(d\) from the truth cannot exceed</p>
+
+  <pre class="equation">$$\Pr\!\left(\,\lvert \bar{X}_n - \mu \rvert \geq d\,\right) \;\leq\; \frac{\operatorname{Var}(\bar{X}_n)}{d^2} \;=\; \frac{\sigma^2}{n\,d^2}$$</pre>
+
+  <p>Read the right-hand side: for any fixed tolerance \(d\), the bound goes to zero as \(n \to \infty\). That is the <strong><span class="gloss" data-gloss="wlln">weak law of large numbers</span></strong> — the sample mean converges in probability to \(\mu\). The average is not guaranteed to be close on any single run, but the probability of being far away is squeezed to nothing.</p>
+
+  <div class="callout insight">
+    <span class="label">The one number to remember</span>
+    <p>The error of an average of \(n\) iid draws scales like \(\sigma/\sqrt{n}\). Want one more digit of accuracy — cut the error by ten? You need <strong>one hundred times</strong> the draws. That single fact governs every Monte Carlo estimate in this lab.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="montecarlo">Averaging a function over draws</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>from a mean to any integral</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Averaging draws of \(X\) estimates \(\mathbb{E}[X]\). Suppose instead you square each draw before averaging — what quantity would that running average converge to? Now suppose the "rule" you apply to each draw is "1 if the point is inside some region \(A\), else 0." What does averaging <em>that</em> give you?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare answers. The first is \(\mathbb{E}[X^2]\); the second is the probability \(\Pr(X \in A)\). Convince each other that a probability is just the average of a 0/1 rule.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on a one-line statement of what "Monte Carlo" lets you estimate, then check it against the box below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Nothing in the weak law required \(X\) itself. Apply any fixed rule \(g\) to each draw first, and the same argument makes the running average of \(g(X_i)\) converge to the <em>expected value of</em> \(g\). This is the whole <span class="gloss" data-gloss="monte-carlo">Monte Carlo</span> method in one line:</p>
+
+  <pre class="equation">$$\bar{y}_n = \frac{1}{n}\sum_{i=1}^n g(X_i) \;\xrightarrow[\;n\to\infty\;]{\;\text{pr}\;}\; \mathbb{E}[g(X)] = \int g(x)\, f(x)\, dx$$</pre>
+
+  <p>The left side is arithmetic a computer does instantly; the right side is an integral you might have no way to evaluate by hand. Monte Carlo trades the integral for a coin-flipping loop, and the weak law guarantees the trade is fair.</p>
+
+  <p>The special case that unlocks geometry is the <strong>indicator rule</strong>. Let \(g\) be 1 when a point lands in a region \(A\) and 0 otherwise. Then the expected value of \(g\) is just the probability of landing in \(A\), which for uniform draws is the <em>area</em> of \(A\):</p>
+
+  <pre class="equation">$$\bar{p}_n = \frac{1}{n}\sum_{i=1}^n \mathbb{I}\{X_i \in A\} \;\xrightarrow[\;n\to\infty\;]{\;\text{pr}\;}\; \Pr(X \in A) = \operatorname{area}(A)$$</pre>
+
+  <p>So "count the fraction of random points that land inside a shape" is a legitimate way to measure that shape's area. The next section turns that fraction into \(\pi\).</p>
+
+  <!-- ============================================================ -->
+  <h2 id="pi">Throwing darts at π</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>a circle from coin flips</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>You scatter points uniformly over the unit square, and keep only those with \(x^2 + y^2 &lt; 1\) — the quarter disc. Before running anything: what fraction of points do you expect to keep, and how would you turn that fraction into an estimate of \(\pi\)? Write the formula.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare formulas. The quarter disc has area \(\pi/4\); the square has area 1; so the keep-fraction is \(\pi/4\), and \(\pi \approx 4 \times \text{fraction inside}\). Did you both get the factor of 4?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Predict how many darts you would need to pin down \(\pi\) to two decimals, then test your guess in the widget.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The quarter disc inside the unit square has area \(\pi/4\), so by the indicator rule the fraction of uniform points landing inside converges to \(\pi/4\). Multiply by four and you have a \(\pi\) machine that uses nothing but a <span class="gloss" data-gloss="rng-seed">seeded</span> random number generator:</p>
+
+  <pre class="equation">$$\hat{\pi}_n = 4 \cdot \frac{\#\{\,i : x_i^2 + y_i^2 < 1\,\}}{n}$$</pre>
+
+  <p>Add darts below and watch the estimate crawl toward 3.14159. It gets there — but slowly, and that slowness is the point of the final section.</p>
+
+  <div class="viz" id="viz-pi">
+    <div class="viz-title">Monte Carlo π · darts in the unit square</div>
+    <div class="viz-description">Each dart is a uniform point \((x, y)\). Orange darts landed inside the quarter disc (\(x^2+y^2<1\)); green darts landed outside. The estimate is four times the orange fraction. Press Play to rain down darts, or drag the slider to set the count directly.</div>
+    <div class="mc-board"></div>
+    <div class="mc-controls"></div>
+    <div class="mc-readout"></div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>Throw 100 darts and read the estimate; then throw 10,000. Roughly how many times more accurate did the estimate get, and why isn't it 100 times better?</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>Going from 100 to 10,000 darts is a 100-fold increase in \(n\), but the error shrinks like \(1/\sqrt{n}\), so it improves by \(\sqrt{100} = 10\)-fold, not 100-fold. Ten times the accuracy costs a hundred times the darts. This is the same \(1/\sqrt{n}\) tax the standard-error band charged in the first widget.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="rate">The 1/√n rule</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>reading a rate off a graph</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>If the error of a Monte Carlo estimate really scales like \(n^{-1/2}\), what should a plot of \(\log(\text{error})\) against \(\log n\) look like? Predict the shape and, if you can, the slope.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions. Taking logs of \(\text{error} \approx C\,n^{-1/2}\) gives \(\log\text{error} \approx \log C - \tfrac12 \log n\): a straight line of slope \(-\tfrac12\). Did you both get the one-half?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Commit to a predicted slope, then read the actual slope off the log–log plot below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The weak law promises convergence; the standard error \(\sigma/\sqrt{n}\) sets the speed. On ordinary axes that \(1/\sqrt{n}\) decay is a lazy-looking curve, but on <span class="gloss" data-gloss="conv-rate">log–log axes</span> it straightens into a line whose slope <em>is</em> the exponent. A slope of \(-\tfrac12\) is the visual signature of Monte Carlo.</p>
+
+  <div class="viz" id="viz-rate">
+    <div class="viz-description">Absolute error \(\lvert\text{estimate} - \text{truth}\rvert\) versus the number of draws \(n\), both on log scales, averaged over several seeds so the trend is visible through the noise. The dashed guide is a pure \(C/\sqrt{n}\) reference line. Switch between the two estimators — the mean of the car prices and the π machine — and confirm both track the same slope.</div>
+    <div class="viz-title">Error vs. n · log–log</div>
+    <div class="mc-board"></div>
+    <div class="mc-controls"></div>
+    <div class="mc-readout"></div>
+  </div>
+
+  <div class="callout note">
+    <span class="label">Note · slow, but dimension-proof</span>
+    <p>\(1/\sqrt{n}\) is genuinely slow next to a good deterministic quadrature rule in one dimension. Monte Carlo earns its keep in high dimensions: its error stays \(1/\sqrt{n}\) whether you are integrating over a line or over a thousand-dimensional space, while grid-based rules collapse under the curse of dimensionality. Slow but flat beats fast but exploding.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Implement the two Monte Carlo estimators from scratch — no numpy, just the loops above. You are given the data loader, a seeded random number generator, and the input/output plumbing the autograder speaks. You write two functions.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>estimate_mean(X, n, seed)</code> — draw <code>n</code> values from the population list <code>X</code> with replacement (using <code>make_rng(seed)</code>) and return their average. It should converge to <code>true_mean</code> as <code>n</code> grows.</li>
+    <li><code>estimate_pi(n, seed)</code> — throw <code>n</code> uniform points into the unit square (two <code>rng()</code> calls per point) and return \(4 \cdot (\text{inside}/n)\), where inside means \(x^2+y^2<1\).</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 montecarlo.py</code> and sends one query per line on stdin. Two shapes: <code>mean &lt;n&gt; &lt;seed&gt;</code> and <code>pi &lt;n&gt; &lt;seed&gt;</code>. For each line you print one line back:</p>
+  <pre><code class="language-text">OK: &lt;estimate&gt;     # six decimals
+ERR: bad query     # unknown command, or a missing / non-numeric n or seed</code></pre>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>name of the measured quantity (<code>price_k</code>)</td></tr>
+      <tr><td><code>unit</code></td><td>string</td><td>units (thousands of USD)</td></tr>
+      <tr><td><code>values</code></td><td>list[float]</td><td>the population \(X\), length \(n = 92\)</td></tr>
+      <tr><td><code>true_mean</code></td><td>float</td><td>\(\mathbb{E}[X]\) over the whole population (\(\approx 8.59\))</td></tr>
+      <tr><td><code>std</code></td><td>float</td><td>population standard deviation \(\sigma\) (\(\approx 8.13\))</td></tr>
+      <tr><td><code>n</code></td><td>int</td><td>population size (92)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "mean 5000 1" | python3 montecarlo.py     # -> OK: ~8.5
+echo "pi 100000 1" | python3 montecarlo.py      # -> OK: ~3.14
+python3 test_montecarlo.py                       # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="montecarlo.py" class="chat-dl-btn" download>montecarlo.py (template)</a>
+    <a href="test_montecarlo.py" class="chat-dl-btn" download>test_montecarlo.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>Mean estimate approaches <code>true_mean</code> as <code>n</code> grows (tolerance tightens with \(n\))</td><td>30</td></tr>
+      <tr><td>π estimate lands within tolerance of 3.14159 at large <code>n</code></td><td>30</td></tr>
+      <tr><td>Reproducible: same <code>n</code> and <code>seed</code> give the identical answer twice</td><td>20</td></tr>
+      <tr><td>Protocol: malformed query answered with <code>ERR: bad query</code>, no crash</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Is Monte Carlo just "guessing"?</h3>
+  <p>No — it is averaging, and the weak law of large numbers guarantees the average converges to the exact answer. What is random is any single run; what is reliable is the long-run average and the \(\sigma/\sqrt{n}\) rate at which it settles.</p>
+
+  <h3>Why resample the 92 prices with replacement instead of just averaging them?</h3>
+  <p>Averaging all 92 once gives the population mean exactly; there is no Monte Carlo in that. Resampling with replacement lets you watch an estimate <em>built from random draws</em> converge to that known truth — the point of the lab is the convergence, and knowing the true mean lets you measure the error.</p>
+
+  <h3>Why must I use the provided <code>make_rng</code> instead of Python's <code>random</code>?</h3>
+  <p>Reproducibility. A seeded generator produces the same stream every run, so the grader (and you) can check that a given <code>seed</code> yields a fixed answer. It also matches the browser widgets and both samplers exactly, so the same seed tells the same story everywhere.</p>
+
+  <h3>Does the estimate ever stop improving?</h3>
+  <p>In theory it keeps improving as \(1/\sqrt{n}\) forever. In practice floating-point precision and the quality of the random generator set a floor, but you will hit your patience long before you hit that floor — a hundredfold more draws buys only one more digit.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 09 — Monte Carlo &amp; the Law of Large Numbers. Draw, apply a rule, average; then read the \(1/\sqrt{n}\) tax straight off the log–log plot.
+  </footer>
+</main>
+
+<!-- Shared base first, then this lab's widgets -->
+<script src="../shared/lab-base.js?v=1"></script>
+<script src="viz.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

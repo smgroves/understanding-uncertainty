@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 06 · The CDF and Inverse-Transform Sampling — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=1">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so a literal probability like P(X ≤ x)
+     is never mistaken for a delimiter; display math uses $$ … $$ inside
+     <pre class="equation">. Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents -->
+<aside class="toc">
+  <div class="toc-title">Class 06 · CDF</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#ecdf">The ECDF staircase</a></li>
+    <li><a href="#cdf">What the staircase estimates</a></li>
+    <li><a href="#inverse">Reading it backwards</a></li>
+    <li><a href="#sampling">Sampling by inverting</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 06 · Sep 10</div>
+    <h1>The CDF, and Sampling by Inverting It</h1>
+    <div class="subtitle">One staircase answers two opposite questions</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">A histogram tells you how the data clusters. The <strong>cumulative distribution function</strong> asks a sharper question — "what fraction of the sample is at or below this value?" — and its answer is a single climbing staircase. Read that staircase left-to-right and you estimate a probability; read it backwards and you can conjure brand-new samples from <em>any</em> distribution, using nothing but a coin-flip's worth of randomness.</p>
+
+  <div class="cite">
+    Built on the Class 06 notebooks on the empirical CDF and the inverse probability transform.
+    Data: <code>age_at_diagnosis</code> (years) — a random sample of 100 patients from the
+    <a href="https://www.cbioportal.org/study/summary?id=brca_metabric">METABRIC</a> breast-cancer cohort
+    (Curtis et al., <em>Nature</em> 2012), shipped as <code>data.json</code>.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+  <p>Below is the age-at-diagnosis of all 100 patients, drawn as an <span class="gloss" data-gloss="ecdf">ECDF</span>: a staircase that starts at 0 on the left and climbs to 1 on the right. Drag the <strong>query age</strong> slider. The dashed lines read off \(\hat{F}(x)\) — the proportion of patients diagnosed at or below that age. Tick the box to lay a smooth <span class="gloss" data-gloss="cdf">CDF</span> reference over the steps.</p>
+
+  <div class="viz" id="viz-try-it">
+    <div class="viz-title">ECDF builder · <code>age_at_diagnosis</code></div>
+    <div class="viz-description">The tick marks along the bottom are the actual 100 ages (a rug plot). The red staircase is \(\hat{F}(x)\); it never goes down and always lands between 0 and 1.</div>
+    <div class="cdf-board"></div>
+    <div class="cdf-controls"></div>
+    <div class="cdf-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers reproduce this exact staircase in ~90 lines of pure stdlib, and can also draw new ages <em>from</em> it.</div>
+  </div>
+
+  <p>Everything on that plot comes from one counting rule, \(\hat{F}(x)\), which you will build by the end of this lab — along with its inverse, the function that runs the staircase backwards to generate samples.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="ecdf">The ECDF staircase</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>counting at or below</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>You have 100 ages and no formula for the population they came from. For a fixed age like 60, how would you turn "the chance a patient is 60 or younger" into a number using only counting? Now imagine sweeping that age from far-left to far-right — what shape does your running answer trace out, and what are its lowest and highest possible values?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare with a neighbour. Did you both divide a count by 100? Did your running answer ever go <em>down</em> as the age increased? Why not?</li>
+        <li><span class="tps-phase">Share · 2 min</span>As a table, agree on the smallest and largest values your curve can take, and carry that into the formula below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The recipe is exactly the count you just described. For each value \(x\), count how many observations are at or below it, then divide by \(n\). That proportion is the <span class="gloss" data-gloss="ecdf">empirical CDF</span>:</p>
+
+  <pre class="equation">$$\hat{F}(x) = \frac{1}{n}\sum_{i=1}^{n} \mathbb{I}\{\,x_i \le x\,\}$$</pre>
+
+  <p>The summand is an indicator: it is 1 when \(x_i \le x\) and 0 otherwise, so the sum is just a count. As \(x\) sweeps rightward the count can only grow, which is why \(\hat{F}\) is a <span class="gloss" data-gloss="monotone">monotone</span> staircase: flat between observations, then a jump of \(1/n\) at each one. It starts at 0 to the left of the smallest value and reaches 1 at the largest.</p>
+
+  <p>In code the whole estimator is one line — loop, compare, divide:</p>
+
+  <pre><code class="language-python">def ecdf_at(x, X):
+    return sum(1 for xi in X if xi &lt;= x) / len(X)   # proportion at or below x</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>In the builder above, drag the query age all the way to the right edge. Why does \(\hat{F}(x)\) flatten out at exactly 1.00 and refuse to climb higher?</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>Once \(x\) passes the oldest patient in the sample, <em>every</em> observation satisfies \(x_i \le x\), so the count is \(n\) and \(\hat{F}(x) = n/n = 1\). A CDF is a probability, and no more than all of the data can sit below a threshold — the staircase is capped at 1 by construction.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="cdf">What the staircase estimates</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>the curve behind the steps</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Your 100 ages are one sample; a different 100 patients would give a slightly different staircase. Predict: if you could keep collecting patients — 1,000, then 10,000 — what happens to the steps? Do they stay jagged, or settle toward something smooth?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions. What would the "something smooth" it settles toward actually represent?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on one sentence describing the limit, then test it with the sample-size slider below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The ECDF is an <em>estimate</em>. Behind it sits the true <span class="gloss" data-gloss="cdf">CDF</span> \(F(x) = P(X \le x)\) of the population the patients were drawn from — a smooth, non-decreasing curve running from 0 up to 1. The staircase is what one finite, <span class="gloss" data-gloss="iid">iid</span> sample lets you see of it.</p>
+
+  <p>The reassuring fact is that the estimate improves with data. Slide the sample size up and watch the staircase's steps shrink and press in against the smooth reference curve — with more observations, \(\hat{F} \to F\) everywhere at once.</p>
+
+  <div class="viz" id="viz-converge">
+    <div class="viz-title">More data · the steps close in on the curve</div>
+    <div class="viz-description">The red staircase is the ECDF of the first \(m\) patients; the dashed grey curve is a fixed smooth reference. Small \(m\) gives a coarse, jumpy estimate; large \(m\) traces the curve closely.</div>
+    <div class="cdf-board"></div>
+    <div class="cdf-controls"></div>
+    <div class="cdf-readout"></div>
+  </div>
+
+  <div class="callout insight">
+    <span class="label">Why the CDF, not the density</span>
+    <p>You can build \(\hat{F}\) with nothing but counting — no bandwidth, no bins, no smoothing choice to defend. That is what makes the CDF the safest first summary of a distribution, and the natural object to invert when you want to <em>generate</em> data rather than describe it.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="inverse">Reading it backwards</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>flip the axes</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>So far you enter an age \(x\) and read off a probability \(\hat{F}(x)\). Reverse it: you pick a height \(u\) between 0 and 1 first, then find the age where the staircase reaches that height. What do you get, and why does the fact that the staircase never decreases guarantee this backwards lookup always has an answer?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare with a neighbour: at \(u = 0.5\), what is the age you land on called?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Commit to what "reading the CDF backwards" produces, then drive the mapper below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Running the staircase backwards is the <span class="gloss" data-gloss="quantile">quantile</span> function, the inverse CDF \(F^{-1}\). You pick a height \(u \in [0,1]\), slide right until you hit the staircase, and drop down to the age underneath. Because the CDF is <span class="gloss" data-gloss="monotone">monotone</span>, every height has a well-defined landing point — the smallest observed value whose ECDF is at least \(u\):</p>
+
+  <pre class="equation">$$\hat{F}^{-1}(u) = \inf\{\,x : \hat{F}(x) \ge u\,\} = x_{(\lceil n u \rceil)}$$</pre>
+
+  <p>Here \(x_{(1)} \le x_{(2)} \le \dots \le x_{(n)}\) are the sorted ages (the order statistics), and \(\lceil n u \rceil\) is the rank you round up to. At \(u = 0.5\) the landing point is the median. Drive the height slider and watch the green mapping: y-axis, across to the staircase, down to an age.</p>
+
+  <div class="viz" id="viz-inverse">
+    <div class="viz-title">Inverse-transform mapper · pick a height, get an age</div>
+    <div class="viz-description">Start at height \(u\) on the y-axis, move right to the staircase, then drop to the x-axis. The age you land on is \(\hat{F}^{-1}(u)\), one inverse-transform sample. Hit "Draw a random u" to feel a single random draw.</div>
+    <div class="cdf-board"></div>
+    <div class="cdf-controls"></div>
+    <div class="cdf-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="sampling">Sampling by inverting</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>uniform in, data out</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Suppose you feed a stream of <span class="gloss" data-gloss="uniform">uniform</span> heights — evenly scattered between 0 and 1 — into that backwards lookup, one after another. Where do the resulting ages pile up? Predict which age ranges collect the most landings, and connect that to how steeply the staircase rises there.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare: a steep part of the staircase covers a lot of height in a little age — so does it catch many uniforms or few?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Predict the shape of the histogram of landed ages, then draw 200 and check.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Here is the payoff, the <span class="gloss" data-gloss="inverse-transform">inverse probability transform</span>. If \(U \sim \text{Uniform}(0,1)\) then \(F^{-1}(U)\) has distribution \(F\). So to draw from any distribution whose CDF you can invert, you need just one uniform random number and one backwards lookup:</p>
+
+  <pre class="equation">$$U \sim \text{Uniform}(0,1) \quad\Longrightarrow\quad F^{-1}(U) \sim F$$</pre>
+
+  <p>The intuition is exactly your prediction above. A uniform height is equally likely to land anywhere on the y-axis. Where the staircase rises <em>steeply</em>, a tall band of heights maps into a narrow band of ages, so those ages collect many landings — high density. Where it is flat, few heights map there — low density. The inverse hands the probability mass right back where the data put it.</p>
+
+  <p>With only a sample, you invert the ECDF instead of the true \(F\). Because each of the \(n\) order statistics is equally likely to be selected, \(\hat{F}^{-1}(U)\) draws the observed ages back with replacement — which is precisely the <strong>bootstrap</strong>. Press "Draw 200" and watch the sampled histogram (solid) grow into the shape of the original data (dashed).</p>
+
+  <div class="viz" id="viz-sample">
+    <div class="viz-title">Draw uniforms, invert, and watch the distribution reappear</div>
+    <div class="viz-description">Top: each draw is a uniform height mapped through the staircase down to an age. Bottom: those ages accumulate into a histogram. It converges to the dashed outline of the original 100 ages — you sampled the distribution back out of its own CDF.</div>
+    <div class="cdf-board"></div>
+    <div class="cdf-controls"></div>
+    <div class="viz-caption">Because the ECDF is a step function, its inverse can only return values the data actually contained — so inverse-transforming the ECDF is resampling. Inverting a <em>smooth</em> CDF instead fills in the gaps and yields genuinely new values.</div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Implement the empirical CDF and its inverse from scratch — no numpy, just the math above. You are given the data loader, the input validation, and the stdin/stdout plumbing the autograder speaks. You write two functions.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>ecdf_at(x, X)</code> — return \(\hat{F}(x) = \frac{1}{n}\sum_i \mathbb{I}\{x_i \le x\}\), a number in \([0,1]\).</li>
+    <li><code>quantile_at(u, X)</code> — return \(\hat{F}^{-1}(u) = x_{(\lceil n u\rceil)}\), the inverse-transform sample point for a height \(u \in [0,1]\).</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 cdf.py</code> and sends one query per line on stdin — a command and one number:</p>
+  <pre><code class="language-text">cdf &lt;x&gt;          -> OK: &lt;F_hat(x)&gt;        # ECDF, 6 decimals
+quantile &lt;u&gt;     -> OK: &lt;F_hat^{-1}(u)&gt;   # inverse, 6 decimals, u in [0,1]
+&lt;anything else&gt;  -> ERR: bad query        # unknown cmd, bad number, or u out of range</code></pre>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>name of the measured quantity (<code>age_at_diagnosis</code>)</td></tr>
+      <tr><td><code>unit</code></td><td>string</td><td>units (<code>years</code>)</td></tr>
+      <tr><td><code>source</code></td><td>string</td><td>provenance of the sample</td></tr>
+      <tr><td><code>values</code></td><td>list[float]</td><td>the 1-D sample \(X\), length \(n = 100\)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "cdf 60"       | python3 cdf.py     # -> OK: 0.430000
+echo "quantile 0.5" | python3 cdf.py     # -> OK: 62.360000
+python3 test_cdf.py                        # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="cdf.py" class="chat-dl-btn" download>cdf.py (template)</a>
+    <a href="test_cdf.py" class="chat-dl-btn" download>test_cdf.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>ECDF correct and always within \([0,1]\)</td><td>30</td></tr>
+      <tr><td>ECDF non-decreasing across a swept grid (monotone)</td><td>20</td></tr>
+      <tr><td>Quantile / inverse matches the reference on all levels \(u\)</td><td>35</td></tr>
+      <tr><td>Protocol: bad command or \(u \notin [0,1]\) reported as <code>ERR:</code>, no crash</td><td>15</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does the quantile jump instead of moving smoothly?</h3>
+  <p>The ECDF is a step function, so its inverse can only return the specific values the sample contains. Sliding \(u\) a little often lands on the same order statistic until you cross the next step. Inverting a smooth CDF (like the Normal reference) instead gives a continuous quantile that returns values <em>between</em> the observed ones.</p>
+
+  <h3>Is inverse-transforming the ECDF really the same as the bootstrap?</h3>
+  <p>Yes. Every order statistic is equally likely to be selected, so drawing \(\hat{F}^{-1}(U)\) repeatedly is sampling the observed values uniformly with replacement — the textbook nonparametric bootstrap. The connection is exact, not an analogy.</p>
+
+  <h3>Why round the rank up with \(\lceil n u\rceil\) instead of down?</h3>
+  <p>The inverse we want is \(\inf\{x : \hat{F}(x) \ge u\}\) — the <em>first</em> age at which the staircase reaches height \(u\). Rounding up picks that first order statistic. Rounding down (or interpolating) defines a different, equally valid quantile convention; this lab fixes one so the autograder has a single right answer.</p>
+
+  <h3>What if two patients have the same age?</h3>
+  <p>Then the staircase takes a double-height jump of \(2/n\) at that value, and both order statistics equal it. The formulas are unchanged — ties just stack the steps.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 06 — The CDF and inverse-transform sampling. Count it up into a staircase, then run the staircase backwards to sample any distribution you can name.
+  </footer>
+</main>
+
+<!-- Shared base first, then this lab's widgets -->
+<script src="../shared/lab-base.js?v=1"></script>
+<script src="viz.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+/* ============================================================
+ * Class 11 · Central Limit Theorem — lab-specific widget styles.
+ * Palette, typography, .viz/.callout chrome, presentation mode,
+ * and the glossary all live in ../shared/lab-base.css. This sheet
+ * is purely additive: the CLT widgets' controls and plot furniture.
+ * ============================================================ */
+
+.clt-source { margin: 2px 0 4px; }
+.clt-source svg { max-width: 100%; }
+.clt-source-label {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-mute);
+  margin: 4px 0 2px;
+}
+.clt-board { margin: 4px 0 12px; }
+.clt-board svg { max-width: 100%; }
+
+.clt-controls {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 14px 22px; font-family: var(--sans); font-size: 13px;
+  margin-top: 6px;
+}
+
+/* Slider rows */
+.clt-slider { display: flex; align-items: center; gap: 8px; }
+.clt-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.clt-slider input[type="range"] { width: 150px; accent-color: var(--accent); }
+.clt-slider-out { font-family: var(--mono); font-size: 12px; color: var(--ink); min-width: 60px; }
+
+/* Radio pill group */
+.clt-radio { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.clt-radio-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border: 1px solid var(--rule); border-radius: 14px;
+  background: var(--bg-elev); cursor: pointer; font-size: 12px;
+}
+.clt-radio-btn input { accent-color: var(--accent); margin: 0; }
+.clt-radio-btn:hover { border-color: var(--accent-soft); }
+
+.clt-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.55;
+}
+.clt-readout code { font-size: 0.92em; }
+
+/* Reference table widget */
+.clt-table { font-family: var(--sans); font-size: 13.5px; }
+.clt-table th, .clt-table td { text-align: right; }
+.clt-table th:first-child, .clt-table td:first-child { text-align: left; }

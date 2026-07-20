@@ -1,0 +1,66 @@
+/* ============================================================
+ * Class 10 · The Bootstrap — lab-specific widget styles.
+ * Palette, typography, .viz/.callout chrome, presentation mode,
+ * and the glossary live in ../shared/lab-base.css. This sheet is
+ * purely additive: the bootstrap widgets' controls and plot furniture.
+ * ============================================================ */
+
+.bs-board { margin: 4px 0 12px; }
+.bs-board svg { max-width: 100%; }
+
+.bs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* Slider rows */
+.bs-slider { display: flex; align-items: center; gap: 8px; }
+.bs-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.bs-slider input[type="range"] { width: 140px; accent-color: var(--accent); }
+.bs-slider-out {
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+  min-width: 58px;
+}
+
+/* Radio + checkbox pill groups */
+.bs-radio, .bs-checks { display: flex; align-items: center; gap: 8px; }
+.bs-radio-btn, .bs-check-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border: 1px solid var(--rule); border-radius: 14px;
+  background: var(--bg-elev); cursor: pointer; font-size: 12px;
+}
+.bs-radio-btn input, .bs-check-btn input { accent-color: var(--accent); margin: 0; }
+.bs-radio-btn:hover, .bs-check-btn:hover { border-color: var(--accent-soft); }
+
+.bs-btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Readout lines under the widgets */
+.bs-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.55;
+}
+.bs-readout code { font-size: 0.92em; }
+.bs-readout strong { color: var(--ink); }
+
+/* A compact grid of numeric readouts (SE widget) */
+.bs-stats {
+  display: flex; flex-wrap: wrap; gap: 10px 20px;
+  margin-top: 10px; font-family: var(--sans);
+}
+.bs-stat { display: flex; flex-direction: column; gap: 1px; }
+.bs-stat .bs-stat-label {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.bs-stat .bs-stat-val { font-family: var(--mono); font-size: 15px; color: var(--ink); }
+
+.bs-note { font-family: var(--sans); font-size: 12.5px; color: var(--ink-soft); font-style: italic; }
+
+/* The download pill row uses .chat-downloads from lab-base.css */

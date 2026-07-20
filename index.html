@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Understanding Uncertainty · Fall 2026</title>
+<link rel="stylesheet" href="labs/shared/lab-base.css?v=1">
+<style>
+  main { max-width: 900px; }
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px; font-family: var(--sans); font-size: 14px; margin: 18px 0 8px;
+  }
+  .meta-card { background: var(--bg-elev); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; }
+  .meta-card .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-mute); margin-bottom: 3px; }
+  .meta-card .v { color: var(--ink); }
+
+  .lab-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px; margin: 18px 0 28px;
+  }
+  .lab-card {
+    display: flex; flex-direction: column; gap: 6px;
+    background: var(--bg-elev); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 16px 18px; text-decoration: none; color: var(--ink);
+    transition: border-color .12s, transform .12s, background .12s;
+  }
+  .lab-card:hover { border-color: var(--accent); transform: translateY(-1px); background: #fff; }
+  .lab-card .num { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; }
+  .lab-card .title { font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.25; }
+  .lab-card .blurb { font-family: var(--sans); font-size: 13px; color: var(--ink-soft); }
+  .lab-card.soon { opacity: 0.55; pointer-events: none; }
+  .lab-card.soon .num::after { content: " · soon"; color: var(--ink-mute); font-weight: 400; }
+  .home-links { display: flex; gap: 12px; flex-wrap: wrap; margin: 6px 0 24px; }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="eyebrow">University of Virginia · School of Data Science · Fall 2026</div>
+    <h1>Understanding Uncertainty</h1>
+    <div class="subtitle">Probability, densities, and inference — built from scratch, one knob at a time</div>
+  </header>
+
+  <p class="lede">A first course in the machinery of uncertainty for data scientists: from wrangling and linear algebra, through probability and densities, to simulation, the bootstrap, and the central limit theorem. Every idea arrives three ways — a paragraph, an equation, and something you can drag.</p>
+
+  <div class="meta-grid">
+    <div class="meta-card"><div class="k">Instructor</div><div class="v">Terence Johnson</div></div>
+    <div class="meta-card"><div class="k">Units</div><div class="v">3 · Lecture</div></div>
+    <div class="meta-card"><div class="k">Meets</div><div class="v">Tu / Th · Aug 25 – Dec 8</div></div>
+    <div class="meta-card"><div class="k">Sections</div><div class="v">9:30 (Rm 305) · 11:00 (Rm 306)</div></div>
+  </div>
+
+  <div class="home-links">
+    <a class="btn primary" href="schedule.html">Full 14-week schedule →</a>
+  </div>
+
+  <h2 style="border-top:none;padding-top:0;">Interactive labs</h2>
+  <p>Each lab is a single web page: a demo you can touch on arrival, a from-scratch derivation, and a Python assignment with a local autograder. More are being built out from the course notebooks.</p>
+
+  <div class="lab-grid">
+    <a class="lab-card" href="labs/class-03-probability/binomial.html">
+      <span class="num">Class 03</span>
+      <span class="title">Coins, trials &amp; the binomial</span>
+      <span class="blurb">Bernoulli trials add up to the binomial. A PMF explorer, running-proportion sample paths, and counts converging to the PMF.</span>
+    </a>
+    <a class="lab-card" href="labs/class-06-cdf/cdf.html">
+      <span class="num">Class 06</span>
+      <span class="title">The CDF &amp; the inverse transform</span>
+      <span class="blurb">The ECDF staircase, and how inverting it lets you sample any distribution from a single uniform draw.</span>
+    </a>
+    <a class="lab-card" href="labs/class-07-kde/kde.html">
+      <span class="num">Class 07</span>
+      <span class="title">Kernel Density Estimation</span>
+      <span class="blurb">A smooth curve where a histogram draws bars. One bandwidth knob, the bias–variance trade-off, and a KDE you build yourself.</span>
+    </a>
+    <a class="lab-card" href="labs/class-09-monte-carlo/montecarlo.html">
+      <span class="num">Class 09</span>
+      <span class="title">Monte Carlo &amp; the WLLN</span>
+      <span class="blurb">Watch a running average converge to the truth, and estimate π by throwing darts. Error that shrinks like 1/√n.</span>
+    </a>
+    <a class="lab-card" href="labs/class-10-bootstrap/bootstrap.html">
+      <span class="num">Class 10</span>
+      <span class="title">The Bootstrap</span>
+      <span class="blurb">Resample your one sample with replacement to simulate the sampling distribution and read off a confidence interval.</span>
+    </a>
+    <a class="lab-card" href="labs/class-11-clt/clt.html">
+      <span class="num">Class 11</span>
+      <span class="title">The Central Limit Theorem</span>
+      <span class="blurb">Averages of even badly-skewed data pile up into a bell — centered on the mean, tightening like σ/√n.</span>
+    </a>
+  </div>
+
+  <footer>
+    Understanding Uncertainty · Fall 2026 · built with the shared lab toolkit in <code>labs/shared/</code>.
+  </footer>
+</main>
+</body>
+</html>

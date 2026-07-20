@@ -1,0 +1,43 @@
+/* ============================================================
+ * Class 03 · Coins, trials, and the binomial — widget styles.
+ * Palette, typography, .viz/.callout/.btn chrome, presentation
+ * mode, and the glossary all live in ../shared/lab-base.css.
+ * This sheet is purely additive: the binomial widgets' controls
+ * and plot furniture only.
+ * ============================================================ */
+
+.bn-board { margin: 4px 0 12px; }
+.bn-board svg { max-width: 100%; }
+
+.bn-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* Slider rows */
+.bn-slider { display: flex; align-items: center; gap: 8px; }
+.bn-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.bn-slider input[type="range"] { width: 150px; accent-color: var(--accent); }
+.bn-slider-out {
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+  min-width: 34px;
+}
+
+/* Button rows (presets, play/step/reset, add-experiments) */
+.bn-preset-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Live numeric readout under a widget */
+.bn-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.55;
+}
+.bn-readout code { font-size: 0.92em; }
+
+/* The download pill row uses .chat-downloads from lab-base.css */

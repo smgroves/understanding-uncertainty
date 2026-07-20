@@ -1,0 +1,57 @@
+/* ============================================================
+ * Class 09 · Monte Carlo — lab-specific widget styles.
+ * Palette, typography, .viz/.callout chrome, presentation mode,
+ * and the glossary live in ../shared/lab-base.css. This sheet is
+ * purely additive: the Monte Carlo widgets' controls and plot
+ * furniture only.
+ * ============================================================ */
+
+.mc-board { margin: 4px 0 12px; }
+.mc-board svg { max-width: 100%; }
+
+.mc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* Slider rows (same shape as the KDE lab's, kept local so labs stay
+   independent) */
+.mc-slider { display: flex; align-items: center; gap: 8px; }
+.mc-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.mc-slider input[type="range"] { width: 160px; accent-color: var(--accent); }
+.mc-slider-out {
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+  min-width: 58px;
+}
+
+/* Button clusters (Play / Step / Reset / Reseed) */
+.mc-btn-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Radio pill group (estimator switch on the rate widget) */
+.mc-radio { display: flex; align-items: center; gap: 8px; }
+.mc-radio-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border: 1px solid var(--rule); border-radius: 14px;
+  background: var(--bg-elev); cursor: pointer; font-size: 12px;
+}
+.mc-radio-btn input { accent-color: var(--accent); margin: 0; }
+.mc-radio-btn:hover { border-color: var(--accent-soft); }
+
+/* Readout line beneath a widget */
+.mc-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.5;
+}
+.mc-readout code { font-size: 0.92em; }
+.mc-readout .mc-big {
+  font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--ink);
+}
+
+/* The download pill row uses .chat-downloads from lab-base.css */

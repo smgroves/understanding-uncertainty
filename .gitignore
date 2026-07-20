@@ -1,0 +1,17 @@
+# macOS / editor junk
+.DS_Store
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+
+# Local Claude Code settings (not for the public site)
+.claude/
+
+# Instructor-only: NOTES.md holds reference SOLUTIONS.
+# GitHub Pages publishes every tracked file, so keep these out of the
+# repo or they'd be fetchable at the public URL. Keep your own copy
+# outside the repo (or in a separate private repo).
+NOTES.md
+**/NOTES.md

@@ -1,0 +1,53 @@
+/* ============================================================
+ * Class 07 · KDE — lab-specific widget styles.
+ * Palette, typography, .viz/.callout chrome, presentation mode,
+ * and the glossary live in ../shared/lab-base.css. This sheet is
+ * purely additive: the KDE widgets' controls and plot furniture.
+ * ============================================================ */
+
+.kde-board { margin: 4px 0 12px; }
+.kde-board svg { max-width: 100%; }
+
+.kde-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* Slider rows */
+.kde-slider { display: flex; align-items: center; gap: 8px; }
+.kde-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.kde-slider input[type="range"] { width: 150px; accent-color: var(--accent); }
+.kde-slider-out {
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+  min-width: 62px;
+}
+
+/* Radio + checkbox pill groups */
+.kde-radio, .kde-checks { display: flex; align-items: center; gap: 8px; }
+.kde-radio-btn, .kde-check-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border: 1px solid var(--rule); border-radius: 14px;
+  background: var(--bg-elev); cursor: pointer; font-size: 12px;
+}
+.kde-radio-btn input, .kde-check-btn input { accent-color: var(--accent); margin: 0; }
+.kde-radio-btn:hover, .kde-check-btn:hover { border-color: var(--accent-soft); }
+
+.kde-silverman { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.kde-note { font-family: var(--sans); font-size: 12.5px; color: var(--ink-soft); font-style: italic; }
+
+.kde-window-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.5;
+}
+.kde-window-readout code { font-size: 0.92em; }
+
+.kde-preset-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* The download pill row uses .chat-downloads from lab-base.css */

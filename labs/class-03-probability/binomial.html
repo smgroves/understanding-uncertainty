@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 03 · Coins, Trials, and the Binomial — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=1">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so a literal probability like p(1-p)
+     is never mistaken for a delimiter; display math uses $$ … $$ inside
+     <pre class="equation">. Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents -->
+<aside class="toc">
+  <div class="toc-title">Class 03 · Binomial</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#one-flip">From one flip to a count</a></li>
+    <li><a href="#pmf">The binomial PMF</a></li>
+    <li><a href="#paths">Sample paths &amp; the LLN</a></li>
+    <li><a href="#histogram">Counts meet the PMF</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 03 · Sep 1</div>
+    <h1>Coins, Trials, and the Binomial</h1>
+    <div class="subtitle">How one 0/1 flip becomes a whole distribution of counts</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">Flip a coin once and you get a single 0 or 1 — a <span class="gloss" data-gloss="bernoulli">Bernoulli trial</span>. Flip it \(n\) times and count the heads, and that count is no longer a single number but a <em>distribution</em> over the values \(0, 1, \dots, n\). That distribution is the <strong>binomial</strong>, and it is the workhorse behind every "how many out of how many" question — how many patients survive, how many packets drop, how many emails are spam.</p>
+
+  <div class="cite">
+    Built for Class 03 of Understanding Uncertainty.
+    Data: the <a href="#">Heart Failure Clinical Records</a> dataset
+    (<code>uu_fa26/class_02/heart_failure_clinical_records_dataset.csv</code>),
+    using the binary <code>DEATH_EVENT</code> column — one 0/1 outcome per patient, \(n = 299\).
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+  <p>Below is the whole distribution at once: for \(n\) trials each with success probability \(p\), the bars give the <span class="gloss" data-gloss="pmf">probability mass function</span> \(P(X=k)\) — the chance of getting exactly \(k\) successes. Drag \(n\) and \(p\) and watch the shape move. The dashed line marks the <span class="gloss" data-gloss="expectation">expected count</span> \(n\cdot p\); notice it always sits under the tallest bars.</p>
+
+  <div class="viz" id="viz-try-it">
+    <div class="viz-title">Binomial PMF explorer · <code>P(X=k)</code></div>
+    <div class="viz-description">Each bar is the probability of exactly \(k\) successes out of \(n\) trials. Try the fair coin (\(p=0.5\)) for a symmetric bell, then the heart-failure rate \(\hat{p}\approx 0.32\) for a skewed one. The bars always sum to 1.</div>
+    <div class="bn-board"></div>
+    <div class="bn-controls"></div>
+    <div class="bn-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers reproduce these exact bars in pure stdlib, and can also draw new counts <em>from</em> the distribution.</div>
+  </div>
+
+  <p>Everything on that plot comes from one formula, \(P(X=k)=\binom{n}{k}p^k(1-p)^{n-k}\), which you will build by the end of this lab. The rest of the page derives it from a single coin flip, then shows two ways the formula shows up when you actually run the trials.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="one-flip">From one flip to a count</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>counting is adding</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>You flip a coin \(n\) times and want the total number of heads. Each flip is a 0 or a 1. Write the total as a formula in the individual flip outcomes \(x_1,\dots,x_n\). What single arithmetic operation turns \(n\) separate 0/1 values into the count?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare formulas with a neighbour. Did you both land on a sum? What is the smallest and largest the sum can be?</li>
+        <li><span class="tps-phase">Share · 2 min</span>As a table, agree on one expression for the count, then carry it into the section below — it becomes the definition of the binomial.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>A single trial is the simplest random variable there is. It takes the value 1 with probability \(p\) and 0 with probability \(1-p\), and that is its entire distribution:</p>
+
+  <pre class="equation">$$P(X_i = 1) = p, \qquad P(X_i = 0) = 1 - p, \qquad \mathbb{E}[X_i] = p$$</pre>
+
+  <p>Because the outcome is already a 0 or a 1, each trial doubles as an <span class="gloss" data-gloss="indicator">indicator</span>: \(X_i = \mathbb{I}\{\text{trial } i \text{ succeeds}\}\). In the heart-failure data, \(X_i = 1\) means patient \(i\) died during follow-up. The sample proportion of deaths is just the average of these indicators, and averaging 0/1 values is the same as counting the 1s and dividing:</p>
+
+  <pre class="equation">$$\hat{p} = \frac{1}{n}\sum_{i=1}^{n} x_i = \frac{\#\{\,x_i = 1\,\}}{n} = \frac{96}{299} \approx 0.321$$</pre>
+
+  <p>Now define the count \(X = \sum_{i=1}^{n} X_i\), the sum of \(n\) trials. If the trials are <span class="gloss" data-gloss="iid">iid</span> — same \(p\) every time, no trial nudging another — then \(X\) follows a Binomial\((n, p)\) distribution. The whole lab is the study of that one sum: what values it takes, how likely each is, and what happens as \(n\) grows.</p>
+
+  <div class="callout note">
+    <span class="label">Note · Bernoulli is Binomial with n = 1</span>
+    <p>A single Bernoulli trial is exactly Binomial\((1, p)\): the count of successes in one trial is 0 or 1. So everything below reduces to the coin-flip case when you slide \(n\) down to 1 in the explorer above.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="pmf">The binomial PMF</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>why the factor out front</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>You flip 3 fair coins. The specific sequence HHT has probability \(0.5^3\). But so does HTH, and THH. Predict \(P(X = 2)\) for 3 fair coins, and explain where the number of sequences comes from. Now generalize: for \(k\) successes in \(n\) trials, how many equally-likely sequences are there?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare counts of sequences. Did you both get 3 for "2 heads in 3 flips"? What counts the orderings in general?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on the multiplier out front, then check it against the formula below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Any one sequence with \(k\) successes and \(n-k\) failures has probability \(p^k(1-p)^{n-k}\) — multiply the per-trial probabilities, since the trials are independent. The catch is that many different sequences give the same total \(k\). The <span class="gloss" data-gloss="binomcoef">binomial coefficient</span> \(\binom{n}{k}\) counts exactly how many, and multiplying gives the probability of the count:</p>
+
+  <pre class="equation">$$P(X = k) = \binom{n}{k}\, p^{k}\,(1-p)^{\,n-k}, \qquad \binom{n}{k} = \frac{n!}{k!\,(n-k)!}$$</pre>
+
+  <p>Read it left to right: choose which \(k\) of the \(n\) trials succeed \(\big(\binom{n}{k}\big)\), pay \(p\) for each success \((p^k)\), and pay \(1-p\) for each failure \(\big((1-p)^{n-k}\big)\). The mean and variance fall straight out of the sum-of-trials view, because expectation adds and, for independent trials, so does variance:</p>
+
+  <pre class="equation">$$\mathbb{E}[X] = n p, \qquad \operatorname{Var}(X) = n p (1-p)$$</pre>
+
+  <p>In code the PMF is a few lines with no libraries. The one subtlety is the coefficient: build it with a multiplicative loop instead of computing giant factorials that overflow.</p>
+
+  <pre><code class="language-python">def n_choose_k(n, k):
+    if k < 0 or k > n:
+        return 0.0
+    k = min(k, n - k)                 # C(n,k) == C(n,n-k)
+    c = 1.0
+    for i in range(k):
+        c = c * (n - i) / (i + 1)     # build the coefficient step by step
+    return c
+
+def binom_pmf(n, p, k):
+    if k < 0 or k > n:
+        return 0.0
+    return n_choose_k(n, k) * p ** k * (1 - p) ** (n - k)</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>In the explorer at the top, set \(n = 10\) and \(p = 0.5\). Which single bar is tallest, and why is the picture symmetric? Now nudge \(p\) to 0.3 — which way does the tall part slide, and why?</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>At \(p = 0.5\) the bar at \(k = 5\) is tallest, and the plot is mirror-symmetric because a success and a failure are equally likely, so \(P(X=k)=P(X=n-k)\). Lowering \(p\) to 0.3 makes failures more likely, so mass slides left toward smaller counts; the peak moves to around \(k = n p = 3\) and the shape becomes right-skewed.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="paths">Sample paths and the law of large numbers</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>early wobble, late calm</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>You start flipping a \(p = 0.32\) coin and track the running proportion of heads after each flip. Sketch that curve for the first few hundred flips. Where is it most jumpy — near the start or near the end? What value is it heading toward, and does it ever stop moving entirely?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare sketches. Did you both draw a wild start settling into a near-flat line? Where did each of you put the line?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Commit to one prediction for where the curves settle, then run several at once in the widget.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The PMF describes the count after a fixed number of trials. But you can also watch the process unfold trial by trial. A <span class="gloss" data-gloss="samplepath">sample path</span> plots the running proportion of successes against the trial number: after \(t\) trials it is the count so far divided by \(t\). Each new flip nudges it up or down.</p>
+
+  <p>Play the widget and watch several paths at once. Early on, one lucky flip swings the proportion wildly — with only 3 trials, one extra head moves it by a third. As \(t\) grows, each flip matters less, and every path is squeezed toward the dashed line at \(p\). That squeeze is the <span class="gloss" data-gloss="lln">law of large numbers</span>, and it is the reason a larger sample gives a more trustworthy estimate.</p>
+
+  <div class="viz" id="viz-paths">
+    <div class="viz-title">Running proportion · one path per color</div>
+    <div class="viz-description">Each colored line is one sequence of iid \(p\)-coins; its height at trial \(t\) is the proportion of successes so far. The dashed line is the true \(p\). Press Play to reveal trials, or Step through them; Reseed draws fresh sequences.</div>
+    <div class="bn-board"></div>
+    <div class="bn-controls"></div>
+    <div class="bn-readout"></div>
+    <div class="viz-caption">The spread between paths shrinks like \(1/\sqrt{t}\): to halve the wobble you need four times the trials. This is the same reason the binomial's <em>proportion</em> gets sharper as \(n\) grows even though its <em>count</em> spreads wider.</div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="histogram">Counts meet the PMF</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>theory vs. tally</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>You repeat the experiment "flip \(n\) coins, count the heads" thousands of times and tally how often each total \(k\) comes up. Predict the shape of that tally. How should it relate to the PMF bars from the top of the page, and what has to happen as you run more repetitions?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions. Did you both expect the tally to approach the exact PMF? What would a mismatch after only 20 repetitions tell you?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on how many repetitions "feels like enough", then test it in the widget.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The PMF is a prediction; here is the check. This widget runs the experiment "flip \(n\) coins, count the 1s" over and over, and tallies how often each count occurs. The shaded bars are the empirical proportions; the orange line is the exact PMF you built above. With only a few experiments the bars are ragged, but every batch you add pulls them toward the line.</p>
+
+  <div class="viz" id="viz-hist">
+    <div class="viz-title">Empirical histogram vs. exact PMF</div>
+    <div class="viz-description">Click <strong>+100</strong> or <strong>+1000</strong> to run more experiments. The shaded bars are what you rolled; the orange line is \(P(X=k)\). Watch them converge — and watch the empirical mean count close in on \(n\cdot p\).</div>
+    <div class="bn-board"></div>
+    <div class="bn-controls"></div>
+    <div class="bn-readout"></div>
+    <div class="viz-caption">Same math as the top widget, seen from the other side: the PMF is what you get in the limit of infinitely many repetitions of this tally.</div>
+  </div>
+
+  <div class="callout insight">
+    <span class="label">Two views, one distribution</span>
+    <p>The bar chart at the top is the binomial <em>from the formula</em>; this histogram is the binomial <em>from running the trials</em>. They are the same object. The formula tells you the answer without flipping a single coin; the simulation earns the same answer the slow way and confirms the formula is right.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Implement the binomial PMF from scratch — no numpy, and no <code>math.comb</code> shortcut. You are given the data loader, the input/output plumbing the autograder speaks, and the check that \(p\) is a valid probability. You write two functions.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>n_choose_k(n, k)</code> — the binomial coefficient \(\binom{n}{k}\) via a multiplicative loop; return 0 when \(k&lt;0\) or \(k&gt;n\).</li>
+    <li><code>binom_pmf(n, p, k)</code> — return \(P(X=k)=\binom{n}{k}p^k(1-p)^{n-k}\), handling the edges \(p=0\) and \(p=1\).</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 binomial.py</code> and sends one query per line on stdin: <code>&lt;n&gt; &lt;p&gt; &lt;k&gt;</code>. For each line you print one line back:</p>
+  <pre><code class="language-text">OK: &lt;P(X=k)&gt;         # the probability, 6 decimals
+ERR: invalid p        # if p is outside [0, 1]</code></pre>
+  <p>The \(p\)-range check is already written in <code>main()</code>; do not print extra lines or debug text to stdout (use stderr for debugging).</p>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>name of the binary column (<code>DEATH_EVENT</code>)</td></tr>
+      <tr><td><code>description</code></td><td>string</td><td>what a 0 and a 1 mean</td></tr>
+      <tr><td><code>source</code></td><td>string</td><td>dataset provenance</td></tr>
+      <tr><td><code>values</code></td><td>list[int]</td><td>the 299 Bernoulli trials (each 0 or 1)</td></tr>
+      <tr><td><code>p_hat</code></td><td>float</td><td>observed proportion of 1s, \(96/299 \approx 0.321\)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "10 0.5 3" | python3 binomial.py       # -> OK: 0.117188
+python3 test_binomial.py                      # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="binomial.py" class="chat-dl-btn" download>binomial.py (template)</a>
+    <a href="test_binomial.py" class="chat-dl-btn" download>test_binomial.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>What it checks</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td>PMF correct</td><td><code>P(X=k)</code> matches the reference across many \((n,p,k)\)</td><td>45</td></tr>
+      <tr><td>PMF sums to 1</td><td>\(\sum_{k=0}^{n} P(X=k) = 1\) for several \((n,p)\)</td><td>20</td></tr>
+      <tr><td>Sampler mean</td><td>counts drawn from your PMF average to \(\approx n\cdot p\)</td><td>20</td></tr>
+      <tr><td>Protocol</td><td>invalid \(p\) reported as <code>ERR: invalid p</code>, no crash</td><td>15</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why not just use <code>math.comb</code> or <code>scipy.stats.binom</code>?</h3>
+  <p>You may in real work. The point of the assignment is to see that the coefficient is a count of orderings and the PMF is one line of arithmetic — so that when a library gives a surprising number you can check it by hand.</p>
+
+  <h3>Why build <code>n_choose_k</code> with a loop instead of factorials?</h3>
+  <p>\(n!\) overflows fast — \(171!\) is already infinity in a float. The multiplicative form keeps every partial product near 1, so it stays accurate for far larger \(n\). It is also how the samplers and the page widgets compute it, so all three agree to the last decimal.</p>
+
+  <h3>The binomial's spread grows with \(n\), but the sample paths get calmer. Which is it?</h3>
+  <p>Both, for different quantities. The <em>count</em> \(X\) has standard deviation \(\sqrt{np(1-p)}\), which grows with \(n\). The <em>proportion</em> \(X/n\) has standard deviation \(\sqrt{p(1-p)/n}\), which shrinks. The count spreads out; the proportion sharpens. The law of large numbers is a statement about the proportion.</p>
+
+  <h3>When does the iid assumption break?</h3>
+  <p>When trials influence each other (drawing cards without replacement) or when \(p\) drifts between trials (a machine that wears down). Then the count is not binomial, and the formula gives wrong probabilities even though it still returns a number.</p>
+
+  <h3>Why does the PMF sometimes sum to 0.999999 instead of 1?</h3>
+  <p>Rounding. Each probability is printed to six decimals, and summing many rounded values loses a little in the last place. The exact sum is 1; the displayed sum is 1 up to floating-point and rounding error.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 03 — Coins, Trials, and the Binomial. Build the PMF, watch the proportion converge, and read the count straight off the bars.
+  </footer>
+</main>
+
+<!-- Shared base first, then this lab's widgets -->
+<script src="../shared/lab-base.js?v=1"></script>
+<script src="viz.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

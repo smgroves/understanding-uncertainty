@@ -1,0 +1,55 @@
+/* ============================================================
+ * Class 06 · The CDF and inverse-transform sampling
+ * Lab-specific widget styles only. Palette, typography,
+ * .viz/.callout chrome, presentation mode, and the glossary all
+ * live in ../shared/lab-base.css. This sheet is purely additive:
+ * the CDF widgets' controls and plot furniture.
+ * ============================================================ */
+
+.cdf-board { margin: 4px 0 12px; }
+.cdf-board svg { max-width: 100%; }
+
+.cdf-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* Slider rows */
+.cdf-slider { display: flex; align-items: center; gap: 8px; }
+.cdf-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.cdf-slider input[type="range"] { width: 160px; accent-color: var(--accent); }
+.cdf-slider-out {
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+  min-width: 64px;
+}
+
+/* Checkbox pill group */
+.cdf-checks { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cdf-check-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border: 1px solid var(--rule); border-radius: 14px;
+  background: var(--bg-elev); cursor: pointer; font-size: 12px;
+}
+.cdf-check-btn input { accent-color: var(--accent); margin: 0; }
+.cdf-check-btn:hover { border-color: var(--accent-soft); }
+
+.cdf-btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.cdf-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.5;
+}
+.cdf-readout code { font-size: 0.92em; }
+.cdf-readout strong { color: var(--accent); }
+
+.cdf-tally {
+  font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft);
+  margin-left: auto;
+}

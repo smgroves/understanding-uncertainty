@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 11 · The Central Limit Theorem — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=1">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so literal currency ($5k) is never
+     mistaken for a delimiter; display math uses $$ … $$ inside
+     <pre class="equation">. Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents -->
+<aside class="toc">
+  <div class="toc-title">Class 11 · CLT</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#population">A skewed population</a></li>
+    <li><a href="#sample-mean">The sample mean</a></li>
+    <li><a href="#standard-error">The √n law</a></li>
+    <li><a href="#standardize">Standardizing</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 11 · Oct 1</div>
+    <h1>The Central Limit Theorem</h1>
+    <div class="subtitle">Why the average of skewed data is nonetheless a bell curve</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">Used-car prices are badly lopsided: a wall of cheap beaters near $2k and a long tail of trucks past $30k. Nothing about that shape is a bell. Yet if you repeatedly grab 30 cars at random and write down their <em>average</em> price, those averages pile up into a clean, symmetric bell — centered on the true mean, and tighter every time you enlarge the sample. That is the <strong><span class="gloss" data-gloss="clt">central limit theorem</span></strong>, and this lab builds it from a single loop.</p>
+
+  <div class="cite">
+    Built on the Class 11 notebooks <a href="#">10_1_bootstrap_inference</a> and <a href="#">10_2_CLT</a>.
+    Data: 92 used-car listings scraped from Charlottesville Craigslist
+    (<code>cville_cars.csv</code>), prices in thousands of dollars.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+  <p>The top strip is the <strong>population</strong> — the raw prices, drawn once and never changing. The bottom plot is the <strong><span class="gloss" data-gloss="sampling-distribution">sampling distribution</span></strong> of the mean: draw \(n\) cars at random, average them, repeat \(m\) times, and histogram the averages. Slide \(n\) from 1 upward and watch the bottom histogram pull in from the population's ragged shape into the smooth blue <strong><span class="gloss" data-gloss="normal">Normal</span></strong> curve.</p>
+
+  <div class="viz" id="viz-try-it">
+    <div class="viz-title">CLT simulator · sample-mean distribution</div>
+    <div class="viz-description">Pick a population (the real skewed car prices, or a uniform / exponential / bimodal shape). The blue overlay is the theoretical Normal(μ, σ²/n). Drag <em>n</em> and the histogram of sample means tightens around μ; press Redraw for a fresh set of \(m\) samples.</div>
+    <div class="clt-source-label">Population (fixed)</div>
+    <div class="clt-source"></div>
+    <div class="clt-source-label">Distribution of the sample mean X̄</div>
+    <div class="clt-board"></div>
+    <div class="clt-controls"></div>
+    <div class="clt-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers reproduce this exact experiment in ~90 lines of pure stdlib — same commands, same math, in JavaScript and Python.</div>
+  </div>
+
+  <p>Everything on that plot comes from one loop: average \(n\) draws, do it \(m\) times. The rest of the page explains why the result is a bell no matter which population you pick — and pins down exactly how fast it tightens.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="population">A skewed population</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>guess the shape of the average</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The car prices are strongly right-skewed. Suppose you draw 30 cars and record their average price, then repeat that thousands of times. Sketch the shape you expect the <em>averages</em> to make. Will it be skewed like the prices, or something else? Where will it be centered?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare sketches. Did you draw a skewed hump or a symmetric bell? Did you both center it on the same value?</li>
+        <li><span class="tps-phase">Share · 2 min</span>As a table, commit to one predicted shape and one predicted center, then check them against the simulator above with n = 30.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Start with the population itself, because the whole point of the CLT is that its shape does <em>not</em> matter. Our 92 prices have a mean of about \(\$8.6\text{k}\) and a standard deviation of about \(\$8.1\text{k}\) — a spread almost as large as the mean, which is the fingerprint of a long right tail.</p>
+
+  <p>Write the population mean \(\mu\) and <span class="gloss" data-gloss="variance">variance</span> \(\sigma^2\) plainly. These are fixed numbers describing the population, not estimates:</p>
+
+  <pre class="equation">$$\mu = \mathbb{E}[X], \qquad \sigma^2 = \mathbb{V}[X] = \mathbb{E}\big[(X-\mu)^2\big]$$</pre>
+
+  <p>The CLT needs only two things from this population: the observations are <strong><span class="gloss" data-gloss="iid">iid</span></strong>, and the variance \(\sigma^2\) is finite. Skew, multiple peaks, hard floors at zero — none of it disqualifies the population. Switch the simulator to the exponential or bimodal population to confirm the punchline survives shapes even uglier than the car prices.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="sample-mean">The sample mean</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>why averaging calms things down</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>A single random car can be a $1k beater or a $38k truck — wildly variable. The average of 30 cars is far steadier. In words, why does averaging make the extremes cancel out instead of adding up? What has to be true about the draws for that cancelling to work?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare reasoning. Did "independent" show up in your answer? A high draw is no more likely to be paired with another high draw than a low one.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on one sentence explaining why the average is steadier than a single draw, then read on to see it made exact.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The object the CLT is about is the <strong><span class="gloss" data-gloss="sample-mean">sample mean</span></strong> — the average of one sample of size \(n\):</p>
+
+  <pre class="equation">$$\bar{X}_n = \frac{1}{n}\sum_{i=1}^{n} X_i$$</pre>
+
+  <p>\(\bar{X}_n\) is itself random: draw a new sample of \(n\) cars and you get a slightly different average. Collecting many of those averages and histogramming them is exactly what the simulator's bottom plot does. Two facts about that histogram are true for <em>any</em> population with finite variance, no approximation involved — they follow directly from the linearity of expectation and the independence of the draws:</p>
+
+  <pre class="equation">$$\mathbb{E}[\bar{X}_n] = \mu, \qquad \mathbb{V}[\bar{X}_n] = \frac{\sigma^2}{n}$$</pre>
+
+  <p>The first says the averages center on the population mean — the red μ line runs through the middle of the bottom histogram at every \(n\). The second says their variance is the population variance divided by \(n\): more cars per sample, less scatter among the averages. The CLT adds one more claim on top of these two exact facts — that the <em>shape</em> of the histogram becomes Normal:</p>
+
+  <pre class="equation">$$\bar{X}_n \;\approx\; \text{Normal}\!\left(\mu,\; \frac{\sigma^2}{n}\right) \quad \text{for large } n$$</pre>
+
+  <div class="callout insight">
+    <span class="label">The claim, in one line</span>
+    <p>Center, spread, and shape are three separate promises. Centering (\(\mathbb{E}[\bar{X}_n]=\mu\)) and spread (\(\mathbb{V}[\bar{X}_n]=\sigma^2/n\)) hold at every \(n\), exactly. The CLT is the third promise: the shape turns into a bell as \(n\) grows, whatever the population looked like.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="standard-error">The √n law</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>how fast does it tighten?</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The spread of the sample mean is \(\sigma/\sqrt{n}\). To make your estimate of the mean twice as precise (half the spread), by what factor must you grow the sample size \(n\)? Predict a number before you read on.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare answers. Halving \(\sigma/\sqrt{n}\) needs \(\sqrt{n}\) to double, so \(n\) must quadruple — diminishing returns.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Commit to the factor, then find the rows in the table below where \(n\) quadruples and check the standard error halves.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Taking the square root of the variance \(\sigma^2/n\) gives the standard deviation of the sample mean, which has its own name — the <strong><span class="gloss" data-gloss="standard-error">standard error</span></strong>:</p>
+
+  <pre class="equation">$$\operatorname{SE}(\bar{X}_n) = \sqrt{\mathbb{V}[\bar{X}_n]} = \frac{\sigma}{\sqrt{n}}$$</pre>
+
+  <p>The \(\sqrt{n}\) in the denominator is the whole economics of sampling. Precision improves with more data, but only as fast as \(\sqrt{n}\): to halve the standard error you must quadruple the sample. The table below runs the simulator across a ladder of sample sizes and puts the theoretical \(\sigma/\sqrt{n}\) next to the observed spread of the sample means.</p>
+
+  <div class="viz" id="viz-table">
+    <div class="viz-title">σ/√n, predicted vs. observed</div>
+    <div class="viz-description">For each sample size \(n\), the theoretical standard error \(\sigma/\sqrt{n}\) against the measured standard deviation of thousands of simulated sample means. The rightmost ratio should sit at 1.</div>
+    <div class="clt-board"></div>
+    <div class="clt-readout"></div>
+  </div>
+
+  <p>Read down the "theory" column: quadrupling \(n\) from 5 to 20-ish, or 25 to 100, cuts the standard error roughly in half. The observed column tracks it row for row. This law is exact for the spread at every \(n\) — the approximation in the CLT is only ever about the <em>shape</em>, never the center or the spread.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="standardize">Standardizing</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>one curve to rule them all</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Different populations and different \(n\) give sample-mean histograms with different centers and widths. If you subtract each one's center and divide by its own standard error, what do you predict happens to all those histograms? Would a skewed population at \(n=1\) already match?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions. Do they all land on one shared curve? Which cases refuse to match until \(n\) is large?</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what the shared curve is, then drive the widget below across populations and sample sizes to test it.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>To compare across populations and sample sizes, <strong><span class="gloss" data-gloss="standardize">standardize</span></strong> the sample mean: subtract its center \(\mu\) and divide by its standard error \(\sigma/\sqrt{n}\). This strips out the particular units and spread, leaving a pure shape:</p>
+
+  <pre class="equation">$$Z_n = \frac{\bar{X}_n - \mu}{\sigma/\sqrt{n}} \;\xrightarrow[n\to\infty]{}\; \text{Normal}(0, 1)$$</pre>
+
+  <p>This is the form stated in the notebook, where \(T_n = \sqrt{n}\,(\bar{X}_n - \mu)/\sigma\) is the same quantity rearranged. Standardizing collapses every case onto one fixed target — the standard normal \(N(0,1)\) — so the blue curve below never moves. Only the histogram changes as you switch populations and slide \(n\).</p>
+
+  <div class="viz" id="viz-standard">
+    <div class="viz-title">Standardized sample mean · collapse onto N(0,1)</div>
+    <div class="viz-description">Histogram of \(Z = (\bar{X}-\mu)/(\sigma/\sqrt{n})\) against the fixed standard normal. At \(n=1\) the histogram still carries the population's skew; grow \(n\) and every population snaps onto the same bell.</div>
+    <div class="clt-board"></div>
+    <div class="clt-controls"></div>
+    <div class="clt-readout"></div>
+  </div>
+
+  <div class="callout note">
+    <span class="label">Note · how large is "large enough"?</span>
+    <p>There is no universal \(n\). A nearly-symmetric population is Normal-looking by \(n \approx 10\); the strongly skewed exponential and the car prices need more, often \(n \gtrsim 30\)-\(50\). The rule of thumb "\(n \ge 30\)" is a rough default, not a theorem — the heavier the skew, the larger the \(n\) the bell demands. Use the widget to see each population's own crossover.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Simulate the sampling distribution of the mean from scratch — no numpy, just the loop above. You are given the data loader, the random-number generator, and the input/output plumbing the autograder speaks. You write two functions.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>one_sample_mean(population, n, rng)</code> — draw \(n\) values with replacement using <code>rng.choice(population)</code> and return their mean.</li>
+    <li><code>summarize(population, n, m, seed)</code> — build \(m\) sample means (seed the generator once with <code>random.Random(seed)</code>) and return the pair <code>(mean_of_means, sd_of_means)</code>, using the provided <code>std()</code> for the spread.</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 clt.py</code> and sends one query per line on stdin: <code>means &lt;n&gt; &lt;m&gt; &lt;seed&gt;</code>. For each line you print one line back:</p>
+  <pre><code class="language-text">OK: &lt;mean_of_means&gt; &lt;sd_of_means&gt;   # both to 6 decimals
+ERR: bad query                       # if n &lt; 1 or m &lt; 1 (or the line is malformed)</code></pre>
+
+  <p>Reproducibility is graded: create the generator with <code>random.Random(seed)</code> and draw with <code>rng.choice(population)</code>, so the same query always returns the same two numbers.</p>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>name of the measured quantity (<code>price_k</code>)</td></tr>
+      <tr><td><code>unit</code></td><td>string</td><td>units (thousands of USD)</td></tr>
+      <tr><td><code>source</code></td><td>string</td><td>provenance of the data</td></tr>
+      <tr><td><code>values</code></td><td>list[float]</td><td>the population, length \(n = 92\)</td></tr>
+      <tr><td><code>pop_mean</code></td><td>float</td><td>mean of <code>values</code> (divides by length)</td></tr>
+      <tr><td><code>pop_sd</code></td><td>float</td><td>standard deviation of <code>values</code> (divides by length)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "means 30 5000 1" | python3 clt.py   # -> OK: 8.5xxxxx 1.4xxxxx
+python3 test_clt.py                        # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="clt.py" class="chat-dl-btn" download>clt.py (template)</a>
+    <a href="test_clt.py" class="chat-dl-btn" download>test_clt.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>What it checks</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td><code>mean_of_means</code> ≈ μ</td><td>the averages center on the population mean</td><td>30</td></tr>
+      <tr><td><code>sd_of_means</code> ≈ σ/√n</td><td>the key CLT relation: spread follows the standard-error law</td><td>35</td></tr>
+      <tr><td>Reproducible</td><td>same seed returns the same two numbers</td><td>20</td></tr>
+      <tr><td>Protocol</td><td><code>n&lt;1</code> / <code>m&lt;1</code> / malformed line reported as <code>ERR: bad query</code>, no crash</td><td>15</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Does the population have to be Normal for the CLT to work?</h3>
+  <p>No — that is the entire point. The population can be skewed, bounded, or multi-peaked. The only requirements are that the draws are iid and the population variance is finite. The <em>sample mean</em> becomes Normal even when the raw data never does.</p>
+
+  <h3>Why divide the spread by √n and not by n?</h3>
+  <p>Because variances add for independent draws, and averaging divides by \(n\). The variance of the mean is \(\sigma^2/n\); taking the square root to get a standard deviation turns that into \(\sigma/\sqrt{n}\). Precision therefore improves like \(\sqrt{n}\): quadruple the data to halve the standard error.</p>
+
+  <h3>Is n = 30 a magic threshold?</h3>
+  <p>No. It is a rough rule of thumb. Mildly non-normal populations are Normal-looking well before 30; heavily skewed ones can need far more. The standardized-view widget lets you watch each population reach the bell at its own pace.</p>
+
+  <h3>My mean_of_means and sd_of_means are a little off from μ and σ/√n. Bug?</h3>
+  <p>Probably not. With finite \(m\) these are Monte-Carlo estimates and jitter around the truth; larger \(m\) tightens them. The autograder uses a generous \(m\) and a tolerance for exactly this reason. If they are wildly off, check that you are averaging \(n\) draws (not summing) and dividing the variance by \(n\).</p>
+
+  <footer>
+    Understanding Uncertainty · Class 11 — The Central Limit Theorem. Watch a skewed population's average turn into a bell, then read the √n law straight off the slider.
+  </footer>
+</main>
+
+<!-- Shared base first, then this lab's widgets -->
+<script src="../shared/lab-base.js?v=1"></script>
+<script src="viz.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>
