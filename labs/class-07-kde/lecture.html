@@ -177,7 +177,17 @@
 
   <pre class="equation">$$\hat f_{i,h}(x) = \frac{1}{h\sqrt{2\pi}}\exp\!\left(-\frac{(x_i-x)^2}{2h^2}\right)$$</pre>
 
-  <p>and averaging all \(n\) bumps gives back the same estimator.</p>
+  <p>and averaging all \(n\) bumps gives back the same estimator. Swapping kernels only changes one line of the algorithm from Part 1 — the indicator-and-count becomes an exponential-and-sum:</p>
+
+  <pre><code class="language-python">def kde_gaussian(X, K=35):
+    n = len(X)
+    h_s = 1.06 * X.std() * n ** (-0.2)
+    x_grid = np.linspace(X.min() - h_s, X.max() + h_s, K)
+    Z = (x_grid[:, None] - X[None, :]) / h_s
+    f_hat = np.sum(np.exp(-Z**2 / 2), axis=1) / (n * h_s * np.sqrt(2 * np.pi))
+    return x_grid, f_hat</code></pre>
+
+  <p>Same shape as the uniform-kernel function from Part 1: a grid, a broadcasted distance matrix, a per-point contribution summed across rows. Only the contribution changes — from a hard \(\mathbb{I}\{\cdot\}/2\) cutoff to the smooth Gaussian \(\phi(z) = \exp(-z^2/2)/\sqrt{2\pi}\).</p>
 
   <h3 id="silverman-gaussian">Silverman's plug-in for the Gaussian</h3>
   <p>Changing the kernel changes the optimal plug-in bandwidth. For the Gaussian, the standard choice is:</p>

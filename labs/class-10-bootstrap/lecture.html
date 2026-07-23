@@ -29,10 +29,15 @@
   <div class="toc-title">Class 10 · Lecture</div>
   <ul>
     <li><a href="#part1">Part 1 · Simulating Sampling Distributions</a></li>
+    <li class="toc-sub"><a href="#statistic-as-rv">A statistic is itself a random variable</a></li>
+    <li class="toc-sub"><a href="#sim-matrix">The simulation matrix</a></li>
+    <li class="toc-sub"><a href="#frequentist-thought-experiment">The frequentist thought experiment</a></li>
     <li><a href="#part2">Part 2 · The Bootstrap</a></li>
     <li class="toc-sub"><a href="#bootstrap-idea">The bootstrap idea</a></li>
     <li class="toc-sub"><a href="#sampling-replacement">Sampling with replacement</a></li>
     <li class="toc-sub"><a href="#bootstrapping-dist">Bootstrapping the sampling distribution</a></li>
+    <li class="toc-sub"><a href="#bootstrap-vs-sim">Bootstrapping versus simulation</a></li>
+    <li class="toc-sub"><a href="#variation-in-data">The variation already inside your data</a></li>
     <li class="toc-sub"><a href="#communicating">Communicating results: the confidence interval</a></li>
     <li class="toc-sub"><a href="#hypothesis-testing-lec">Hypothesis testing</a></li>
     <li class="toc-sub"><a href="#interpreting">Interpreting the bootstrap and the CI</a></li>
@@ -68,7 +73,25 @@
   <!-- ============================================================ -->
   <h2 id="part1">Part 1 · Simulating Sampling Distributions</h2>
 
-  <p>This class's first notebook is a short pointer rather than a full derivation: the motivating idea is to <em>use simulation to explore sampling distributions</em> — repeat an experiment many times, over and over, and watch the resulting statistic pile up into a distribution of its own. That is exactly what the earlier classes' widgets already did by simulating a data-generating process directly. The problem the rest of this lecture solves is what to do when you cannot simulate the generating process at all, because you only ever get to observe it once.</p>
+  <h3 id="statistic-as-rv">A statistic is itself a random variable</h3>
+  <p>Take any <span class="gloss" data-gloss="statistic-lec">statistic</span> \(S\) computed on a sample, \(S(X_1,\dots,X_n)\) — a mean, a median, a correlation, anything. Draw a different sample and you get a different number back, so \(S\) is a function of random inputs and is therefore itself a random variable, with its own distribution. Repeat the draw-and-compute step many times and the resulting values of \(S\) pile up into an ECDF — an estimate of the distribution that \(S\) itself follows. That distribution is the <span class="gloss" data-gloss="sampling-dist-lec">sampling distribution</span>: not the distribution of the data, but the distribution of a number computed from the data.</p>
+
+  <h3 id="sim-matrix">The simulation matrix</h3>
+  <p>Make this concrete by drawing \(N\) values of an iid random variable \(X\), and doing that whole draw \(T\) separate times:</p>
+  <pre class="equation">$$
+\left[
+    \begin{array}{cccc}
+X_{11} & X_{12} & \dots & X_{1T} \\
+X_{21} & X_{22} & \dots & X_{2T} \\
+\vdots & \vdots & \ddots & \vdots \\
+X_{N1} & X_{N2} & \dots & X_{NT} \\
+    \end{array}
+    \right]
+$$</pre>
+  <p>Each column is one simulated sample; each row is the position of a draw within its sample, so \(X_{it}\) is the \(i\)-th draw of the \(t\)-th simulation. Growing the number of rows grows the sample size \(N\); growing the number of columns grows the number of simulated repetitions \(T\). The question this whole class is building toward: as \(T\to\infty\), what does the distribution of \(S_t = S(X_{1t},\dots,X_{Nt})\) look like, for a fixed sample size \(N\)?</p>
+
+  <h3 id="frequentist-thought-experiment">The frequentist thought experiment</h3>
+  <p>For the sample mean specifically, the answer is already in hand from earlier classes: \(\mathbb{E}[\bar X_N] = \mathbb{E}[X]\), \(\mathbb{V}[\bar X_N] = \mathbb{V}[X]/N\), and \(pr[|\bar X_N - \mathbb{E}[X]| > d] \le \mathbb{V}[X]/Nd^2\) by Chebyshev. Each of those facts describes one column of the matrix above, for a fixed \(N\); replicating the study many times is exactly what growing \(T\) means. This is the foundational thought experiment of <strong>frequentist statistics</strong>: if I repeated this entire analysis many times, what would typically happen? The sample mean has a closed-form answer to that question. Most statistics of interest — a median, a correlation, an odds ratio — do not. Simulation is how you answer the same question for those, by literally building the \(T\)-column matrix and watching what \(S_t\) does. Part 2 replaces even the simulation step: instead of drawing fresh columns from a generating process you don't have direct access to, you resample the one column of real data you actually collected.</p>
 
   <!-- ============================================================ -->
   <h2 id="part2">Part 2 · The Bootstrap</h2>
@@ -85,6 +108,23 @@
   <p>Fix a number of bootstrap replications \(B\). For \(t = 1,\dots,B\): draw a resample of \(n\) observations with replacement, \(D_t\), and compute the statistic on it, \(\hat S_t = S(D_t)\). The collection \([\hat S_1,\dots,\hat S_B]\) approximates the sampling distribution of \(\hat S\).</p>
 
   <p>From that collection alone: the ECDF estimates the sampling distribution itself; the KDE estimates its density; and the standard deviation of \([\hat S_1,\dots,\hat S_B]\) is the <span class="gloss" data-gloss="bootstrap-se-lec">standard error</span> of \(\hat S\) — three different summaries of one collection of numbers.</p>
+
+  <h3 id="bootstrap-vs-sim">Bootstrapping versus simulation</h3>
+  <p>Line the bootstrap replicates up in the same matrix shape as Part 1's simulation matrix, to see exactly what changed:</p>
+  <pre class="equation">$$
+\left[
+    \begin{array}{cccc}
+X_{11} & X_{12} & \dots & X_{1B} \\
+X_{21} & X_{22} & \dots & X_{2B} \\
+\vdots & \vdots & \ddots & \vdots \\
+X_{N1} & X_{N2} & \dots & X_{NB} \\
+    \end{array}
+    \right]
+$$</pre>
+  <p>Each column is one bootstrap resample, drawn with replacement and the same size \(N\) as the real dataset; each row is the position of a draw within its resample, so \(X_{ib}\) is the \(i\)-th draw of the \(b\)-th resample. The sample size \(N\) is now fixed by the data you actually collected, not a free choice. As the number of columns \(B\) grows large, the ECDF of a statistic computed across those columns becomes an estimate of its sampling distribution — the same target as Part 1's simulation matrix, reached by resampling data instead of drawing fresh simulations from a generating process you don't have.</p>
+
+  <h3 id="variation-in-data">The variation already inside your data</h3>
+  <p>It can feel like resampling the same \(N\) rows over and over must eventually run out of new information. It does not, for any dataset of realistic size. There are \(N\) choices for the first draw of a resample, \(N\) choices for the second, and so on, for \(N\) draws — so there are \(N^N\) distinct ways to build one bootstrap resample. At \(N=100\), \(100^{100}\) dwarfs the roughly \(10^{80}\) atoms in the observable universe, the \(10^{11}\) stars in an average galaxy, and even the \(10^{12}\) galaxies in the observable universe. No computer will ever exhaust the ways of resampling even a moderately sized dataset, which is exactly why a few thousand bootstrap replicates already capture real variation rather than repeating the same handful of resamples.</p>
 
   <h3 id="communicating">Communicating results: the confidence interval</h3>
   <p>The full distribution of replicates is an honest, complete answer, but people often want a simpler numeric summary. The usual choice: report an interval \((L,H)\) that captures 90/95/99% of the replicates, as a bound on the values this kind of process tends to produce. This is a <strong><span class="gloss" data-gloss="ci-lec">confidence interval</span></strong>.</p>
@@ -118,6 +158,10 @@
 
 <script>
   window.GLOSSARY = {
+    'statistic-lec': {
+      title: 'Statistic',
+      body: '<p>Any number computed from a sample — a mean, a median, a correlation. Because the sample is random, a statistic computed from it is random too, with its own sampling distribution.</p>',
+    },
     'sampling-dist-lec': {
       title: 'Sampling distribution',
       body: '<p>The distribution of a statistic across all the samples you could have drawn from the population. Normally unobservable directly, since you only ever have the one sample you actually collected.</p>',
