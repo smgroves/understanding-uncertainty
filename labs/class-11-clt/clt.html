@@ -39,6 +39,7 @@
     <li><a href="#sample-mean">The sample mean</a></li>
     <li><a href="#standard-error">The √n law</a></li>
     <li><a href="#standardize">Standardizing</a></li>
+    <li><a href="#pvalue">Testing a hypothesized mean</a></li>
     <li><a href="#assignment">Assignment</a></li>
     <li><a href="#faq">FAQ</a></li>
   </ul>
@@ -222,6 +223,55 @@
   </div>
 
   <!-- ============================================================ -->
+  <h2 id="pvalue">Testing a hypothesized mean</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>closed form instead of resampling</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The bootstrap lab tested a hypothesized value by checking whether it fell inside a resampled interval — thousands of resamples, then a lookup. Now that \(Z_n\) collapses onto the fixed \(N(0,1)\) curve, what could you compute directly, with no resampling at all, to measure how extreme an observed \(Z\) is?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare answers. Did you land on "the area under the standard normal curve beyond \(|Z|\)"? That area is a p-value, and it comes from a known formula, not a simulation.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what a *small* area beyond \(|Z|\) should mean about the hypothesized value, then test your answer in the widget below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>A sample of size \(n\) gives you a mean \(\bar{X}_n\) and a standard error \(\widehat{SE} = \hat\sigma/\sqrt{n}\). To test a hypothesized population mean \(\mu_0\) — a null \(H_0: \mu = \mu_0\) against \(H_1: \mu \neq \mu_0\) — standardize the gap between what you observed and what you hypothesized:</p>
+
+  <pre class="equation">$$Z = \frac{\bar{X}_n - \mu_0}{\widehat{SE}}$$</pre>
+
+  <p>Under \(H_0\), the CLT says \(Z\) is (approximately) a draw from \(N(0,1)\). The <span class="gloss" data-gloss="p-value">p-value</span> is the probability that a standard normal variable would land at least as far from zero as your observed \(Z\) — the two shaded tails below. Because \(\Phi\), the standard normal CDF, is a known closed-form function, this is a lookup, not a resampling loop:</p>
+
+  <pre class="equation">$$p = 2\bigl(1 - \Phi(|Z|)\bigr)$$</pre>
+
+  <p>A small p-value says the data would be surprising if \(H_0\) were true — the usual cutoff is \(p < 0.05\), which lines up exactly with \(\mu_0\) falling outside the 95% confidence interval from a moment ago. Drag \(\mu_0\) below and watch the shaded tail area track the verdict.</p>
+
+  <div class="viz" id="viz-ptest">
+    <div class="viz-title">Test a hypothesized mean against a real sample</div>
+    <div class="viz-description">One fixed sample of \(n = 30\) car prices gives \(\bar{X}_n\) and \(\widehat{SE}\). The curve is the standard normal; the shaded tails mark everywhere at least as extreme as your observed \(Z\). Their combined area is the p-value.</div>
+    <div class="clt-board"></div>
+    <div class="clt-controls"></div>
+    <div class="clt-readout"></div>
+  </div>
+
+  <div class="callout insight">
+    <span class="label">What a p-value does and does not say</span>
+    <p>A p-value of 0.03 means: <em>if</em> \(H_0\) were exactly true, a sample this extreme or more so would turn up about 3% of the time. It is not "there is a 3% chance \(H_0\) is true," and it is not "there is a 97% chance \(H_1\) is true" — the null hypothesis either is or is not true, full stop, and the p-value only describes how surprising your data would be under it. Small p, surprising data under \(H_0\); that is all it claims.</p>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding — comparing two groups</div>
+    <p>The car-price z-test above compares one sample mean to a fixed \(\mu_0\). An A/B test asks the same question about <em>two</em> sample means at once: are group A and group B plausibly drawn from populations with the same mean? Suppose 40 manual-transmission listings average \(\bar{X}_A = 7.10\)\,$k with \(s_A = 5.20\), and 52 automatic listings average \(\bar{X}_B = 9.60\)\,$k with \(s_B = 6.80\). Compute a Z-statistic for \(H_0: \mu_A = \mu_B\) using the pooled standard error \(\sqrt{s_A^2/n_A + s_B^2/n_B}\), then decide whether to reject at the 5% level (\(|Z| > 1.96\)).</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>The pooled SE is \(\sqrt{5.20^2/40 + 6.80^2/52} = \sqrt{0.676 + 0.889} = \sqrt{1.565} \approx 1.251\). The Z-statistic is \(Z = (7.10 - 9.60)/1.251 \approx -2.00\). Since \(|{-2.00}| > 1.96\), reject \(H_0\) at the 5% level: the two transmission types' average prices are not consistent with a single common mean. Same recipe as the one-sample test — subtract, divide by a standard error, compare to \(N(0,1)\) — applied to a difference of two means instead of one.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
   <h2 id="assignment">Assignment</h2>
 
   <p>Simulate the sampling distribution of the mean from scratch — no numpy, just the loop above. You are given the data loader, the random-number generator, and the input/output plumbing the autograder speaks. You write two functions.</p>
@@ -295,8 +345,8 @@ python3 test_clt.py                        # local autograder</code></pre>
 </main>
 
 <!-- Shared base first, then this lab's widgets -->
-<script src="../shared/lab-base.js?v=1"></script>
-<script src="viz.js?v=1"></script>
+<script src="../shared/lab-base.js?v=3"></script>
+<script src="viz.js?v=2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>

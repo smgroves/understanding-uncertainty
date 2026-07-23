@@ -478,6 +478,91 @@
   })();
 
   // ============================================================
+  // Widget 4 — testing a hypothesized value against the CI
+  // ============================================================
+  (function initHypTest() {
+    const host = document.getElementById('viz-hyptest');
+    if (!host) return;
+
+    fetch('data.json').then(r => r.json()).then(data => {
+      const X = data.values, n = X.length;
+      const SEED = 42, B = 2000;
+      const width = 680, height = 130;
+      const ml = 46, mr = 16;
+      const svg = svgBox(width, height);
+      host.querySelector('.bs-board').appendChild(svg);
+      const g = el('g'); svg.appendChild(g);
+      const xmin = 0, xmax = 20;
+      const x2px = x => ml + (x - xmin) / (xmax - xmin) * (width - ml - mr);
+      const rowCI = 55, axisY = 100;
+
+      // Pin both statistics' 95% CIs once, same seed/B as "Building the
+      // bootstrap distribution" above, so the numbers agree everywhere.
+      const ci = {}, obs = {};
+      ['mean', 'median'].forEach(name => {
+        const rng = LabBase.makeLcg(SEED);
+        const stats = [];
+        for (let t = 0; t < B; t++) stats.push(BOOT.statOfIdx(X, BOOT.resampleIdx(n, rng), name));
+        ci[name] = BOOT.percentileCI(stats, 0.05);
+        obs[name] = BOOT.statFor(X, name);
+      });
+
+      const state = { name: 'mean', s0: 10.5 };
+
+      function draw() {
+        g.textContent = '';
+        const [lo, hi] = ci[state.name];
+        drawAxis(g, x2px, axisY, xmin, xmax, 5);
+
+        // shaded CI band with its endpoints
+        g.appendChild(el('rect', { x: x2px(lo), y: rowCI - 14, width: x2px(hi) - x2px(lo), height: 28, fill: '#d5e6dc', opacity: 0.6 }));
+        [lo, hi].forEach(q => g.appendChild(el('line', { x1: x2px(q), y1: rowCI - 14, x2: x2px(q), y2: rowCI + 14, stroke: TEAL, 'stroke-width': 1.4, 'stroke-dasharray': '4 3' })));
+        g.appendChild(txt(x2px(lo), rowCI - 20, fmt(lo, 2), { 'text-anchor': 'middle', fill: TEAL }));
+        g.appendChild(txt(x2px(hi), rowCI - 20, fmt(hi, 2), { 'text-anchor': 'middle', fill: TEAL }));
+
+        // observed statistic, for reference
+        g.appendChild(el('line', { x1: x2px(obs[state.name]), y1: rowCI - 18, x2: x2px(obs[state.name]), y2: rowCI + 18, stroke: '#8a857d', 'stroke-width': 1 }));
+
+        // hypothesized value s0: teal if inside the CI, accent if outside
+        const inside = state.s0 >= lo && state.s0 <= hi;
+        const color = inside ? TEAL : ACCENT;
+        g.appendChild(el('circle', { cx: x2px(state.s0), cy: rowCI, r: 6, fill: color }));
+        g.appendChild(txt(x2px(state.s0), rowCI + 28, 's₀ = ' + fmt(state.s0, 2), { 'text-anchor': 'middle', fill: color, 'font-weight': 700 }));
+
+        const verdict = inside
+          ? `<strong style="color:${TEAL}">Fail to reject</strong> H₀: S = ${fmt(state.s0, 2)}`
+          : `<strong style="color:${ACCENT}">Reject</strong> H₀: S = ${fmt(state.s0, 2)}`;
+        host.querySelector('.bs-readout').innerHTML =
+          `95% CI for the ${state.name}: <strong>(${fmt(lo, 2)}, ${fmt(hi, 2)}) $k</strong>. ${verdict} at the 5% level` +
+          (inside ? ' — it sits inside the interval.' : ' — it sits outside the interval.');
+      }
+
+      const controls = host.querySelector('.bs-controls');
+      const stgroup = 'bs-hyp-stat-' + Math.random().toString(36).slice(2, 6);
+      const rMean = radioBtn('Mean', 'mean', true, stgroup);
+      const rMed = radioBtn('Median', 'median', false, stgroup);
+      const srow = document.createElement('div'); srow.className = 'bs-radio';
+      srow.innerHTML = '<span class="bs-slider-label">Statistic</span>';
+      srow.appendChild(rMean.wrap); srow.appendChild(rMed.wrap);
+      controls.appendChild(srow);
+
+      const s0S = slider('Hypothesized value s₀ ($k)', 0, 20, 0.1, state.s0);
+      controls.appendChild(s0S.wrap);
+      s0S.out.textContent = fmt(state.s0, 2);
+
+      rMean.input.addEventListener('change', () => { state.name = 'mean'; draw(); });
+      rMed.input.addEventListener('change', () => { state.name = 'median'; draw(); });
+      s0S.input.addEventListener('input', () => {
+        state.s0 = parseFloat(s0S.input.value);
+        s0S.out.textContent = fmt(state.s0, 2);
+        draw();
+      });
+
+      draw();
+    });
+  })();
+
+  // ============================================================
   // Inline glossary (contract from CLAUDE.md / lab-01) — verbatim
   // ============================================================
   const GLOSSARY = {

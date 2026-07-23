@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 01 · Wrangling &amp; Robust Statistics — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=1">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so literal currency ($5k) is never
+     mistaken for a delimiter; display math uses $$ … $$ inside
+     <pre class="equation">. Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents -->
+<aside class="toc">
+  <div class="toc-title">Class 01 · Wrangling &amp; EDA</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#messy-data">A market full of typos</a></li>
+    <li><a href="#mean-variance">Mean and variance</a></li>
+    <li><a href="#median">The value that doesn't flinch</a></li>
+    <li><a href="#quantiles">Quantiles and the IQR</a></li>
+    <li><a href="#transform">Taming the long tail</a></li>
+    <li><a href="#groups">Comparing groups</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 01 · Aug 27</div>
+    <h1>Wrangling &amp; Robust Statistics</h1>
+    <div class="subtitle">From messy real listings to summary statistics that survive the mess</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">A used-car listing does not arrive ready to average. One row in this lab's data is a salvage-title Peterbilt truck with <strong>1,017,936 miles</strong> on the odometer and a color field that just says "color:" — someone left the form blank and the scraper kept the label. Before any statistic can be trusted, someone has to decide what each recorded value actually means. That decision made, one lesson repeats across every variable in this dataset: the <span class="gloss" data-gloss="robust-statistic">mean</span> trusts every observation equally, and a single wrong one can wreck it. The <strong>median</strong> barely notices.</p>
+
+  <div class="cite">
+    Built on the Class 01 notebooks <a href="#">01_1_wrangling</a> and <a href="#">01_2_eda</a>.
+    Data: 250 nationwide used-car auction listings
+    (<code>USA_cars_datasets.csv</code>, <code>uu_fa26/class_02/</code>), prices and odometer readings as scraped.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+
+  <p>Pick a variable, then toggle one row on and off: the salvage truck with the 7-digit odometer reading. Watch what happens to the mean and to the median.</p>
+
+  <div class="viz" id="viz-try-it">
+    <div class="viz-title">One row, two statistics · <code>USA_cars_datasets</code></div>
+    <div class="viz-description">Every dot is one of 250 real listings, placed on a line by its value. The accent line is the mean; the blue line is the median. Switching the truck off removes the single most extreme point in the whole dataset.</div>
+    <div class="wr-board"></div>
+    <div class="wr-controls"></div>
+    <div class="wr-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers compute the same mean, variance, median, and quantiles in ~130 lines of pure stdlib each.</div>
+  </div>
+
+  <p>On the mileage variable, that one truck pulls the mean from about 53,000 miles up to almost 57,000 — a swing of roughly 3,900 miles. The median moves about 150 miles. One bad (or at least unusual) row moved the mean twenty-five times more than it moved the median. That gap is the entire subject of this lab.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="messy-data">A market full of typos</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>what a zero means</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Four listings in this dataset have <code>price = 0</code>. Before reading on: is that a real free car, a data-entry error, or something else? What would you check to decide, and what should you do with those four rows before computing an average price?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare guesses. A $0 truck is almost certainly a missing price, not a giveaway — the scraper recorded "no price listed" as a number instead of a blank.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on a rule for what to do with a suspicious zero, then compare it to the wrangling steps below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Loading a dataset is the easy part; trusting it is the work. The wrangling notebook lays out a fixed sequence — read the file, check the <span class="gloss" data-gloss="schema">schema</span>, verify types, handle missing values, filter, save — and this dataset needs every step. Its <code>condition</code> column mixes units freely, so <code>"2 days left"</code> and <code>"21 hours left"</code> and <code>"34 minutes"</code> all describe the same underlying quantity — time left in the auction — in three different disguises, and a handful of rows just say <code>"Listing Expired"</code>. None of that is usable until it is <span class="gloss" data-gloss="type-cast">cast</span> to one common numeric unit:</p>
+
+  <pre><code class="language-python">def hours_left(raw):
+    n, unit = raw.split()[:2]
+    n = float(n)
+    if unit.startswith('day'):
+        return n * 24
+    if unit.startswith('hour'):
+        return n
+    if unit.startswith('minute'):
+        return n / 60
+    return None   # "Listing Expired" and anything else unrecognized</code></pre>
+
+  <p>Missing values are the harder problem, because they rarely announce themselves. A blank cell is easy to spot; a <span class="gloss" data-gloss="disguised-missing">disguised missing value</span> is not. This dataset's color column uses the literal string <code>"no_color"</code> for some rows and the leftover label <code>"color:"</code> for others — two different sentinels for the same underlying fact, that no color was recorded. The price column goes further and encodes "unknown" as the number <code>0</code>, which is silently valid input to a <code>mean()</code> call and will never raise an error. Before any statistic runs, every variable needs the same question asked of it: what does a missing observation look like <em>here</em>, and have I found all of them?</p>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>Suppose you compute the average listing price without excluding the four <code>price = 0</code> rows. Does the average come out too high, too low, or unaffected — and by roughly how much, given <code>n = 250</code>?</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>Too low. Treating four missing prices as literal zeros pulls the sum down while the count of 250 stays the same, so the mean is biased toward zero. Excluding them here raises the mean from about $18,246 to about $18,543 — a small shift because n is large and only 4 of 250 rows are affected, but the direction is not a coincidence: coding "missing" as the smallest possible number always drags the mean down.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="mean-variance">Mean and variance</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>one truck, five cars</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Five cars have mileage (in thousands) 12, 34, 41, 58, and 1018 — that last one is our truck. Without computing anything, predict whether the average of these five numbers lands closer to the first four cars or closer to the truck.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions, then compute it: the mean is 232.6. That is closer to the truck than to any of the other four cars, even though the truck is one data point out of five.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on why an average of five numbers can land nowhere near four of them, then read the formula below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>A <strong>statistic</strong> is just a function that turns a list of numbers into one number. The <strong>sample mean</strong> is the most familiar: add everything up and divide by how many there are.</p>
+
+  <pre class="equation">$$M(X) = \frac{x_1 + x_2 + \cdots + x_n}{n} = \frac{1}{n}\sum_{i=1}^n x_i$$</pre>
+
+  <p>The <strong>sample variance</strong> measures spread — the average squared distance of each point from that mean — and its square root is the <strong>standard deviation</strong>:</p>
+
+  <pre class="equation">$$V(X) = \frac{1}{n}\sum_{i=1}^n \bigl(x_i - M(X)\bigr)^2, \qquad \mathrm{sd}(X) = \sqrt{V(X)}$$</pre>
+
+  <p>Drag the slider below to change the truck's mileage — everything else in the toy set of five stays fixed. Watch the mean and the standard deviation move as the one extreme value moves.</p>
+
+  <div class="viz" id="viz-toystat">
+    <div class="viz-title">Five cars, one slider · {12, 34, 41, 58, ?}</div>
+    <div class="viz-description">Four fixed cars at 12, 34, 41, and 58 thousand miles, plus a fifth whose mileage you control. The dashed accent line is the mean; the solid blue line is the median, introduced in the next section.</div>
+    <div class="wr-board"></div>
+    <div class="wr-controls"></div>
+    <div class="wr-readout"></div>
+  </div>
+
+  <div class="callout insight">
+    <span class="label">Worked example · the pinned five</span>
+    <p>At the truck's real value of 1018 (thousand miles): \(M(X) = 232.6\), \(V(X) \approx 154{,}431\), \(\mathrm{sd}(X) \approx 393.0\) — a standard deviation larger than four of the five data points. One number is doing almost all of the work in both the mean and the spread.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="median">The value that doesn't flinch</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>break the truck, not the median</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Using the widget above, drag the fifth car's mileage all the way up to 1,200 and all the way down to 20. Before you look at the readout: for which part of that range does the median stay pinned at 41, and for which part does it move?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare: the median stays pinned at 41 for any fifth value at or above 41 — whether it lands between the other cars or shoots past all of them, 41 keeps its middle rank. Only when the fifth value drops <em>below</em> 41 does it displace 41 from the middle, and the median moves with it.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on the general rule this implies — it is about <em>rank</em>, not magnitude — then check it against the definition below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The <strong><span class="gloss" data-gloss="robust-statistic">median</span></strong> answers a different question than the mean: not "what is the total, divided evenly," but "what value sits in the middle, with half the data above and half below." Sort the data first; for an odd count the median is the middle entry, and for an even count it is the average of the two middle entries:</p>
+
+  <pre><code class="language-python">def median(X):
+    values = sorted(X)      # rank is only meaningful once sorted
+    n = len(values)
+    mid = n // 2             # middle index (odd n), or right-of-center (even n)
+    if mid != n / 2:          # true exactly when n is odd
+        return values[mid]
+    return (values[mid - 1] + values[mid]) / 2   # even n: average the two middles</code></pre>
+
+  <p>Run this on the toy set sorted as \(\{12, 34, 41, 58, 1018\}\): \(n = 5\) is odd, so the median is the third entry, 41 — however far out the truck sits, it only ever occupies one end of the sorted list and never touches the middle. That is the entire mechanism behind "the median doesn't flinch": moving the largest value larger never changes which value is in the middle.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>Add a sixth car at 1500 (thousand miles) to the toy set, so it becomes \(\{12, 34, 41, 58, 1018, 1500\}\), n = 6. What is the median now, and why does the rule change?</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>The median is \((41 + 58)/2 = 49.5\). With n = 6 there is no single middle element — index 2 and index 3 (0-indexed) both straddle the center — so the convention averages them. Both middle values, 41 and 58, are still comfortably ordinary cars; the two extreme trucks at the top of the sorted list still do not touch the median.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="quantiles">Quantiles and the IQR</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>generalizing the median</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The median is "the value with half the data below it." What single number would you compute to answer "the value with a <em>quarter</em> of the data below it"? Sketch the recipe before reading on.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare recipes: sort the data, then walk 25% of the way into the sorted list instead of 50%. The median is this same operation at 50% — at least for an odd-length sample, as the next paragraph makes precise.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what "25% of the way in" should mean for a list of 250 real prices, then test it in the widget below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The <span class="gloss" data-gloss="quantile">\(f\)-th quantile</span> generalizes the median to any split point: the value with a fraction \(f\) of the data at or below it. Sort the data, then read off the entry at the right index:</p>
+
+  <pre class="equation">$$q_f = X_{(\lceil n f \rceil)}, \qquad \text{index} = \max\bigl(\lceil n f \rceil - 1,\ 0\bigr)$$</pre>
+
+  <p>For an odd-length sample the median is exactly \(q_{.5}\) — both land on the same middle entry. For an even-length sample the two conventions can differ slightly: <code>median()</code> averages the two middle entries, while this <code>quantile()</code> picks a single sorted entry and never averages. On the 250-listing price sample that gap is real: the median is $16,250, but \(q_{.5}\) computed this way lands on $16,000, one order-statistic short. Two quantiles together give a robust measure of spread, the <span class="gloss" data-gloss="iqr">interquartile range</span>: the gap between the 75th and 25th percentiles, which brackets the middle half of the data and — like the median — barely reacts to a single extreme listing.</p>
+
+  <pre class="equation">$$\mathrm{IQR} = q_{.75} - q_{.25}$$</pre>
+
+  <p>Drag \(f\) across the real 250-listing price sample below and watch the quantile track the sorted data, then compare the shaded IQR band to the mean ± sd band above it.</p>
+
+  <div class="viz" id="viz-quantile">
+    <div class="viz-title">Quantiles of the real price sample</div>
+    <div class="viz-description">The teal band marks the interquartile range (25th to 75th percentile); the accent tick is the quantile at your chosen \(f\). The orange band above it, for comparison, is mean ± one standard deviation — watch how much more it shifts if you flip the outlier toggle in the Try It widget and reload.</div>
+    <div class="wr-board"></div>
+    <div class="wr-controls"></div>
+    <div class="wr-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="transform">Taming the long tail</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>squinting at a skewed histogram</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>A histogram of price has a wall of listings under $20k and a thin scatter of trucks and luxury cars out past $50k. Predict what a mathematical transformation could do to the <em>shape</em> of that histogram without changing which car is more expensive than which.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare answers. A transform that shrinks large gaps between big numbers more than small gaps between small numbers — like a logarithm — should pull the scattered tail in and spread out the crowded wall.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what could go wrong with a logarithm specifically, then check the widget below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Almost every real numeric variable has a long tail — a few values much larger than the rest — and price is no exception. The standard fix is the <strong>natural logarithm</strong>, <code>np.log(df[var])</code>, which compresses large values far more than small ones and turns a lopsided histogram nearly symmetric. Its flaw is that it is undefined at zero and for negative numbers — exactly the disguised-missing zeros this dataset already has.</p>
+
+  <p>The fix for the fix is the <strong>inverse hyperbolic sine</strong>, or <span class="gloss" data-gloss="arcsinh">arcsinh</span>, which behaves like a logarithm for large values but is defined everywhere, including zero and negative numbers, where it evaluates to 0 and to negative outputs respectively:</p>
+
+  <pre class="equation">$$i(x) = \ln\!\left(x + \sqrt{x^2 + 1}\right)$$</pre>
+
+  <p>Toggle between raw, log, and arcsinh price below. The four <code>price = 0</code> listings vanish from the log histogram (their transformed value is undefined) but stay put, at zero, under arcsinh.</p>
+
+  <div class="viz" id="viz-transform">
+    <div class="viz-title">Raw vs. log vs. arcsinh · price</div>
+    <div class="viz-description">Same 250 listings, three scales. Watch the wall-plus-tail shape of the raw histogram fold into something close to symmetric, and watch what happens to the zero-price rows as you switch to log.</div>
+    <div class="wr-board"></div>
+    <div class="wr-controls"></div>
+    <div class="wr-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="groups">Comparing groups</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>does a salvage title cost you</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>18 of the 250 listings carry a <code>salvage insurance</code> title instead of <code>clean vehicle</code>. Predict, roughly, how much lower the typical salvage-title price is compared to a clean title — and whether the mean or the median is the fairer number to compare, given what you now know about outliers.</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions, then read the group medians off the widget below. Salvage titles should run noticeably cheaper — the title itself signals prior damage.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on why the median is the safer statistic for this specific comparison, given that the single most extreme mileage value in the whole dataset is also a salvage title.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Every statistic so far has summarized one variable at a time. The natural next question is <em>conditional</em>: how does price behave <strong>within</strong> a category? Splitting the sample by <code>title_status</code> and recomputing mean, median, and IQR inside each group is the numeric analogue of a <span class="gloss" data-gloss="contingency-table">contingency table</span> for two categoricals — instead of counts in each cell, you get a full distribution.</p>
+
+  <div class="viz" id="viz-groups">
+    <div class="viz-title">Price, split by title status</div>
+    <div class="viz-description">Two strips of the same 250 listings, grouped by title_status. Mean and median are marked for each group separately.</div>
+    <div class="wr-board"></div>
+    <div class="wr-controls"></div>
+    <div class="wr-readout"></div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>The salvage-title group contains the single most extreme mileage value in the dataset (the 1,017,936-mile truck) but that widget is about price, not mileage. Does the truck's extreme mileage automatically make it an extreme <em>price</em> too? Check the data and explain.</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>No — the truck is priced at only $1,025, near the bottom of the price range despite having the highest mileage by a wide margin. Being an outlier in one variable does not make an observation an outlier in another; mileage and price are correlated but not identical, and a salvage title with ruined mileage is priced low precisely <em>because</em> of that mileage. This is why every variable needs its own wrangling and its own robust summary, not just one blanket "remove the outliers" rule applied to the whole row.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Implement two robust statistics from scratch — no numpy, no <code>statistics</code> module. You are given the data loader, the sample mean and variance, and the input/output plumbing the autograder speaks. You write <code>median</code> and <code>quantile</code>.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>median(X)</code> — the middle value of the sorted list, averaging the two middle values when <code>len(X)</code> is even.</li>
+    <li><code>quantile(X, frac)</code> — the value at sorted index <code>max(ceil(len(X) * frac) - 1, 0)</code>, for any <code>frac</code> in <code>[0, 1]</code>.</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 wrangling.py</code> and sends one query per line on stdin. Values are a single comma-separated list with no spaces:</p>
+  <pre><code class="language-text">median &lt;v1,v2,...&gt;         -> OK: &lt;value, 6 decimals&gt;
+quantile &lt;frac&gt; &lt;v1,v2,...&gt; -> OK: &lt;value, 6 decimals&gt;
+ERR: unknown query           # anything else</code></pre>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>dataset label</td></tr>
+      <tr><td><code>source</code></td><td>string</td><td>original CSV and its location in the source repo</td></tr>
+      <tr><td><code>n</code></td><td>int</td><td>number of listings, 250</td></tr>
+      <tr><td><code>price</code></td><td>list[float]</td><td>listing price in dollars, length \(n\), aligned with <code>rows</code></td></tr>
+      <tr><td><code>mileage</code></td><td>list[float]</td><td>odometer reading in miles, length \(n\), aligned with <code>rows</code></td></tr>
+      <tr><td><code>rows</code></td><td>list[dict]</td><td>one dict per listing: <code>brand, year, title_status, price, mileage, color, state, condition_raw, hours_left</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "median 12,34,41,58,1018" | python3 wrangling.py       # -> OK: 41.000000
+echo "quantile 0.25 12,34,41,58,1018" | python3 wrangling.py # -> OK: 34.000000
+python3 test_wrangling.py                                    # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="wrangling.py" class="chat-dl-btn" download>wrangling.py (template)</a>
+    <a href="test_wrangling.py" class="chat-dl-btn" download>test_wrangling.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td><code>median</code> correct on odd-length lists</td><td>20</td></tr>
+      <tr><td><code>median</code> correct on even-length lists (averages the two middle values)</td><td>20</td></tr>
+      <tr><td><code>quantile</code> matches the reference index formula across \(f \in \{0, .25, .5, .75, 1\}\)</td><td>35</td></tr>
+      <tr><td>Protocol: unknown query reported as <code>ERR:</code>, no crash</td><td>25</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does the median only ever move to another observed value?</h3>
+  <p>Because it is defined by <em>rank</em>, not by arithmetic — it is either literally one of the data points (odd \(n\)) or the average of two adjacent ones (even \(n\)). Nothing outside the two middle ranks can influence it, no matter how extreme.</p>
+
+  <h3>Is the median always the better choice?</h3>
+  <p>No. The mean uses every value's exact magnitude, which is exactly what you want when magnitudes carry real information you do not want to throw away — total revenue is a sum of means, not medians. The median is the better choice specifically when a few extreme or erroneous values would otherwise dominate a statistic meant to describe the typical case.</p>
+
+  <h3>Why not just delete every outlier before computing anything?</h3>
+  <p>Because "outlier" is a judgment call, not a fact visible from one number. The salvage truck's mileage is extreme but plausibly real; a price of exactly $0 is extreme and almost certainly wrong. Wrangling is the process of making that judgment call explicit, variable by variable, instead of encoding it silently into whichever statistic you happened to compute.</p>
+
+  <h3>Does arcsinh change which car is more expensive than which?</h3>
+  <p>No — it is a strictly increasing function, so it preserves every ordering in the data. It changes the visual and numerical <em>scale</em>, compressing large gaps between expensive cars, without changing any comparison between two listings.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 01 — Wrangling &amp; Robust Statistics. One salvage truck, and the two statistics that disagree about it.
+  </footer>
+</main>
+
+<!-- Shared base first, then this lab's widgets -->
+<script src="../shared/lab-base.js?v=3"></script>
+<script src="viz.js?v=5"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

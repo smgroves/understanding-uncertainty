@@ -26,6 +26,17 @@
       const z = (x - mu) / sigma;
       return Math.exp(-(z * z) / 2) / (sigma * Math.sqrt(2 * Math.PI));
     },
+    // Standard normal CDF via the Abramowitz–Stegun 7.1.26 erf approximation
+    // (max error ~1.5e-7) — no external math library required.
+    normalCdf(z) {
+      const sign = z < 0 ? -1 : 1;
+      const x = Math.abs(z) / Math.sqrt(2);
+      const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+            a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+      const t = 1 / (1 + p * x);
+      const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+      return 0.5 * (1 + sign * y);
+    },
     // one sample mean = average of n draws WITH REPLACEMENT from X
     oneSampleMean(X, n, rand) {
       let s = 0;
@@ -350,6 +361,94 @@
       `The last column hugs 1.0: the observed spread of the sample means tracks σ/√n across two orders of magnitude in n.`;
   }
 
+  // ============================================================
+  // Widget 4 — testing a hypothesized mean (closed-form p-value)
+  // ============================================================
+  function initPValue(data) {
+    const host = document.getElementById('viz-ptest');
+    if (!host) return;
+
+    const X = genPop('cars', data);
+    const n = 30;
+    // One fixed sample (seed 7), so only mu0 moves as the reader drags it.
+    const rand = LabBase.makeLcg(7);
+    const sample = [];
+    for (let i = 0; i < n; i++) sample.push(X[Math.floor(rand() * X.length)]);
+    const xbar = CLT.mean(sample);
+    const sd = Math.sqrt(sample.reduce((a, b) => a + (b - xbar) * (b - xbar), 0) / (n - 1));
+    const se = sd / Math.sqrt(n);
+
+    const width = 680, height = 240;
+    const ml = 44, mr = 12, mt = 16, mb = 30;
+    const plotW = width - ml - mr, plotH = height - mt - mb;
+    const svg = el('svg', { viewBox: `0 0 ${width} ${height}`, width: '100%', height: 'auto', style: 'display:block', role: 'img' });
+    host.querySelector('.clt-board').appendChild(svg);
+    const gTail = el('g'), gCurve = el('g'), gAxis = el('g'), gMark = el('g');
+    [gTail, gCurve, gAxis, gMark].forEach(g => svg.appendChild(g));
+
+    const zmin = -4, zmax = 4;
+    const z2px = z => ml + (z - zmin) / (zmax - zmin) * plotW;
+    const ymax = CLT.normalPdf(0, 0, 1) * 1.15;
+    const y2px = y => mt + plotH - (y / ymax) * plotH;
+
+    function draw() {
+      [gTail, gCurve, gAxis, gMark].forEach(g => { g.textContent = ''; });
+      const mu0 = parseFloat(mu0S.input.value);
+      mu0S.out.textContent = fmt(mu0, 2);
+      const z = (xbar - mu0) / se;
+      const p = 2 * (1 - CLT.normalCdf(Math.abs(z)));
+
+      // axis
+      gAxis.appendChild(el('line', { x1: ml, y1: mt + plotH, x2: ml + plotW, y2: mt + plotH, stroke: '#cfc9bd' }));
+      for (let zt = zmin; zt <= zmax; zt++) {
+        const px = z2px(zt);
+        gAxis.appendChild(el('line', { x1: px, y1: mt + plotH, x2: px, y2: mt + plotH + 4, stroke: '#cfc9bd' }));
+        gAxis.appendChild(el('text', { x: px, y: mt + plotH + 16, 'text-anchor': 'middle', fill: '#8a857d', 'font-family': 'var(--sans)', 'font-size': 10 }, [document.createTextNode(zt)]));
+      }
+
+      // shaded tails beyond |z| — the p-value's two halves
+      const az = Math.min(Math.abs(z), zmax);
+      [[zmin, -az], [az, zmax]].forEach(([a, b]) => {
+        if (b <= a) return;
+        let d = `M ${fmt(z2px(a), 1)} ${fmt(mt + plotH, 1)}`;
+        const N = 40;
+        for (let i = 0; i <= N; i++) {
+          const zz = a + (b - a) * i / N;
+          d += ` L ${fmt(z2px(zz), 1)} ${fmt(y2px(CLT.normalPdf(zz, 0, 1)), 1)}`;
+        }
+        d += ` L ${fmt(z2px(b), 1)} ${fmt(mt + plotH, 1)} Z`;
+        gTail.appendChild(el('path', { d, fill: '#fde0d2', stroke: 'none' }));
+      });
+
+      // the standard normal curve
+      let dCurve = '';
+      for (let i = 0; i <= 240; i++) {
+        const zz = zmin + (zmax - zmin) * i / 240;
+        dCurve += (i === 0 ? 'M ' : ' L ') + fmt(z2px(zz), 1) + ' ' + fmt(y2px(CLT.normalPdf(zz, 0, 1)), 1);
+      }
+      gCurve.appendChild(el('path', { d: dCurve, fill: 'none', stroke: NORMAL, 'stroke-width': 2.4 }));
+
+      // observed Z marker
+      const zpx = z2px(Math.max(zmin, Math.min(zmax, z)));
+      gMark.appendChild(el('line', { x1: zpx, y1: mt, x2: zpx, y2: mt + plotH, stroke: ACCENT, 'stroke-width': 2 }));
+      gMark.appendChild(el('text', { x: zpx, y: mt - 4, 'text-anchor': 'middle', fill: ACCENT, 'font-family': 'var(--sans)', 'font-size': 11, 'font-weight': 700 }, [document.createTextNode('Z = ' + fmt(z, 2))]));
+
+      const reject = p < 0.05;
+      const verdict = reject
+        ? `<strong style="color:${ACCENT}">Reject</strong> H₀: μ = ${fmt(mu0, 2)}`
+        : `<strong style="color:${NORMAL}">Fail to reject</strong> H₀: μ = ${fmt(mu0, 2)}`;
+      host.querySelector('.clt-readout').innerHTML =
+        `Sample of n = 30: X̄ = <strong>${fmt(xbar, 2)}</strong>, SE = <strong>${fmt(se, 3)}</strong>. ` +
+        `Z = ${fmt(z, 2)}, p-value = <strong>${fmt(p, 4)}</strong>. ${verdict} at the 5% level.`;
+    }
+
+    const controls = host.querySelector('.clt-controls');
+    const mu0S = slider('Hypothesized mean μ₀ ($k)', 0, 20, 0.1, 10.5);
+    controls.appendChild(mu0S.wrap);
+    mu0S.input.addEventListener('input', draw);
+    draw();
+  }
+
   // ---------- downloads (same pattern as the KDE lab) ----------
   function wireDownloads(host, data) {
     const row = host.querySelector('.chat-downloads');
@@ -370,6 +469,7 @@
     initTryIt(data);
     initStandard(data);
     initTable(data);
+    initPValue(data);
   }).catch(err => {
     const t = document.getElementById('viz-try-it');
     if (t) t.innerHTML = '<p style="color:#b14a2e">Could not load data.json — open this page over http (e.g. <code>python3 -m http.server</code>), not via file://.</p>';
@@ -411,6 +511,10 @@
     'variance': {
       title: 'Variance σ²',
       body: '<p>The average squared distance of values from their mean; its square root is the standard deviation σ. The CLT requires the population variance to be finite for the standard-error law σ/√n to apply.</p>',
+    },
+    'p-value': {
+      title: 'p-value',
+      body: '<p>The probability, assuming the null hypothesis is exactly true, of seeing a test statistic at least as extreme as the one observed. A small p-value means the data would be surprising under the null — it is not the probability that the null hypothesis itself is true.</p>',
     },
   };
   (function initGlossary() {

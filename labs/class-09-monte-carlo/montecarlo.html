@@ -154,6 +154,11 @@
 
   <p>The left side is arithmetic a computer does instantly; the right side is an integral you might have no way to evaluate by hand. Monte Carlo trades the integral for a coin-flipping loop, and the weak law guarantees the trade is fair.</p>
 
+  <div class="callout note">
+    <span class="label">Note · a tempting mistake</span>
+    <p>It is tempting to fold the density back in yourself and compute \(\sum_i g(x_i)\,f(x_i)\) instead. Resist it. The draws \(X_i\) already arrive with frequency proportional to \(f\) — that is what "sampled from \(F\)" means — so multiplying by \(f(x_i)\) again double-counts the density. The correct estimator is the plain average \(\frac1n\sum_i g(x_i)\), with no density evaluation and no grid spacing anywhere in it. The sample already did that work for you.</p>
+  </div>
+
   <p>The special case that unlocks geometry is the <strong>indicator rule</strong>. Let \(g\) be 1 when a point lands in a region \(A\) and 0 otherwise. Then the expected value of \(g\) is just the probability of landing in \(A\), which for uniform draws is the <em>area</em> of \(A\):</p>
 
   <pre class="equation">$$\bar{p}_n = \frac{1}{n}\sum_{i=1}^n \mathbb{I}\{X_i \in A\} \;\xrightarrow[\;n\to\infty\;]{\;\text{pr}\;}\; \Pr(X \in A) = \operatorname{area}(A)$$</pre>
@@ -305,7 +310,7 @@ python3 test_montecarlo.py                       # local autograder</code></pre>
 </main>
 
 <!-- Shared base first, then this lab's widgets -->
-<script src="../shared/lab-base.js?v=1"></script>
+<script src="../shared/lab-base.js?v=3"></script>
 <script src="viz.js?v=1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>

@@ -154,6 +154,8 @@
   // the prev/next strip links straight to these files, so a phantom entry
   // would 404. Folders are named class-NN-slug and match the /class-NN/ route.
   const LAB_SEQUENCE = [
+    { num: '02', slug: 'class-02-vectors',      file: 'vectors.html',    title: 'Vectors, Distance & the Inner Product' },
+    { num: '01', slug: 'class-01-wrangling',    file: 'wrangling.html',  title: 'Wrangling & Robust Statistics' },
     { num: '03', slug: 'class-03-probability',  file: 'binomial.html',   title: 'Coins, trials & the binomial' },
     { num: '06', slug: 'class-06-cdf',          file: 'cdf.html',        title: 'The CDF & inverse transform'  },
     { num: '07', slug: 'class-07-kde',          file: 'kde.html',        title: 'Kernel Density Estimation'    },
