@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 11 Lecture · Bootstrap Inference &amp; the CLT — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 11 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Z-Statistics &amp; Bootstrap Inference</a></li>
+    <li class="toc-sub"><a href="#standard-errors-lec">Standard errors</a></li>
+    <li class="toc-sub"><a href="#z-statistics">Z-statistics</a></li>
+    <li class="toc-sub"><a href="#percentile-ci-normalized">The percentile confidence interval, normalized</a></li>
+    <li class="toc-sub"><a href="#hyp-tests-lec">Hypothesis tests</a></li>
+    <li class="toc-sub"><a href="#p-values-lec">p-values</a></li>
+    <li class="toc-sub"><a href="#bell-curves">Bell curves: a first look at the CLT</a></li>
+    <li><a href="#part2">Part 2 · The CLT and the Z/t-Tests</a></li>
+    <li class="toc-sub"><a href="#asymptotic-stats">Asymptotic statistics</a></li>
+    <li class="toc-sub"><a href="#clt-statement">The Central Limit Theorem</a></li>
+    <li class="toc-sub"><a href="#using-clt">Using the CLT</a></li>
+    <li class="toc-sub"><a href="#ci-via-clt">Confidence intervals via the CLT</a></li>
+    <li class="toc-sub"><a href="#pvalues-via-clt">p-values via the CLT</a></li>
+    <li class="toc-sub"><a href="#t-distribution">The t-distribution</a></li>
+    <li class="toc-sub"><a href="#two-sample-t">Two-sample t-tests</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 11 Lecture · Oct 1</div>
+    <h1>Bootstrap Inference &amp; the Central Limit Theorem</h1>
+    <div class="subtitle">Standardizing the bootstrap into Z-statistics, then replacing resampling with a closed-form bell curve</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">Every bootstrap confidence interval and every bootstrap p-value is built from the same standardized quantity, a Z-statistic. This lecture's first half derives that machinery in full generality. Its second half asks why a bootstrap distribution built from resampling so often looks like a bell curve — the answer is the Central Limit Theorem — and shows that once you believe it, you can skip resampling entirely and read the same confidence intervals and p-values straight off the standard normal.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 11, integrating the full content of
+    <a href="#">10_1_bootstrap_inference</a> and <a href="#">10_2_CLT</a>.
+    See the <a href="clt.html">Class 11 lab</a> for the interactive, real-data build of the CLT itself and the closed-form p-value test.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Z-Statistics &amp; Bootstrap Inference</h2>
+
+  <h3 id="standard-errors-lec">Standard errors</h3>
+  <p>The standard deviation of a sampling distribution is its <strong><span class="gloss" data-gloss="se-clt-lec">standard error</span></strong> — a large part of a statistician's job, professionally, is computing standard errors. For the sample mean:</p>
+
+  <pre class="equation">$$\widehat{SE}(\bar X_n) = \sqrt{\mathbb{V}[\bar X_n]} = \frac{\hat s}{\sqrt n}$$</pre>
+
+  <h3 id="z-statistics">Z-statistics</h3>
+  <p>Standardize each bootstrap replicate the same way any quantity gets standardized — center it, then divide by its own spread:</p>
+
+  <pre class="equation">$$Z_b = \frac{\hat S_b - \hat S}{\widehat{SE}(\hat S)}$$</pre>
+
+  <p>\(Z_b\) answers, literally, "how many standard-error units away from \(\hat S\) is my \(b\)-th bootstrap estimate?" Centering and normalizing this way doesn't change the <em>rank</em> of the replicates — the percentile confidence interval built from \([Z_1,\dots,Z_B]\) picks out the same replicates it always would — but it does make Z-values comparable <em>across</em> different statistics and different datasets, which raw \(\hat S_b\) values never are.</p>
+
+  <h3 id="percentile-ci-normalized">The percentile confidence interval, normalized</h3>
+  <p>The Z-statistics \([Z_1,\dots,Z_B]\) approximate the distribution of the population quantity \(Z = (\hat S - S)/SE(\hat S)\). Find the \(q_{\alpha/2}\) and \(q_{1-\alpha/2}\) quantiles of the Z-sample and build a normalized confidence interval:</p>
+
+  <pre class="equation">$$\left(\hat S - q_{\alpha/2}\times\widehat{SE}(\hat S),\ \ \hat S + q_{1-\alpha/2}\times\widehat{SE}(\hat S)\right)$$</pre>
+
+  <p class="keep-in-present">The pattern "\(\hat S \pm q\times\widehat{SE}(\hat S)\)" is the foundation of confidence-interval construction generally — it reappears constantly for the rest of this course.</p>
+
+  <h3 id="hyp-tests-lec">Hypothesis tests</h3>
+  <p>Every confidence interval doubles as a statistical test. The <strong>null hypothesis of 0</strong> is that the true value of \(S\) is zero; the <strong>alternative</strong> is that it isn't. Checking whether 0 falls inside the \(\alpha\)-level confidence interval settles the test: inside, fail to reject the null at level \(\alpha\); outside, reject it. Researchers are usually hoping <em>to</em> reject the null of zero — no one runs an expensive clinical trial hoping the treatment effect is exactly zero — and being upfront about that motivation is more honest than pretending the analysis has no stake in the outcome.</p>
+
+  <h3 id="p-values-lec">p-values</h3>
+  <p>Picking a level \(\alpha\) in advance can feel arbitrary and ritualistic. The alternative question: "what confidence level \(\alpha\) would be just barely enough to reject the null of 0?" That threshold is the <strong><span class="gloss" data-gloss="p-value-clt-lec">p-value</span></strong> — equivalently, "what fraction of the bootstrapped Z-values are farther from 0 than my observed Z-value?"</p>
+
+  <p>With a hypothesized value \(S_0\) (often 0), ask how often the distance from a bootstrap replicate to \(\hat S\) exceeds the distance from \(\hat S\) to \(S_0\):</p>
+
+  <pre class="equation">$$p = \frac1B\sum_{b=1}^B \mathbb{I}\{|Z_b| \gt |Z_0|\} = \frac1B\sum_{b=1}^B \mathbb{I}\big\{|\hat S_b-\hat S| \gt |\hat S - S_0|\big\}$$</pre>
+
+  <h3 id="bell-curves">Bell curves: a first look at the CLT</h3>
+  <p>The bell curve keeps showing up in this course. Why? Adding up many small deviations from zero and averaging them — under quite general conditions — produces a normal distribution. Standardize any normal distribution the same way \(Z\)-values are standardized, and you get a standard normal — a bell. The core observation of asymptotic statistics is that under the right circumstances, the ECDF of a standardized statistic can be approximated by the standard normal distribution. That observation is the <strong>Central Limit Theorem</strong>, and Part 2 is entirely about it.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · The CLT and the Z/t-Tests</h2>
+
+  <p>If the ECDF and quantiles from the bootstrap in Part 1 are replaced with the standard normal distribution and its inverse, the result is the classic <strong>z-test</strong>. That substitution is the entire content of this half of the lecture.</p>
+
+  <h3 id="asymptotic-stats">Asymptotic statistics</h3>
+  <p>Everywhere Part 1 used the bootstrapped distribution of Z-statistics, this half substitutes the standard normal \(\Phi(z)\) — trading a resampling loop for a closed-form lookup, whenever that substitution is justified.</p>
+
+  <h3 id="clt-statement">The Central Limit Theorem</h3>
+  <p>Why is approximating the bootstrapped Z-distribution with \(\Phi(z)\) justified in the first place?</p>
+
+  <div class="callout insight">
+    <span class="label">Central Limit Theorem</span>
+    <p>Let \(X_1,\dots,X_n\) be an iid sample of size \(n\) from a distribution with mean \(\mathbb{E}[X_i]=\mu\) and finite variance \(\mathbb{V}[X_i]=\sigma^2 \lt \infty\). Then as \(n \to \infty\), the distribution of \(Z_n = \sqrt n(\bar X_n-\mu)/\sigma\) converges to the standard normal, \(\Phi(z)\).</p>
+  </div>
+
+  <h3 id="using-clt">Using the CLT</h3>
+  <p>Every bootstrap inference in Part 1 used a bootstrapped sampling distribution built by resampling. The CLT says that for large samples, the sampling distribution of a statistic is always approximately bell-shaped — so the standard normal can be substituted for the bootstrapped distribution, and confidence intervals and p-values become "asymptotically, approximately exact" closed-form calculations instead of simulations.</p>
+
+  <h3 id="ci-via-clt">Confidence intervals via the CLT</h3>
+  <p>Part 1 built confidence intervals from the \(q_{\alpha/2}\) and \(q_{1-\alpha/2}\) quantiles of the bootstrapped \([Z_1,\dots,Z_B]\):</p>
+
+  <pre class="equation">$$\left(\hat S - q_{\alpha/2}\times\widehat{SE}(\hat S),\ \ \hat S + q_{1-\alpha/2}\times\widehat{SE}(\hat S)\right)$$</pre>
+
+  <p>The CLT says those same quantiles can instead be read directly off the standard normal's own quantile function, with no resampling at all:</p>
+
+  <table>
+    <thead><tr><th>Confidence level</th><th>\(\alpha\)</th><th>\(\pm q\)</th></tr></thead>
+    <tbody>
+      <tr><td>90%</td><td>0.10</td><td>1.645</td></tr>
+      <tr><td>95%</td><td>0.05</td><td>1.960</td></tr>
+      <tr><td>99%</td><td>0.01</td><td>2.576</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="pvalues-via-clt">p-values via the CLT</h3>
+  <p>Part 1's bootstrap p-value,</p>
+
+  <pre class="equation">$$p = \frac1B\sum_{b=1}^B \mathbb{I}\{|Z_b| \gt |Z_0|\}$$</pre>
+
+  <p>becomes, in the limit, an exact probability computed from the standard normal instead of an average over resamples:</p>
+
+  <pre class="equation">$$p = p\!\left[\left|\frac{\hat S - S_0}{\widehat{SE}(\hat S)}\right| \gt |z|\right] = 2\bigl(1-\Phi(|z|)\bigr)$$</pre>
+
+  <p class="keep-in-present">This is exactly the closed-form p-value the <a href="clt.html#pvalue">Class 11 lab</a> builds as a live, draggable widget — no resampling loop, just a lookup against the standard normal CDF.</p>
+
+  <h3 id="t-distribution">The t-distribution</h3>
+  <p>The bootstrap derives a sampling distribution empirically from your data; the CLT assumes you have enough data that the sampling distribution is already normal. Between those two extremes: acknowledge the sample size honestly, but use a parametric distribution instead of either the non-parametric bootstrap or the large-sample normal. This is <strong><span class="gloss" data-gloss="t-dist-lec">Student's t-distribution</span></strong>, with density</p>
+
+  <pre class="equation">$$f(t) = \frac{\Gamma\!\left(\frac{d+1}{2}\right)}{\sqrt{\pi d}\,\Gamma\!\left(\frac d2\right)}\left(1+\frac{t^2}{d}\right)^{-\frac{d+1}{2}}$$</pre>
+
+  <p>where \(d\) is the <strong>degrees of freedom</strong> and \(\Gamma(\cdot)\) is the gamma function. Around \(d \ge 32\), this density is already very close to the standard normal; for smaller \(d\) it puts more weight in the tails, giving a small-sample correction that keeps tests honestly calibrated. Rule of thumb: small sample, use a t-distribution; large sample, use the standard normal.</p>
+
+  <h3 id="two-sample-t">Two-sample t-tests</h3>
+  <p>Observe two independent groups \(A\) and \(B\), with sample sizes \(n_A, n_B\), sample means \(\bar X_A, \bar X_B\), and sample variances \(s_A^2, s_B^2\). The question: is the difference in sample means large relative to the noise in both samples? The null hypothesis is usually \(H_0 : \mu_A - \mu_B = 0\). The standard error of the difference in means:</p>
+
+  <pre class="equation">$$\widehat{SE}(\bar X_A - \bar X_B) = \sqrt{\frac{s_A^2}{n_A} + \frac{s_B^2}{n_B}}$$</pre>
+
+  <p>and the two-sample t-statistic:</p>
+
+  <pre class="equation">$$t = \frac{(\bar X_A-\bar X_B) - 0}{\sqrt{s_A^2/n_A + s_B^2/n_B}}$$</pre>
+
+  <p>Compare this to the standard normal in large samples, or to a Student t-distribution in smaller ones. The full recipe: compute the difference in means; compute the pooled standard error; divide to get the t-statistic; compare it to the standard normal or t-distribution for a p-value, or build a confidence interval \((\bar X_A-\bar X_B) \pm q\times\widehat{SE}(\bar X_A-\bar X_B)\). This is the default test behind questions like "is average blood pressure different across two treatments," "is mean price different across two neighborhoods," or "is average product quality different across two factories."</p>
+
+  <div class="callout note">
+    <span class="label">Caution · paired data is not this test</span>
+    <p>If the same units are measured twice (before/after, matched pairs), this is <em>not</em> a two-independent-samples problem — it's a paired-difference problem, and needs a different standard error that accounts for the correlation between the two measurements on the same unit.</p>
+  </div>
+
+  <p class="keep-in-present">The <a href="clt.html#pvalue">Class 11 lab</a>'s closing exercise walks through exactly this two-sample recipe by hand on a toy example.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does standardizing bootstrap replicates into Z-values not change the confidence interval's endpoints?</h3>
+  <p>Because standardizing is a strictly increasing (monotonic) transformation — it preserves rank order. The 2.5th and 97.5th percentiles of the raw replicates map to exactly the 2.5th and 97.5th percentiles of the standardized ones; only the number line they're read off of changes, not which replicates get selected.</p>
+
+  <h3>Why does the 95% quantile table say 1.960 and not something rounder?</h3>
+  <p>Because 1.960 is the exact (to three decimals) value of \(z\) such that \(\Phi(z) - \Phi(-z) = 0.95\) for the standard normal — it falls out of the normal CDF's inverse, not from any rounding convention. It's worth memorizing precisely because it appears so often.</p>
+
+  <h3>When should I prefer the t-distribution over the standard normal?</h3>
+  <p>Whenever your sample size is small (rule of thumb: well under 32) and you are estimating the standard error from the sample itself rather than knowing it exactly. The t-distribution's heavier tails correct for the extra uncertainty in that estimated standard error; as the sample grows, that correction shrinks and the t-distribution converges to the standard normal.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 11 Lecture — Bootstrap Inference &amp; the Central Limit Theorem. The same Z, standardized once, then replaced by a closed form.
+  </footer>
+</main>
+
+<script>
+  window.GLOSSARY = {
+    'se-clt-lec': {
+      title: 'Standard error',
+      body: '<p>The standard deviation of a statistic\'s sampling distribution — how much the statistic would vary across repeated samples. For the sample mean it is ŝ/√n.</p>',
+    },
+    'p-value-clt-lec': {
+      title: 'p-value',
+      body: '<p>The smallest confidence level at which you would reject the null hypothesis, or equivalently, the fraction of a reference distribution at least as extreme as your observed statistic. A small p-value is evidence against the null, not a probability that the null is true.</p>',
+    },
+    't-dist-lec': {
+      title: "Student's t-distribution",
+      body: '<p>A bell-shaped distribution with heavier tails than the standard normal, parameterized by degrees of freedom d. Used instead of the normal when a sample is small and its standard error is itself estimated from the data.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

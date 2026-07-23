@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 04 Lecture · Learning From Data &amp; Random Numbers — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=4">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so literal currency is never mistaken
+     for a delimiter; display math uses $$ … $$ inside <pre class="equation">.
+     Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents: one entry per h2 AND h3, since a lecture runs longer than a lab -->
+<aside class="toc">
+  <div class="toc-title">Class 04 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Learning From Data</a></li>
+    <li class="toc-sub"><a href="#generating-samples">Generating processes and samples</a></li>
+    <li class="toc-sub"><a href="#models">Models</a></li>
+    <li class="toc-sub"><a href="#parameter-statistic">Parameter and statistic</a></li>
+    <li class="toc-sub"><a href="#learning-from-data">Learning from data</a></li>
+    <li class="toc-sub"><a href="#why-mean">Why the sample mean?</a></li>
+    <li class="toc-sub"><a href="#iid">Independent and identically distributed</a></li>
+    <li class="toc-sub"><a href="#expectation-mean">Expectation of the sample mean</a></li>
+    <li class="toc-sub"><a href="#variance-mean">Variance of the sample mean</a></li>
+    <li class="toc-sub"><a href="#behavior">Behavior of the estimator</a></li>
+    <li class="toc-sub"><a href="#what-is-learning">What is learning?</a></li>
+    <li><a href="#part2">Part 2 · Random Numbers</a></li>
+    <li class="toc-sub"><a href="#not-random">Random numbers aren't random</a></li>
+    <li class="toc-sub"><a href="#generating-random">Generating random numbers</a></li>
+    <li class="toc-sub"><a href="#die-example">Example: rolling a die</a></li>
+    <li class="toc-sub"><a href="#grid-example">Example: choosing from a grid</a></li>
+    <li class="toc-sub"><a href="#logical-looping">Logical statements and looping an experiment</a></li>
+    <li class="toc-sub"><a href="#writing-fast">Writing simulations for speed</a></li>
+    <li class="toc-sub"><a href="#experimental-results">Experimental results</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 04 Lecture · Sep 3</div>
+    <h1>Learning From Data &amp; Random Numbers</h1>
+    <div class="subtitle">Parameters, estimators, and the reproducible randomness that lets you test them</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">This lecture has two halves. The first asks a deceptively simple question — why do we compute the sample mean at all? — and answers it with calculus: it is the single number that minimizes mean squared error against your data, and it happens to be an unbiased estimator of the population mean with variance that shrinks like \(1/n\). The second half is about the tool that makes every experiment in this course testable: a random number generator you can seed, reproduce, and — when you write it the wrong way — wait ten times longer than you needed to.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 04, integrating the full content of
+    <a href="#">04_1_learning_from_data</a> and <a href="#">04_2_random_number_generation</a>.
+    No dataset — this class is entirely notation, derivation, and simulated dice.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Learning From Data</h2>
+
+  <h3 id="generating-samples">Generating processes and samples</h3>
+  <p>Out in the world, probability spaces \((\mathcal{S}, \mathcal{E}, p)\) are happening whether or not anyone measures them. When we measure a feature \(X\) of one of those processes, we create an <span class="gloss" data-gloss="observation">observation</span> \(x_i\) of that random variable. Collect a set of observations together and you have a <strong>random sample</strong> of data. We <strong>estimate</strong> or <strong>fit</strong> models to that sample to learn about the underlying probability space and the random variable built on it — so that we can make better decisions.</p>
+
+  <h3 id="models">Models</h3>
+  <p>The real world — \((\mathcal{S}, \mathcal{E}, p)\) and the random variables built on it — is typically too difficult to understand on its own terms. This is why randomized controlled trials exist: nobody can predict how a novel surgical procedure or drug will affect the body without real evidence, because the underlying process is too complex to reason about directly. We build abstractions of the real world called <strong>models</strong> to help us understand it anyway.</p>
+
+  <h3 id="parameter-statistic">Parameter and statistic</h3>
+  <p>A <strong><span class="gloss" data-gloss="parameter">parameter</span></strong> is any function of the random variable and the probability space — for example, \(\mathbb{E}[X] = \sum_x p(x)\,x\) is a fixed number describing the population, whether or not anyone ever measures it. A <strong><span class="gloss" data-gloss="statistic-lec">statistic</span></strong> is any function of the data — for example, the sample mean \(m(X) = \sum_{i=1}^n x_i\), usually written \(\bar{X}_n\). An <strong>estimate</strong> is a statistic intended to measure the true value of a parameter: we suspect that \(\bar{X}_n\) is a "good" estimate of \(\mathbb{E}[X]\). The rest of this half of the lecture is about why.</p>
+
+  <h3 id="learning-from-data">Learning from data</h3>
+  <p>Sample the process \(X\) to get data \([x_1, \dots, x_n]\), then find a loss function that generates a statistic, \(\bar{X}_n\). We suspect the sample mean is connected to the expectation \(\mathbb{E}[X]\), and we want probability to make that connection precise by answering two questions: what is the relationship between \(\bar{X}_n\) and \(\mathbb{E}[X]\), and between \(\mathbb{V}[\bar{X}_n]\) and \(\mathbb{V}[X]\)?</p>
+
+  <h3 id="why-mean">Why the sample mean?</h3>
+  <p>First: why care about \(\bar{X}_n\) at all? Imagine predicting the next outcome of \(X\) and wanting to minimize your error — specifically, the mean squared error against the sample you already have:</p>
+
+  <pre class="equation">$$\frac{1}{n}\sum_i (X_i - \hat{x})^2$$</pre>
+
+  <p>The best predictor \(\hat{x}\) sets the derivative of that expression, with respect to \(\hat{x}\), to zero:</p>
+
+  <pre class="equation">$$\frac{1}{n}\sum_{i=1}^n 2(X_i - \hat{x}) = 0 \quad\Longrightarrow\quad \hat{x} = \frac{1}{n}\sum_{i=1}^n X_i$$</pre>
+
+  <p>That is the sample mean: the best predictor of \(X\), under mean squared error, given the sample available. The average loss at that optimum is the <strong>sample variance</strong>:</p>
+
+  <pre class="equation">$$s^2 = \frac{1}{n}\sum_i \left(X_i - \bar{X}_n\right)^2$$</pre>
+
+  <p>This is the prototype analysis behind essentially all of machine learning: pick a loss function, minimize it over your data, and whatever number falls out is your estimator.</p>
+
+  <h3 id="iid">Independent and identically distributed</h3>
+  <p>A random sample is a collection of \(n\) random vectors, \([X_1, X_2, \dots, X_n]\). It is <strong>independent</strong> if the observed value of \(X_i\) has no influence on the observed value of \(X_j\) for \(i \neq j\), and <strong><span class="gloss" data-gloss="identically-distributed">identically distributed</span></strong> if every \(X_i\) is generated by the same probability space and random variable. A sample that is both is called <strong><span class="gloss" data-gloss="iid-lec">iid</span></strong>. Later in the course you will handle sequences whose values are correlated in time or space, or whose generating process shifts with context — but iid is the assumption underneath everything in this lecture.</p>
+
+  <h3 id="expectation-mean">Expectation of the sample mean</h3>
+  <p>Suppose \((X_1, \dots, X_n)\) is iid. What value do we expect the sample mean to take?</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{E}[\bar{X}_n] &=& \mathbb{E}\left[\frac{1}{n}\sum_{i=1}^n X_i\right] \quad &(\text{Definition})\\
+&=& \frac{1}{n}\sum_{i=1}^n \mathbb{E}[X_i] \quad &(\text{Linearity of } \mathbb{E})\\
+&=& \frac{1}{n}\sum_{i=1}^n \mathbb{E}[X] \quad &(\text{IID property})\\
+&=& \mathbb{E}[X] \quad &(\text{Sum of } \mathbb{E}[X] \text{ taken } n \text{ times, over } n)
+\end{alignat*}$$</pre>
+
+  <p>The expectation of the sample mean is exactly the true parameter, \(\mathbb{E}[X]\). This means \(\bar{X}_n\) is an <strong><span class="gloss" data-gloss="unbiased">unbiased estimator</span></strong> of the true expected value: computing the statistic \(\bar{X}_n\) estimates the population parameter \(\mathbb{E}[X]\) without systematic error in either direction.</p>
+
+  <h3 id="variance-mean">Variance of the sample mean</h3>
+  <p>Now the harder question: the variance of the sample mean.</p>
+
+  <pre class="equation">$$\mathbb{V}[\bar{X}_n] = \mathbb{E}\left[\left(\frac{1}{n}\sum_{i=1}^n X_i - \mathbb{E}[\bar{X}_n]\right)^2\right]$$</pre>
+
+  <p>Before the derivation, the answer: \(\mathbb{V}[\bar{X}_n] = \mathbb{V}[X]/n\) — the underlying population variance, divided by sample size. As \(n\) grows, the variance falls: larger samples deliver more precise estimates, in expectation. The rest of this section is the "grueling part," in the source material's own words — working out exactly why.</p>
+
+  <p>Variance is the mean of the square minus the square of the mean, and since \(\mathbb{E}[\bar{X}_n] = \mathbb{E}[X]\):</p>
+
+  <pre class="equation">$$\mathbb{V}[\bar{X}_n] = \mathbb{E}[\bar{X}_n^2] - (\mathbb{E}[\bar{X}_n])^2 = \mathbb{E}[\bar{X}_n^2] - \mathbb{E}[X]^2$$</pre>
+
+  <p>The problem term is \(\mathbb{E}[\bar{X}_n^2]\). Expanding the square of the sum produces \(n^2\) cross-terms \(X_i X_j\); because the sample is iid, \(\mathbb{E}[X_i X_j] = \mathbb{E}[X_i]\,\mathbb{E}[X_j] = \mathbb{E}[X]^2\) whenever \(i \neq j\):</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{E}[\bar{X}_n^2] &=& \frac{1}{n^2}\,\mathbb{E}\!\left[\sum_{i=1}^n X_i^2 + \sum_{i \neq j} X_i X_j\right] \quad &(\text{FOIL})\\
+&=& \frac{1}{n^2}\left(\sum_{i=1}^n \mathbb{E}[X_i^2] + \sum_{i \neq j} \mathbb{E}[X_i X_j]\right) \quad &(\text{Linearity})\\
+&=& \frac{1}{n^2}\left(\sum_{i=1}^n \mathbb{E}[X_i^2] + \sum_{i \neq j} \mathbb{E}[X]^2\right) \quad &(\text{IID})
+\end{alignat*}$$</pre>
+
+  <p>Among the \(n \times n\) pairs of indices, exactly \(n\) have \(i = j\) and \(n^2 - n\) have \(i \neq j\):</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{E}[\bar{X}_n^2] &=& \frac{1}{n^2}\left(\sum_{i=1}^n \mathbb{E}[X_i^2] + (n^2 - n)\,\mathbb{E}[X]^2\right) \quad &(\text{Replace } \textstyle\sum_{i\neq j} \text{ with } n^2 - n)\\
+&=& \frac{1}{n^2}\left(n\,\mathbb{E}[X^2] - n\,\mathbb{E}[X]^2\right) + \mathbb{E}[X]^2 \quad &(X_i \text{ are IID})\\
+&=& \frac{1}{n}\Big(\underbrace{\mathbb{E}[X^2] - \mathbb{E}[X]^2}_{\mathbb{V}[X]}\Big) + \mathbb{E}[X]^2 \quad &(\text{Simplify})\\
+&=& \frac{\mathbb{V}[X]}{n} + \mathbb{E}[X]^2 \quad &(\mathbb{V}[X] = \mathbb{E}[X^2] - \mathbb{E}[X]^2)
+\end{alignat*}$$</pre>
+
+  <p>Plug that back into \(\mathbb{V}[\bar{X}_n] = \mathbb{E}[\bar{X}_n^2] - \mathbb{E}[X]^2\):</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{V}[\bar{X}_n] &=& \mathbb{E}[\bar{X}_n^2] - \mathbb{E}[X]^2\\
+&=& \frac{\mathbb{V}[X]}{n} + \mu^2 - \mu^2\\
+\mathbb{V}[\bar{X}_n] &=& \frac{\mathbb{V}[X]}{n}
+\end{alignat*}$$</pre>
+
+  <p>The variance of the sample mean is the variance of the underlying variable, divided by \(n\) — exactly the claim from the start of this section, now derived rather than asserted.</p>
+
+  <h3 id="behavior">Behavior of the estimator</h3>
+  <p>Putting the two results together:</p>
+
+  <pre class="equation">$$\mathbb{E}[\bar{X}_n] = \mathbb{E}[X], \qquad \mathbb{V}[\bar{X}_n] = \frac{\mathbb{V}[X]}{n}$$</pre>
+
+  <p>\(\bar{X}_n\) is an unbiased estimator of \(\mathbb{E}[X]\), since its expectation equals the parameter exactly. And because its variance falls as \(n\) grows, the uncertainty about the estimate itself shrinks with more data — the two properties together are why the sample mean is trustworthy, not just conventional.</p>
+
+  <h3 id="what-is-learning">What is learning?</h3>
+  <p>Four steps summarize the whole prototype:</p>
+  <ol>
+    <li>Understand your phenomenon of interest — the probability space \((\mathcal{S}, \mathcal{E}, p)\) and the random variable \(X\) built on it. What are you measuring, why, and what variables determine outcomes?</li>
+    <li>Sample randomly from the process to gather data.</li>
+    <li>Find a loss function that aligns your model's estimates with the true parameters (sum of squared error, sample mean).</li>
+    <li>Analyze how the model behaves as a function of the data — does it provide good estimates and predictions? (The sample mean is unbiased; the sample variance shrinks to zero at a rate of \(1/n\).)</li>
+  </ol>
+  <p>The rest of machine learning is, in this framing, just making the model more complicated and learning to recognize what kinds of problems arise when you do.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · Random Numbers</h2>
+
+  <p>Uncertainty is at the core of probability: how do we quantify and manage risk? The paradox is that we want a <em>consistent</em> answer to emerge from randomized experiments, so that our conclusions don't depend on chance. We often want to test ideas against randomness we can control and manipulate — NumPy gives us the tools to generate random vectors (a <strong>sample</strong>), and this course uses them constantly.</p>
+
+  <h3 id="not-random">Random numbers aren't random</h3>
+  <p>Computers are deterministic machines and cannot create true randomness on their own. A <span class="gloss" data-gloss="rng-seed-lec">pseudorandom number generator</span> starts from a <code>seed</code> value and performs calculations that produce a sequence of numbers with no detectable correlation from value to value. Your analysis's conclusions should never depend on which seed you happened to pick — but fixing the seed is exactly what makes debugging and reproducibility possible: the same seed always regenerates the same sequence.</p>
+
+  <h3 id="generating-random">Generating random numbers</h3>
+  <p>To create a stream of random numbers: <code>rng = np.random.default_rng(seed=100)</code>. Each draw from the stream is then a method call on <code>rng</code>:</p>
+
+  <table>
+    <thead><tr><th>Method</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>rng.integers(low, high, size=N)</code></td><td>Generate a random integer between <code>low</code> and <code>high - 1</code></td></tr>
+      <tr><td><code>rng.choice(A, size=N)</code></td><td>Select \(N\) random elements from the set \(A\)</td></tr>
+      <tr><td><code>rng.choice(A, size=N, replace=False)</code></td><td>Select \(N\) random elements from \(A\), without replacing elements between draws</td></tr>
+      <tr><td><code>rng.random(size=N)</code></td><td>Select \(N\) uniformly distributed numbers between 0 and 1</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code class="language-python"># Example
+rng = np.random.default_rng(seed=100)  # Create a random number stream
+rng.integers(0, 5, size=10)</code></pre>
+  <pre class="nb-output"><code>array([3, 4, 0, 2, 0, 1, 2, 0, 2, 4])</code></pre>
+
+  <h3 id="die-example">Example: rolling a die</h3>
+  <p>To get acquainted with <code>.choice</code>: imagine rolling a six-sided die \(K = 100\) times and averaging the result, then repeating that whole experiment \(B = 50{,}000\) times. We already know \(\mathbb{E}[\bar{X}_n] = \mathbb{E}[X]\) and \(\mathbb{V}[\bar{X}_n] = \mathbb{V}[X]/n\) from Part 1 — in principle we could grind out the formulas here, but it is faster to let randomization simulate the experiment directly.</p>
+
+  <pre><code class="language-python">rng = np.random.default_rng(seed=100)  # Create a random number stream
+
+die = [1, 2, 3, 4, 5, 6]
+K = 100
+B = 50_000
+result = []
+for i in range(B):
+    R = rng.choice(die, size=K, replace=True)
+    result.append(R)
+result = np.array(result)
+sns.histplot(result.mean(axis=1), bins=80)</code></pre>
+
+  <pre><code class="language-python">print('Sample mean: ', x_bar := np.mean(result.mean(axis=1)))
+print('Sample variance: ', s_sq := np.mean((result.mean(axis=1) - x_bar) ** 2, axis=0))</code></pre>
+  <pre class="nb-output"><code>Sample mean:  3.4998618
+Sample variance:  0.029393562900760003</code></pre>
+
+  <p class="keep-in-present">Despite the die having only six outcomes, the 50,000 averages form a smooth bell shape tightly clustered around 3.5 — not the ragged six-bar histogram of a single roll. That number is not a coincidence: \(\mathbb{E}[X] = (1+2+3+4+5+6)/6 = 21/6 = 3.5\), matching the sample mean above to four decimal places. Standardize those same averages — subtract \(\mu = 3.5\) and divide by the standard error \(\sigma/\sqrt{K}\), where \(\sigma = \sqrt{35/6}\) is the die's own standard deviation — and the resulting z-scores spread out over roughly \([-2.6, 4.2]\) in a shape the source material titles "Foreshadowing": the full explanation of why that bell shape is universal is the Central Limit Theorem, built from scratch in the <a href="../class-11-clt/lecture.html">Class 11 lecture</a>.</p>
+
+  <h3 id="grid-example">Example: choosing from a grid</h3>
+  <p>Build a grid of \(K\) evenly spaced points between 0 and 1, \(\{1/K, 2/K, \dots, K/K\}\) (<code>np.linspace(1/K, 1, K)</code>), and draw from it at random. The expectation of a single draw is:</p>
+
+  <pre class="equation">$$\frac{1}{K}\cdot\frac{1}{K} + \frac{1}{K}\cdot\frac{2}{K} + \cdots + \frac{1}{K}\cdot\frac{K}{K} = \sum_{k=1}^K \frac{1}{K}\cdot\frac{k}{K} = \frac{K(K+1)}{2K^2} = \frac{1}{2} + \frac{1}{2K}$$</pre>
+
+  <p>Three things fall out of that formula as \(K\) grows large: each individual grid value has probability \(1/K \to 0\), so every specific value becomes "impossible" to land on exactly; the average approaches \(1/2\); and for any \(0 < a < b < 1\), the probability of landing between \(a\) and \(b\) approaches \(b - a\) — a discrete grid, made fine enough, behaves like a continuous uniform distribution.</p>
+
+  <pre><code class="language-python">K = 10
+X = np.linspace(1, K, K) / K
+print(rng.choice(X, size=5, replace=True))
+
+K = 10000
+X = np.linspace(1, K, K) / K
+rng.choice(X, size=5, replace=True)</code></pre>
+  <pre class="nb-output"><code>[0.7 0.9 0.9 0.8 0.2]
+array([0.3972, 0.0014, 0.6256, 0.6294, 0.503 ])</code></pre>
+
+  <h3 id="logical-looping">Logical statements and looping an experiment</h3>
+  <p>Comparisons on an array of draws produce an array of booleans, which cast to 0/1 the same way anywhere else in Python:</p>
+
+  <pre><code class="language-python">R = rng.random(5)
+I = ((R >= .25) * (R < .75)).astype(int)
+print(I)</code></pre>
+  <pre class="nb-output"><code>[1 1 1 0 0]</code></pre>
+
+  <p>Simulation is the best available way to understand a random (<span class="gloss" data-gloss="stochastic">stochastic</span>) phenomenon whose exact formula is inconvenient or impossible to derive by hand: loop the experiment, collect the statistic every time, and look at what comes out.</p>
+
+  <pre><code class="language-python">B = 10_000
+N = 100
+
+results = []
+for b in range(B):
+    sample_b = rng.random(N)
+    results.append(sample_b.mean())
+loop_results = np.array(results)
+
+print(loop_results)</code></pre>
+  <pre class="nb-output"><code>[0.49540872 0.51480983 0.51894682 ... 0.51209575 0.50678215 0.49174426]</code></pre>
+
+  <h3 id="writing-fast">Writing simulations for speed</h3>
+  <p>Simulations can be expensive, and how you write the loop changes how long it takes to run — its "wall time." Four ways to write the same computation, from easiest-to-write to fastest-to-run:</p>
+  <ol>
+    <li><strong>Simple loops.</strong> Code compiles step by step in the interpreter, so it is easy to write but inefficient.</li>
+    <li><strong>List comprehension.</strong> The instructions are given once, so the interpreter can optimize a little: <code>results = np.array([rng.random(N).mean() for b in range(B)])</code>.</li>
+    <li><strong><span class="gloss" data-gloss="vectorized-lec">Vectorized</span> NumPy.</strong> NumPy calls pre-compiled code written in C: <code>results = rng.random(size=(N, B)).mean(axis=0)</code>.</li>
+    <li><strong>Compiled loops (Numba).</strong> Pre-compile the Python into machine code directly with the <code>@njit</code> decorator, then call it like an ordinary function.</li>
+  </ol>
+
+  <pre><code class="language-python"># The `time` library
+# Simple Loop
+start = time.perf_counter()
+results = []
+for b in range(B):
+    R = rng.random(N)
+    results.append(R.mean())
+loop_results = np.array(results)
+end = time.perf_counter()
+print(f"Naive loop time: {end - start:.5f} seconds")
+
+# List Comprehension
+start = time.perf_counter()
+results = np.array([rng.random(N).mean() for b in range(B)])
+end = time.perf_counter()
+print(f"List comprehension time: {end - start:.5f} seconds")
+
+# Vectorized Numpy
+start = time.perf_counter()
+results = rng.random(size=(B, N)).mean(axis=1)
+end = time.perf_counter()
+print(f"Vectorized time: {end - start:.5f} seconds")
+
+# Numba-accelerated loop
+from numba import njit
+@njit
+def numba_loop(B, N):
+    results = np.empty(B)
+    for b in range(B):
+        total = 0.0
+        for i in range(N):
+            total += np.random.random()
+        results[b] = total / N
+    return results
+
+numba_loop(B, N)  # Run once to compile
+
+start = time.perf_counter()
+results = numba_loop(B, N)
+end = time.perf_counter()
+print(f"Compiled Numba time: {end - start:.5f} seconds")</code></pre>
+  <pre class="nb-output"><code>Naive loop time: 0.04156 seconds
+List comprehension time: 0.03743 seconds
+Vectorized time: 0.00426 seconds
+Compiled Numba time: 0.00272 seconds</code></pre>
+
+  <h3 id="experimental-results">Experimental results</h3>
+  <p>On this run, the naive loop and the list comprehension are close to each other (0.042s vs. 0.037s — list comprehension is "more Pythonic" but barely faster), vectorized NumPy is roughly an order of magnitude faster than either (0.0043s), and compiled Numba edges out even the vectorized version (0.0027s) despite having "no right" to outperform NumPy's own optimized C, in the source material's words. The exact numbers depend on the machine — RAM, CPU, and whatever else is running — but the ranking is typical. The practical lesson: <strong>write code that works first, then optimize</strong>. As Knuth put it, premature optimization is the root of all evil.</p>
+
+  <p class="keep-in-present">The same standardizing trick from the die example reappears here: <code>z_scores = (results - mu) / sem</code> with <code>mu = 0.5</code> and <code>sigma = sqrt(1/12)</code> (the mean and standard deviation of a continuous Uniform(0,1)) turns the histogram of sample means into another "Foreshadowing" bell curve — the same Central Limit Theorem the die example previewed, now for a different population entirely.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>If the sample mean is unbiased, is it the only reasonable estimator?</h3>
+  <p>No — unbiasedness is one desirable property, not the only one. The median is also a reasonable estimator of central tendency (unbiased for a symmetric population, and far more robust to outliers), and later in the course you will meet estimators that trade a little bias for a large reduction in variance. Mean squared error minimization is what singles out the sample mean specifically; a different loss function singles out a different statistic.</p>
+
+  <h3>Why does fixing a seed not compromise the randomness of an experiment?</h3>
+  <p>Because the seed only controls <em>which</em> sequence of pseudorandom numbers you draw, not whether the sequence has the statistical properties (uniformity, lack of correlation) you need. Two different seeds produce two different, equally valid random sequences; a fixed seed just lets you and anyone reading your code regenerate the exact same one, which is what reproducibility requires.</p>
+
+  <h3>Does vectorized code always beat a loop?</h3>
+  <p>Not automatically, but almost always for numeric array work, because the loop over elements happens inside pre-compiled C rather than inside the Python interpreter. The exception is when the "vectorized" version has to build a much larger intermediate array than the loop ever holds in memory — at that point memory bandwidth can erase the advantage. Measure before assuming.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 04 Lecture — Learning From Data &amp; Random Numbers. Continue to <a href="rng.html">the lab →</a>, or back to the <a href="../../index.html">course index</a>.
+  </footer>
+</main>
+
+<!-- Glossary content for this page (lab-base.js owns the wiring; a lecture
+     page has no viz.js, so it defines window.GLOSSARY inline instead). -->
+<script>
+  window.GLOSSARY = {
+    observation: {
+      title: 'Observation',
+      body: '<p>One measured value of a random variable, produced by the underlying probability space actually happening once. A collection of observations is a sample.</p>',
+    },
+    parameter: {
+      title: 'Parameter',
+      body: '<p>Any function of the random variable and the probability space itself — a fixed number describing the population, like its expected value, that exists whether or not anyone ever measures it.</p>',
+    },
+    'statistic-lec': {
+      title: 'Statistic',
+      body: '<p>Any function of the data you actually collected, like the sample mean. Unlike a parameter, a statistic is itself random — collect a new sample and you get a new value.</p>',
+    },
+    'identically-distributed': {
+      title: 'Identically distributed',
+      body: '<p>Every observation in the sample is generated by the same underlying probability space and random variable — no observation comes from a different process than any other.</p>',
+    },
+    'iid-lec': {
+      title: 'iid',
+      body: '<p>Independent and identically distributed: each observation is generated by the same process (identically distributed) and knowing one observation tells you nothing about another (independent). The core assumption behind the sample-mean derivations in this lecture.</p>',
+    },
+    unbiased: {
+      title: 'Unbiased estimator',
+      body: '<p>An estimator whose expected value equals the true parameter exactly — no systematic tendency to overshoot or undershoot. The sample mean is unbiased for the population mean: its expectation is exactly the population mean, for any sample size.</p>',
+    },
+    'rng-seed-lec': {
+      title: 'Seed',
+      body: '<p>The starting value a pseudorandom number generator uses to produce its entire sequence. The same seed always reproduces the exact same sequence, which is what makes a randomized experiment debuggable and reproducible.</p>',
+    },
+    stochastic: {
+      title: 'Stochastic',
+      body: '<p>Governed by randomness — a stochastic phenomenon\'s exact outcome cannot be predicted in advance, only described by a distribution of possible outcomes.</p>',
+    },
+    'vectorized-lec': {
+      title: 'Vectorized',
+      body: '<p>Written as whole-array operations that call pre-compiled, optimized code (NumPy calling C) instead of looping element-by-element in the Python interpreter. Usually an order of magnitude faster for numeric work.</p>',
+    },
+  };
+</script>
+
+<!-- Shared base first, then this lecture's minimal styles -->
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

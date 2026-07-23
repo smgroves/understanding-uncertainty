@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 05 Lecture · Categorical &amp; Numeric Variables — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=5">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 05 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Categorical Variables</a></li>
+    <li class="toc-sub"><a href="#variable-process">Variable and process</a></li>
+    <li class="toc-sub"><a href="#bernoulli">Categorical variables and the Bernoulli trial</a></li>
+    <li class="toc-sub"><a href="#bernoulli-props">Expectation, variance, and the unbiased sample proportion</a></li>
+    <li class="toc-sub"><a href="#multinomial">Multinomial trials and indicator variables</a></li>
+    <li class="toc-sub"><a href="#dummies">Dummy variables and the sample proportion</a></li>
+    <li><a href="#part2">Part 2 · Numeric Variables</a></li>
+    <li class="toc-sub"><a href="#numeric-intro">Numeric variables and why raw plots fail</a></li>
+    <li class="toc-sub"><a href="#ecdf">The ECDF</a></li>
+    <li class="toc-sub"><a href="#cdf">From ECDF to CDF</a></li>
+    <li class="toc-sub"><a href="#ecdf-props">Unbiasedness and variance of the ECDF</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 05 Lecture · Sep 8</div>
+    <h1>Categorical &amp; Numeric Variables</h1>
+    <div class="subtitle">One indicator function, reused for labels, thresholds, and the ECDF itself</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">A categorical variable and a numeric variable look like they need entirely different tools — counting labels versus measuring magnitudes. This lecture shows they need the same one. Every question in both halves reduces to "what fraction of my sample satisfies this condition," and every such fraction is an average of a 0/1 indicator, which makes it a Bernoulli trial in disguise — with the same unbiasedness and the same \(p(1-p)/n\) variance every time.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 05, integrating the full content of
+    <a href="#">01_categorical_variables</a> and <a href="#">02_numeric_variables</a>.
+    No dataset — the source material works entirely in notation and toy examples (car colors, car brands).
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Categorical Variables</h2>
+
+  <h3 id="variable-process">Variable and process</h3>
+  <p>Data are samples: realizations of a random variable, drawn from some presumed <span class="gloss" data-gloss="dgp">data generating process</span>. Without that assumption, a learning algorithm has no stable pattern to find — it would just be describing one particular batch of numbers, with no reason to expect the next batch to look similar. The concept connecting a sample back to the process it came from is the random variable and its expectation: how do we expect the process to behave, and what can the data tell us about it?</p>
+
+  <h3 id="bernoulli">Categorical variables and the Bernoulli trial</h3>
+  <p>A random variable that generates <strong>labels</strong> — color, brand, disease type — is <strong><span class="gloss" data-gloss="categorical-lec">categorical</span></strong>. Write it \(C\), with values \(c_i\); car color might be <code>C = ['red', 'blue', 'blue', 'grey', ...]</code>, and <code>C[i]</code> one particular observation.</p>
+
+  <p>The simplest categorical variable has exactly two outcomes. Flip a coin, call the outcomes \(H\) and \(T\), and assign \(I(H) = 1\), \(I(T) = 0\). \(I\) is an <strong><span class="gloss" data-gloss="indicator-lec">indicator function</span></strong> — it takes the value 1 exactly when a condition (here, "heads") holds. This is a <strong>Bernoulli trial</strong>: \(p(H) = p\), \(p(T) = 1-p\).</p>
+
+  <p>As a full probability space: the sample space is \(\mathcal{S} = \{H, T\}\), the events are \(\mathcal{E} = \{\varnothing, H, T, HT\}\), and the probability function is \(p(\varnothing) = 0\), \(p(H) = p\), \(p(T) = 1-p\), \(p(HT) = 1\). The random variable \(I\) maps \(I(H) = 1\), \(I(T) = 0\).</p>
+
+  <h3 id="bernoulli-props">Expectation, variance, and the unbiased sample proportion</h3>
+  <p>The expectation of the indicator is exactly \(p\):</p>
+
+  <pre class="equation">$$\mathbb{E}[I] = p \times I(H) + (1-p)\times I(T) = p \times 1 + (1-p)\times 0 = p$$</pre>
+
+  <p>The variance takes a little more algebra, but always resolves to the same shape:</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{V}[I] &=& \mathbb{E}\big[(I - \mathbb{E}[I])^2\big] \quad &(\text{Definition})\\
+&=& p(1-p)^2 + (1-p)(0-p)^2 \quad &(\text{Expand the definition})\\
+&=& p(1-p)(1-p+p) \quad &(\text{Factor out } 1-p)\\
+&=& p(1-p) \quad &(\text{Simplify})
+\end{alignat*}$$</pre>
+
+  <p>For any 0/1-valued variable, the variance is \(p(1-p)\) — this exact term reappears constantly in this course. Because the trial is 0/1-valued, the sample mean of \(n\) trials is literally the <strong>sample proportion</strong> of 1s:</p>
+
+  <pre class="equation">$$\hat{p} = \frac{1}{n}\sum_{i=1}^n I_i$$</pre>
+
+  <p>Linearity of expectation carries the same computation straight through to the sample proportion:</p>
+
+  <pre class="equation">$$\mathbb{E}[\hat{p}] = \mathbb{E}\left[\frac{1}{n}\sum_{i=1}^n I_i\right] = \frac{1}{n}\sum_{i=1}^n \mathbb{E}[I_i] = \frac{1}{n}\sum_{i=1}^n \big(p\times 1 + (1-p)\times 0\big) = p$$</pre>
+
+  <p>\(\mathbb{E}[\hat{p}] = p\) makes \(\hat{p}\) an <strong><span class="gloss" data-gloss="unbiased-lec">unbiased estimator</span></strong> of \(p\): computing a sample proportion is already an estimate of the population probability, with no extra machinery required. The variance of that same sample proportion is \(\mathbb{V}[X]/n\) applied to a Bernoulli — the population variance \(p(1-p)\), divided by \(n\):</p>
+
+  <pre class="equation">$$\mathbb{V}[\hat{p}] = \frac{p(1-p)}{n}$$</pre>
+
+  <p class="keep-in-present">Put together: the sample proportion \(\hat{p}\) is an unbiased estimator of \(p\), and its variance shrinks to zero at rate \(1/n\) as the sample grows. Watch for the shape "\(p(1-p)/n\)" — it recurs every time this course asks "what is the sampling variance of a proportion," in this class and later ones.</p>
+
+  <h3 id="multinomial">Multinomial trials and indicator variables</h3>
+  <p>Real categorical variables usually have more than two labels. With \(L\) possible labels \(\ell_1, \dots, \ell_L\) — say four car brands, Honda, Subaru, Ford, Audi — each has its own probability \(p_1, \dots, p_L\), the long-run fraction of the time it occurs.</p>
+
+  <p>As a probability space: outcomes are \(\mathcal{S} = \{\ell_1, \dots, \ell_L\}\), and the events are every subset of labels — \(\varnothing\), each single label, every pair, every triple, and so on, up to \(\mathcal{S}\) itself: \(2^L\) events in total. The probability of any tuple of labels is the sum of their individual probabilities.</p>
+
+  <p>The indicator function generalizes directly to any one label \(\ell\):</p>
+
+  <pre class="equation">$$\mathbb{I}\{C = \ell\} = \begin{cases} 1, & C = \ell \\ 0, & \text{otherwise} \end{cases}$$</pre>
+
+  <h3 id="dummies">Dummy variables and the sample proportion</h3>
+  <p>Building a full set of indicators — one per label — for a categorical variable is exactly <span class="gloss" data-gloss="one-hot">one-hot encoding</span>. In Pandas, <code>pd.get_dummies(df[var], dtype=int)</code> builds all of them; for a model with an intercept, drop one label's column with <code>pd.get_dummies(df[var], dtype=int, drop_first=True)</code> so the columns are not perfectly collinear with the intercept.</p>
+
+  <p>The <strong>sample proportion</strong> of any one label \(\ell\) is the average of its indicator over the sample:</p>
+
+  <pre class="equation">$$\hat{p}_\ell = \frac{1}{N}\sum_{i=1}^N \mathbb{I}\{c_i = \ell\}$$</pre>
+
+  <p>The exact same argument as the Bernoulli case shows this is unbiased:</p>
+
+  <pre class="equation">$$\mathbb{E}_C[\hat{p}_\ell] = \mathbb{E}_C\left[\frac{1}{n}\sum_{i=1}^n \mathbb{I}\{C_i=\ell\}\right] = \frac{1}{n}\sum_{i=1}^n \mathbb{E}_C\big[\mathbb{I}\{C_i=\ell\}\big] = \frac{1}{n}\sum_{i=1}^n p_\ell = p_\ell$$</pre>
+
+  <p>You can think of "is \(C\) equal to \(\ell\)" as its own Bernoulli variable: either \(C = \ell\) with probability \(p_\ell\), or \(C \neq \ell\) with probability \(1 - p_\ell\). That Bernoulli's variance is \(p_\ell(1-p_\ell)\), so the sample proportion's variance is the familiar shape again:</p>
+
+  <pre class="equation">$$\mathbb{V}[\hat{p}_\ell] = \frac{p_\ell(1-p_\ell)}{n}$$</pre>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · Numeric Variables</h2>
+
+  <h3 id="numeric-intro">Numeric variables and why raw plots fail</h3>
+  <p>A <strong>numeric variable</strong> takes number values — real values like <code>3.14</code> (a <code>float</code>) or integers like <code>25</code> (an <code>int</code>). The organizing question for this half of the lecture is: how do we analyze a numeric variable the same way we just analyzed a categorical one?</p>
+
+  <p>The categorical toolkit does not transfer directly. For a categorical variable, every label typically occurs many times, so counting labels is informative. A numeric variable's exact values are often each observed only once — many values are sparse or unique — so the categorical indicator \(\mathbb{I}\{x_i = x\}\) is nearly useless here: a rug plot of raw values (<code>sns.rugplot()</code>) just shows a scatter of marks with no way to see relative density.</p>
+
+  <h3 id="ecdf">The ECDF</h3>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>reusing the indicator</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The categorical indicator \(\mathbb{I}\{x_i = x\}\) fails for numeric data because exact matches are rare. What single change to that indicator would make it useful again — one that still produces a proportion between 0 and 1 for a numeric variable, and stays meaningful even when no two values match exactly?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare answers. Replacing "equals" with "less than or equal to," \(\mathbb{I}\{x_i \le x\}\), turns an unhelpful equality test into a question every numeric dataset can answer at any threshold \(x\): what fraction of the sample sits at or below it.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what averaging that indicator over the whole sample computes, then check the definition below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Instead of asking whether \(x_i\) equals a specific value, ask whether it falls <em>at or below</em> a threshold \(x\):</p>
+
+  <pre class="equation">$$\mathbb{I}\{x_i \le x\} = \begin{cases} 1, & x_i \le x \\ 0, & \text{otherwise} \end{cases}$$</pre>
+
+  <p>Averaging that indicator over the sample gives the proportion of observations below \(x\):</p>
+
+  <pre class="equation">$$\frac{1}{n}\sum_{i=1}^n \mathbb{I}\{x_i \le x\}$$</pre>
+
+  <p>Fixing this as a function of \(x\) defines the <strong><span class="gloss" data-gloss="ecdf-lec">Empirical Cumulative Distribution Function</span></strong>, one of the two main ways this course models a numeric variable:</p>
+
+  <pre class="equation">$$\hat{F}_n(x) = \frac{1}{n}\sum_{i=1}^n \mathbb{I}\{x_i \le x\}$$</pre>
+
+  <p>The ECDF only changes value where \(x\) sweeps past an observed point \(x_i\), so computing it needs only the unique sorted values of the sample, compared against every point and averaged:</p>
+
+  <pre><code class="language-python">import matplotlib.pyplot as plt
+
+def ecdf(x):
+    grid = sorted(x.unique())          # Get the grid
+    n = len(x)                          # Sample size
+    I = grid.reshape(-1, 1) <= x.reshape(1, -1)  # Compare values
+    F_hat = I.sum(axis=0) / n           # Average across columns
+    return F_hat, grid</code></pre>
+
+  <p>Two structural properties follow directly from the definition: \(\hat{F}_n\) is non-decreasing (moving \(x\) rightward can only capture more observations, never fewer), and it runs from 0 (as \(x \to -\infty\)) to 1 (as \(x \to +\infty\)). At any point \(x\), its value is exactly the proportion of the sample at or below that value.</p>
+
+  <h3 id="cdf">From ECDF to CDF</h3>
+  <p>The ECDF is an empirical answer to "what fraction of my data is below \(x\)." The population-level version of the same question is the <strong><span class="gloss" data-gloss="cdf-lec">cumulative distribution function</span></strong>, the CDF:</p>
+
+  <pre class="equation">$$F(x) = p[X \le x] = p\big[\{s \text{ in the sample space such that } X(s) \le x\}\big]$$</pre>
+
+  <p>The connection between the two is that the CDF is exactly the expectation of the same indicator that defines the ECDF:</p>
+
+  <pre class="equation">$$\mathbb{E}\big[\mathbb{I}\{X \le x\}\big] = \sum_x p(x)\,\mathbb{I}\{X \le x\} = F(x)$$</pre>
+
+  <h3 id="ecdf-props">Unbiasedness and variance of the ECDF</h3>
+  <p>Because the ECDF is an average of the indicator \(\mathbb{I}\{X_i \le x\}\), and that indicator has expectation \(F(x)\), the same linearity argument from Part 1 shows the ECDF is unbiased for the CDF at every threshold \(x\):</p>
+
+  <pre class="equation">$$\mathbb{E}_X\left[\frac{1}{n}\sum_{i=1}^n \mathbb{I}\{X_i \le x\}\right] = \frac{1}{n}\sum_{i=1}^n \mathbb{E}_X\big[\mathbb{I}\{X_i \le x\}\big] = \frac{1}{n}\sum_{i=1}^n F(x) = F(x)$$</pre>
+
+  <p>The observed object, \(\hat{F}_n(x)\), is in expectation exactly the truth, \(F(x)\) — for every threshold \(x\) at once.</p>
+
+  <p>Fix one threshold \(x\) and \(\hat{F}_n(x)\) is nothing but a Bernoulli average in disguise: each data point independently lands at or below \(x\) (indicator 1) or above it (indicator 0), with success probability \(p = F(x)\). Every Bernoulli result from Part 1 transfers immediately:</p>
+
+  <pre class="equation">$$\mathbb{V}\big[\hat{F}(x)\big] = \frac{F(x)\big(1 - F(x)\big)}{n}$$</pre>
+
+  <p class="keep-in-present">As the sample grows, the ECDF's variance at every threshold shrinks toward zero at rate \(1/n\) — the same guarantee Part 1 proved for a single sample proportion, now holding simultaneously at every point along the whole curve. The <a href="../class-06-cdf/cdf.html">Class 06 lab</a> builds the interactive version of exactly this object.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Is a categorical variable with two labels the same thing as a Bernoulli trial?</h3>
+  <p>Yes, exactly — "heads/tails," "disease/no disease," "clicked/did not click" are all Bernoulli trials once you assign 1 to one label and 0 to the other. Every property derived for the coin flip (unbiased sample proportion, variance \(p(1-p)/n\)) applies unchanged to any two-label categorical variable.</p>
+
+  <h3>Why does one-hot encoding sometimes drop one column?</h3>
+  <p>Because the full set of indicator columns for a categorical variable always sums to exactly 1 in every row — one label indicator is redundant given the rest. If a model already has an intercept term, keeping all \(L\) dummy columns makes that intercept perfectly predictable from the dummies (perfect collinearity), which breaks estimation. Dropping one column removes the redundancy without losing any information: "not any of the remaining labels" already identifies the dropped one.</p>
+
+  <h3>Why is the ECDF's variance different at different thresholds \(x\)?</h3>
+  <p>Because the variance formula \(F(x)(1-F(x))/n\) depends on \(F(x)\) itself, and \(p(1-p)\) is maximized at \(p = 0.5\) and shrinks toward 0 as \(p\) approaches either 0 or 1. The ECDF is therefore least certain near its own median and most certain out in its tails, where almost all — or almost none — of the data has accumulated.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 05 Lecture — Categorical &amp; Numeric Variables. One indicator, averaged, is a proportion, a dummy variable, and the ECDF, all at once.
+  </footer>
+</main>
+
+<script>
+  window.GLOSSARY = {
+    'dgp': {
+      title: 'Data generating process',
+      body: '<p>The underlying, usually unobserved mechanism presumed to produce every observation in a sample. Assuming a stable data generating process is what makes it sensible to expect a pattern learned from one sample to hold for future data.</p>',
+    },
+    'categorical-lec': {
+      title: 'Categorical variable',
+      body: '<p>A random variable whose values are labels rather than numbers — color, brand, disease status. Contrasted with a numeric variable, whose values are real numbers or integers.</p>',
+    },
+    'indicator-lec': {
+      title: 'Indicator function',
+      body: '<p>A function that returns 1 when some condition holds and 0 otherwise. Averaging an indicator over a sample always produces the sample proportion of observations satisfying that condition.</p>',
+    },
+    'unbiased-lec': {
+      title: 'Unbiased estimator',
+      body: '<p>An estimator whose expected value equals the true parameter exactly. The sample proportion is unbiased for the true probability; the ECDF is unbiased for the true CDF, at every threshold.</p>',
+    },
+    'one-hot': {
+      title: 'One-hot encoding',
+      body: '<p>Representing a categorical variable as a full set of 0/1 indicator columns, one per possible label, with exactly one column equal to 1 in each row.</p>',
+    },
+    'ecdf-lec': {
+      title: 'Empirical CDF (ECDF)',
+      body: '<p>The proportion of a sample at or below each possible threshold value, as a function of that threshold. It is built entirely from averaging a 0/1 indicator, the same operation behind every sample proportion in this lecture.</p>',
+    },
+    'cdf-lec': {
+      title: 'Cumulative distribution function (CDF)',
+      body: '<p>The population-level probability that a random variable falls at or below a threshold x. The ECDF is the sample\'s estimate of this object, and is unbiased for it at every threshold.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

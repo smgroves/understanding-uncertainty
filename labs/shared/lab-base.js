@@ -157,6 +157,8 @@
     { num: '02', slug: 'class-02-vectors',      file: 'vectors.html',    title: 'Vectors, Distance & the Inner Product' },
     { num: '01', slug: 'class-01-wrangling',    file: 'wrangling.html',  title: 'Wrangling & Robust Statistics' },
     { num: '03', slug: 'class-03-probability',  file: 'binomial.html',   title: 'Coins, trials & the binomial' },
+    { num: '04', slug: 'class-04-rng',          file: 'rng.html',        title: 'Random Numbers & the Sample Mean' },
+    { num: '05', slug: 'class-05-eda',          file: 'eda.html',        title: 'Proportions, One-Hot Encoding & the ECDF' },
     { num: '06', slug: 'class-06-cdf',          file: 'cdf.html',        title: 'The CDF & inverse transform'  },
     { num: '07', slug: 'class-07-kde',          file: 'kde.html',        title: 'Kernel Density Estimation'    },
     { num: '09', slug: 'class-09-monte-carlo',  file: 'montecarlo.html', title: 'Monte Carlo & the WLLN'       },
@@ -225,6 +227,76 @@
     if (footer) main.insertBefore(nav, footer);
     else main.appendChild(nav);
   })();
+
+  // ----- Inline glossary (contract from CLAUDE.md) ----- ----- --
+  // Shared across every lab AND lecture page, so no per-page viz.js needs
+  // to redefine this wiring. A page just sets `window.GLOSSARY = {...}`
+  // (a lab's viz.js does this at its own top level; a lecture page with no
+  // viz.js sets it in an inline <script>) before DOMContentLoaded fires -
+  // script tags run in document order, so by DOMContentLoaded every plain
+  // <script src> on the page has already executed, GLOSSARY included.
+  function initGlossary() {
+    const GLOSSARY = window.GLOSSARY || {};
+    const panel = document.getElementById('glossary-panel');
+    const content = document.getElementById('glossary-content');
+    const closeBtn = document.getElementById('glossary-close');
+    if (!panel || !content) return;
+    const terms = Array.from(document.querySelectorAll('.gloss[data-gloss]'));
+    if (!terms.length) return;
+    let activeTerm = null;
+
+    function blockFor(node) {
+      let n = node;
+      while (n && n !== document.body) {
+        if (n.tagName && /^(P|LI|H2|H3|H4|FIGURE|TABLE|BLOCKQUOTE|PRE)$/.test(n.tagName)) {
+          if (n.tagName === 'LI') {
+            const list = n.closest('ul, ol');
+            if (list) return list;
+          }
+          return n;
+        }
+        n = n.parentElement;
+      }
+      return node;
+    }
+    function show(term) {
+      const key = term.getAttribute('data-gloss');
+      const g = GLOSSARY[key];
+      if (!g) return;
+      const block = blockFor(term);
+      block.parentNode.insertBefore(panel, block.nextSibling);
+      content.innerHTML = '<div class="glossary-panel-title">' + g.title + '</div><div class="glossary-content">' + g.body + '</div>';
+      panel.hidden = false;
+      terms.forEach(t => t.classList.toggle('active', t === term));
+      activeTerm = term;
+    }
+    function hide() {
+      panel.hidden = true;
+      terms.forEach(t => t.classList.remove('active'));
+      activeTerm = null;
+    }
+    terms.forEach(term => {
+      term.setAttribute('tabindex', '0');
+      term.setAttribute('role', 'button');
+      term.addEventListener('mouseenter', () => show(term));
+      term.addEventListener('click', () => (activeTerm === term ? hide() : show(term)));
+      term.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activeTerm === term ? hide() : show(term); }
+      });
+    });
+    if (closeBtn) closeBtn.addEventListener('click', hide);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !panel.hidden) {
+        if (e.target.matches && e.target.matches('input, textarea')) return;
+        hide();
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGlossary);
+  } else {
+    initGlossary();
+  }
 
   // ----- TOC active-link tracking ----- ----- ----- ----- ----- -
   (function initToc() {

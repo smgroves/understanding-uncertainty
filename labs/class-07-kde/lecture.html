@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 07 Lecture · Kernel Density Estimation — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 07 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Kernel Density Estimation</a></li>
+    <li class="toc-sub"><a href="#moving-window">Estimating f(x) as a moving-window proportion</a></li>
+    <li class="toc-sub"><a href="#slope-ecdf">A second construction: slope of the ECDF</a></li>
+    <li class="toc-sub"><a href="#kde-algorithm">The KDE algorithm</a></li>
+    <li class="toc-sub"><a href="#measurement-error">A third construction: measurement error</a></li>
+    <li class="toc-sub"><a href="#what-is-kde">What is the KDE estimating?</a></li>
+    <li class="toc-sub"><a href="#bias-consistency">Bias, consistency, and the bias-variance trade-off</a></li>
+    <li><a href="#part2">Part 2 · The Gaussian Kernel</a></li>
+    <li class="toc-sub"><a href="#exp-function">Constructing the exponential function</a></li>
+    <li class="toc-sub"><a href="#sigmoid-example">Example: the sigmoid/logistic distribution</a></li>
+    <li class="toc-sub"><a href="#gaussian-kernel-lec">The Gaussian kernel</a></li>
+    <li class="toc-sub"><a href="#uniform-to-gaussian">From uniform to Gaussian kernels</a></li>
+    <li class="toc-sub"><a href="#silverman-gaussian">Silverman's plug-in for the Gaussian</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 07 Lecture · Sep 15</div>
+    <h1>Kernel Density Estimation</h1>
+    <div class="subtitle">The same estimator, derived three independent ways, then smoothed with a better kernel</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">Estimating a density sounds like it should need new machinery. It doesn't: a moving-window sample proportion, the slope of the ECDF, and an average of measurement-error bumps all arrive at the exact same formula. This lecture derives it three times, proves it is biased but consistent, and then swaps its blocky uniform kernel for a smooth Gaussian one.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 07, integrating the full content of
+    <a href="#">05_1_kde</a> and <a href="#">05_2_gaussian_kernel</a>.
+    See the <a href="kde.html">Class 07 lab</a> — the canonical reference lab for this whole site — for the interactive, real-data build of every widget this lecture describes.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Kernel Density Estimation</h2>
+
+  <h3 id="moving-window">Estimating f(x) as a moving-window proportion</h3>
+  <p>How would you estimate the density \(f(x) = F'(x)\)? Intuitively, you are estimating the probability that \(X\) lands in a small neighborhood around \(x\): \(x-h \lt X \lt x+h\). The sample version of that question is "what fraction of my observations fall in that neighborhood?" — a <strong>moving-window histogram</strong>.</p>
+
+  <p>One property of absolute value does the bookkeeping: \(|x-x_i| \lt h\) means \(x-h \lt x_i \lt x+h\) — \(x_i\) sits inside a window centered at \(x\) with half-width \(h\). The natural estimate is then a sample proportion of points inside that window:</p>
+
+  <pre class="equation">$$\frac{\text{number of observations in } |x-X|\lt h}{N} = \frac{\sum_{i=1}^N \mathbb{I}\{|x-x_i|\lt h\}}{N}$$</pre>
+
+  <h3 id="slope-ecdf">A second construction: slope of the ECDF</h3>
+  <p>The derivative of the CDF is the PDF, so compute the secant of the ECDF as if preparing to differentiate it:</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\hat f_{X,h}(x) &=& \frac{\hat F_X(x+h) - \hat F_X(x-h)}{2h}\\
+&=& \frac{\frac1n\sum_{i=1}^n \mathbb{I}\{x_i\le x+h\} - \frac1n\sum_{i=1}^n\mathbb{I}\{x_i\le x-h\}}{2h}\\
+&=& \frac{\sum_{i=1}^n \mathbb{I}\{x_i\le x+h\} - \mathbb{I}\{x_i \le x-h\}}{2nh}
+\end{alignat*}$$</pre>
+
+  <p>For any one \(i\), the numerator is 1 exactly when \(x+h \ge x_i\) and \(x_i > x-h\) — i.e., \(x_i\) is between \(x-h\) and \(x+h\):</p>
+
+  <pre class="equation">$$\hat f_{X,h}(x) = \frac{\sum_{i=1}^n \mathbb{I}\{|x-x_i|\lt h\}}{2nh}$$</pre>
+
+  <p>Identical to the moving-window count from the last section, divided by \(2nh\) instead of \(n\) — the two derivations, starting from completely different intuitions, land on the same estimator. This is the <strong><span class="gloss" data-gloss="kde-lec">kernel density estimator</span></strong>, and \(h\) is its <strong><span class="gloss" data-gloss="bandwidth-lec">bandwidth</span></strong>. The <strong>uniform kernel</strong> is \(k(z) = \mathbb{I}\{|z|\lt 1\}/2\). Let \(h \to 0\) with finite data and you get \(0/0\) everywhere except exactly at the data points — which is exactly what <code>sns.rugplot(df[var])</code> shows: a comb of spikes with nothing in between.</p>
+
+  <h3 id="kde-algorithm">The KDE algorithm</h3>
+  <p>What bandwidth to pick? Data-driven methods exist (least-squares cross-validation), but the standard, convenient starting point is <strong><span class="gloss" data-gloss="silverman-lec">Silverman's rule-of-thumb</span></strong>:</p>
+
+  <pre class="equation">$$h_u = 1.84\times \mathrm{sd}(X)\times n^{-1/5}$$</pre>
+
+  <p>Four steps compute a KDE end to end: (1) compute the Silverman bandwidth, <code>h_u = 1.84 * X.std() * n ** (-.2)</code>; (2) build a grid from just below the sample minimum to just above the maximum, <code>x_grid = np.linspace(X.min()-h_u, X.max()+h_u, K)</code>; (3) compute the indicator matrix via broadcasting, <code>I = np.abs(x_grid[:,None] - X[None,:]) < h_u</code>; (4) sum each row and normalize, <code>f_hat = np.sum(I, axis=1) / (2*n*h_u)</code>:</p>
+
+  <pre><code class="language-python">def kde(X, K=20):
+    n = len(X)
+    h_u = 1.84 * X.std() * n ** (-0.2)
+    x_grid = np.linspace(X.min() - h_u, X.max() + h_u, K)
+    I = np.abs(x_grid[:, None] - X[None, :]) < h_u
+    f_hat = np.sum(I, axis=1) / (2 * n * h_u)
+    return x_grid, f_hat</code></pre>
+
+  <h3 id="measurement-error">A third construction: measurement error</h3>
+  <p>A third, independent way to arrive at the same estimator: imagine each observed \(x_i\) actually carries measurement error, uniformly distributed on \((x_i-h, x_i+h)\). Each data point then contributes its own tiny density bump,</p>
+
+  <pre class="equation">$$\hat f_{i,h}(x) = \mathbb{I}\{|x_i-x|\lt h\}/2h$$</pre>
+
+  <p>and averaging all \(n\) bumps together:</p>
+
+  <pre class="equation">$$\hat f_{n,h}(x) = \frac1n\sum_{i=1}^n \hat f_{i,h}(x) = \frac1n\sum_{i=1}^n \frac{\mathbb{I}\{|x_i-x|\lt h\}}{2h}$$</pre>
+
+  <p>the exact same formula, a third time — each data point contributes \(1/n\) of a bump, and the sum of all \(n\) bumps <em>is</em> the density estimate.</p>
+
+  <h3 id="what-is-kde">What is the KDE estimating?</h3>
+  <p>Take the expectation of the KDE itself:</p>
+
+  <pre class="equation">$$\mathbb{E}_X[\hat f_{X,h}(x)] = \mathbb{E}_X\!\left[\frac{\hat F_X(x+h)-\hat F_X(x-h)}{2h}\right] = \frac{F_X(x+h)-F_X(x-h)}{2h}$$</pre>
+
+  <p>Not quite a derivative yet — but taking the limit as \(h \to 0\):</p>
+
+  <pre class="equation">$$\lim_{h\to 0}\mathbb{E}_X[\hat f_{X,h}(x)] = F_X'(x) = f_X(x)$$</pre>
+
+  <p>The KDE estimates the true density in the limit as the bandwidth shrinks to zero. The probability that \(X\) equals \(x\) exactly is still zero — the same lesson as the vanishing-grid puzzle from the <a href="../class-06-cdf/lecture.html#puzzle">previous lecture</a> — but the density still captures the local behavior of \(X\) near \(x\), just not at a single point.</p>
+
+  <h3 id="bias-consistency">Bias, consistency, and the bias-variance trade-off</h3>
+  <p>In practice, \(h\) is set by the Silverman plug-in, not literally 0 — it scales like \(n^{-1/5}\). That means the KDE is <strong><span class="gloss" data-gloss="biased-lec">biased</span></strong>: its expectation does not equal the true density exactly. But because \(h_n \to 0\) as \(n \to \infty\), that bias shrinks to zero as the sample grows — the KDE is a <strong><span class="gloss" data-gloss="consistent-lec">consistent estimator</span></strong> of \(f_X(x)\), even though it is not unbiased at any finite \(n\).</p>
+
+  <p class="keep-in-present">Nudge the bandwidth and watch the classic <strong>bias-variance trade-off</strong>: large \(h\) averages over large neighborhoods, so the curve barely moves as the data changes (low variance, high bias); small \(h\) averages over tiny neighborhoods, so the curve swings wildly with every new sample (high variance, low bias). The <a href="kde.html#bandwidth">Class 07 lab</a>'s regime-preset widget makes this trade-off directly draggable — applied machine learning is, in large part, judgment about exactly this trade-off.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · The Gaussian Kernel</h2>
+
+  <h3 id="exp-function">Constructing the exponential function</h3>
+  <p>Start with the constant function \(e_0(x) = 1\) and integrate repeatedly: \(e_1(x) = \int 1\,dx = 1+x\), \(e_2(x) = \int (1+x)\,dx = 1+x+\tfrac{x^2}2\), and in general \(e_k(x) = 1+x+\tfrac{x^2}2+\cdots+\tfrac{x^k}{k!}\). Continue forever:</p>
+
+  <pre class="equation">$$e_\infty(x) = 1+x+\frac{x^2}{2}+\cdots+\frac{x^k}{k!}+\cdots$$</pre>
+
+  <p>This infinite series defines <strong>the exponential function</strong>, \(e^x\). Differentiating term by term reproduces the same series, so \(D_x e^x = e^x\) — it is its own derivative, hence strictly increasing. As \(x\to\infty\) every term is positive and the sum diverges, so \(e^x \to \infty\); as \(x \to -\infty\), \(e^x = 1/e^{-x} \to 1/\infty = 0\). Increasing and bounded below by 0 forces \(e^x \ge 0\) everywhere.</p>
+
+  <h3 id="sigmoid-example">Example: the sigmoid/logistic distribution</h3>
+  <p>One of data science's most common functions:</p>
+
+  <pre class="equation">$$F(z) = \frac{1}{1+e^{-z}} = \frac{e^z}{e^z+1}$$</pre>
+
+  <p>Its density has a self-referential form that makes it cheap to compute once you already have \(F\):</p>
+
+  <pre class="equation">$$f(z) = \left(1-\frac{e^{-z}}{1+e^{-z}}\right)\frac{e^{-z}}{1+e^{-z}} = \bigl(1-F(z)\bigr)F(z)$$</pre>
+
+  <h3 id="gaussian-kernel-lec">The Gaussian kernel</h3>
+  <p>One of the single most important functions in probability:</p>
+
+  <pre class="equation">$$\phi(z) = \frac{1}{\sqrt{2\pi}}\exp\!\left(\frac{-z^2}{2}\right)$$</pre>
+
+  <p>the <strong><span class="gloss" data-gloss="gaussian-kernel-def">Gaussian kernel</span></strong>, standard normal density, or simply "a Gaussian" — the equation for the bell curve. Since \(-z^2\) is always negative, \(\phi(z)\) is maximized at \(z=0\) (value \(1/\sqrt{2\pi}\)) and decays quickly as \(|z|\) grows; it is non-negative everywhere since \(\exp(w) \ge 0\); and it integrates to exactly 1 over the whole real line.</p>
+
+  <h3 id="uniform-to-gaussian">From uniform to gaussian kernels</h3>
+  <p>The KDE derivation used the uniform kernel \(k_u(z) = \mathbb{I}\{|z|\lt 1\}/2\) inside</p>
+
+  <pre class="equation">$$\hat f_{n,h}(x) = \frac1n\sum_{i=1}^n \frac1h\,k_u\!\left(\frac{x-x_i}{h}\right)$$</pre>
+
+  <p>a well-behaved estimator, but a blocky one — every window edge is a discontinuity. Swap \(k_u\) for the Gaussian kernel \(\phi\) instead and the same formula smooths out completely:</p>
+
+  <pre class="equation">$$\hat f_{n,h}(x) = \frac1n\sum_{i=1}^n \frac1h\,\phi\!\left(\frac{x-x_i}{h}\right) = \frac{1}{nh\sqrt{2\pi}}\sum_{i=1}^n \exp\!\left(-\frac{(x-x_i)^2}{2h^2}\right)$$</pre>
+
+  <p>This is exactly what Seaborn's <code>kdeplot</code> computes by default. The same measurement-error story from Part 1 applies here too, with a Gaussian in place of a uniform: each \(x_i\) is measured with Gaussian error of bandwidth (standard deviation) \(h\), contributing its own bell-shaped bump,</p>
+
+  <pre class="equation">$$\hat f_{i,h}(x) = \frac{1}{h\sqrt{2\pi}}\exp\!\left(-\frac{(x_i-x)^2}{2h^2}\right)$$</pre>
+
+  <p>and averaging all \(n\) bumps gives back the same estimator.</p>
+
+  <h3 id="silverman-gaussian">Silverman's plug-in for the Gaussian</h3>
+  <p>Changing the kernel changes the optimal plug-in bandwidth. For the Gaussian, the standard choice is:</p>
+
+  <pre class="equation">$$h_s = 1.06\times \mathrm{sd}(X)\times n^{-1/5}$$</pre>
+
+  <p>A slightly more robust variant guards against a heavy-tailed sample inflating \(\mathrm{sd}(X)\) by also considering the IQR:</p>
+
+  <pre class="equation">$$h_s = 0.9\times \min\!\left\{\mathrm{sd}(X),\, \frac{\mathrm{IQR}}{1.34}\right\}\times n^{-1/5}$$</pre>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why do three completely different derivations (moving window, ECDF slope, measurement error) all land on the same formula?</h3>
+  <p>Because they are the same idea described in three vocabularies. Each one asks, in its own language, "how much probability mass is within \(h\) of \(x\)?" — a window count, a secant slope, and a stack of uniform error bumps are three ways of counting the identical set of nearby points and normalizing the same way.</p>
+
+  <h3>Why is a biased estimator still useful?</h3>
+  <p>Because bias is not the only property that matters — consistency (the bias vanishing as \(n\) grows) matters just as much in practice. The KDE trades a small, known, shrinking bias for a density estimate that would otherwise be impossible to compute at all without assuming a parametric form.</p>
+
+  <h3>Why does the Gaussian kernel need a different Silverman constant (1.06) than the uniform kernel (1.84)?</h3>
+  <p>Because the optimal bandwidth balances a kernel-specific bias-variance trade-off, and different kernel shapes spread their probability mass differently around each data point. A Gaussian kernel's smooth tails need a different scaling constant than a uniform kernel's hard cutoff to hit the same optimality criterion.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 07 Lecture — Kernel Density Estimation. One estimator, derived three ways, then smoothed.
+  </footer>
+</main>
+
+<script>
+  window.GLOSSARY = {
+    'kde-lec': {
+      title: 'Kernel density estimator (KDE)',
+      body: '<p>An estimate of a probability density built by averaging a small "bump" (a kernel) centered at every data point. The same formula falls out of a moving-window count, the slope of the ECDF, and a measurement-error argument.</p>',
+    },
+    'bandwidth-lec': {
+      title: 'Bandwidth',
+      body: '<p>The width parameter h controlling how far each kernel bump spreads around its data point. Small h gives a jagged, high-variance estimate; large h gives an over-smoothed, high-bias one.</p>',
+    },
+    'silverman-lec': {
+      title: "Silverman's rule-of-thumb",
+      body: '<p>A standard plug-in formula for choosing a KDE\'s bandwidth automatically from the sample\'s size and spread, without needing cross-validation.</p>',
+    },
+    'biased-lec': {
+      title: 'Bias of an estimator',
+      body: '<p>The gap between an estimator\'s expected value and the true parameter it estimates. The KDE is biased at any finite bandwidth, since it estimates a limit (h → 0) using a bandwidth that is not actually zero.</p>',
+    },
+    'consistent-lec': {
+      title: 'Consistent estimator',
+      body: '<p>An estimator whose bias (and typically variance) shrinks to zero as the sample size grows, even if it is biased at any finite sample size. The KDE is consistent because its bandwidth shrinks toward zero as n grows.</p>',
+    },
+    'gaussian-kernel-def': {
+      title: 'Gaussian kernel',
+      body: '<p>The standard normal density, φ(z) = (1/√2π)exp(-z²/2), used as a smooth alternative to the uniform kernel in KDE. Produces a continuous, differentiable density estimate instead of a blocky one.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

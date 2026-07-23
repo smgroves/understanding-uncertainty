@@ -32,7 +32,8 @@ Understanding Uncertainty/
     ├── shared/           ← shared base linked by EVERY lab (do not fork per-lab)
     │   ├── lab-base.css    ← design tokens, chrome, widget primitives, presentation mode, glossary
     │   └── lab-base.js     ← presentation toggle, TOC tracking, prev/next nav (LAB_SEQUENCE)
-    └── class-07-kde/       ← one folder per built lab: class-NN-slug
+    └── class-07-kde/       ← one folder per built class: class-NN-slug
+        ├── lecture.html    ← the lecture page (comprehensive, both source notebooks, see below)
         ├── kde.html        ← the lab page (single file, all sections inline)
         ├── styles.css      ← lab-specific widget CSS only (NOT palette/chrome)
         ├── viz.js          ← lab-specific widgets, one IIFE each
@@ -42,6 +43,8 @@ Understanding Uncertainty/
         ├── test_kde.py     ← local autograder (spawns the template as a subprocess)
         └── NOTES.md         ← instructor notes: solution, expected outputs, common errors
 ```
+
+Every class ships up to two student-facing pages, both in the same `class-NN-slug` folder: **`lecture.html`** (comprehensive — everything in both source notebooks) and the lab (`kde.html`, `bootstrap.html`, …; one focused concept, Touch→Derive→Build, autograded assignment). Not every class needs a lab yet, but a lecture should exist whenever the source repo has the notebook material for it.
 
 ### Source content (read-only, elsewhere on disk)
 
@@ -219,6 +222,29 @@ When a lab includes a student deliverable:
 - Ship a `test_<name>.py` that spawns the student's file as a subprocess, pipes batched queries through stdin, and prints pass/fail per case, comparing against a reference computed the same way, within tolerance. Group the cases (e.g. per kernel) and include a protocol case (unknown input reported, not crashed).
 - The HTML assignment section includes: what-you-build list, I/O spec, data-structure table, run commands, downloads row, and a rubric table that rewards more than one dimension (KDE weights both kernels, an area/normalization check, and protocol handling) so a degenerate all-one-answer solution fails.
 - Keep a reference solution and common-error list in the lab's `NOTES.md` (instructor-facing), not in the student folder root.
+
+### Lecture pages
+
+Every class has (or should eventually have) a **lecture page**, `labs/class-NN-slug/lecture.html`, alongside its lab. A lecture and a lab answer different questions and are not interchangeable:
+
+- **The lecture is comprehensive.** It integrates *both* of the class's numbered source notebooks (`class_NN/NN_1_*.ipynb` and `NN_2_*.ipynb`, or whatever the two are named) into one continuous page, covering every definition, derivation, and worked example either notebook contains — not one distilled theme. If a notebook cell exists, the lecture accounts for it; nothing gets cherry-picked away.
+- **The lab is narrow.** One central idea, Touch → Derive → Build, an autograded assignment. The lab still exists independently and is not replaced by the lecture — a class can have a lecture with no lab yet (most of the not-yet-built classes), but shouldn't end up with a lab and no lecture.
+- **Build order:** read both source notebooks in full before writing anything (skimming loses the "nothing gets cherry-picked" guarantee). If a lab already exists for the class, skim it too, so the lecture's worked examples don't contradict the lab's pinned toy numbers or dataset.
+
+**Shell:** identical to a lab page — link `shared/lab-base.css` then a per-page `lecture.css` (or reuse the lab's `styles.css` if the class already has one and the two pages can share chrome cleanly), same MathJax/Prism setup, same sticky TOC, same `#present-toggle` button, same inline-glossary contract. `shared/lab-base.js`'s `LAB_SEQUENCE` and prev/next nav are lab-to-lab; a lecture page does not need its own sequence entry, but should link to its own lab (if one exists) and back to the course index.
+
+**Structure**, top to bottom:
+1. Sticky TOC — one entry per `<h2>` **and** `<h3>`, since a lecture runs longer than a lab.
+2. Header (eyebrow with class/date, `<h1>` title covering both notebooks' topics, one-sentence subtitle, byline) + lede + citation block naming both source notebooks.
+3. One `<h2>` per source notebook (or per natural half if a notebook is long), title matching that notebook's own heading. Nest the notebook's own markdown headings as `<h3>`s underneath, in the original order.
+4. Render each concept faithfully: prose becomes prose, a `$$...$$` block becomes a `<pre class="equation">`, a multi-step derivation keeps every intermediate line (do not compress a shown derivation down to just the result), and a code cell becomes a Prism-highlighted `<pre><code class="language-python">` block reproducing that exact cell (not a paraphrase). Reuse `lab-base.css`'s primitives: `.callout note` for a notebook's own aside/warning cells, `.callout insight` for a "key idea" cell, `.exercise` only where the source notebook actually poses a question.
+5. Where a concept is explored interactively in this class's lab, add a one-line `<p class="keep-in-present">` pointer ("The bandwidth trade-off below is explored hands-on in the lab →") linking to the lab's relevant anchor, instead of rebuilding the widget on the lecture page. Interactive widgets on a lecture page are the exception, not the rule — reach for one only when a static equation genuinely cannot carry a concept the source notebook treats as central (e.g. an animation the notebook itself describes).
+6. FAQ is optional (only if the source material poses explicit Q&A-style cells). No assignment section — that lives in the lab.
+7. Footer, and a closing link to the lab (`→ Continue to the lab`) if one exists, else a link back to the course index.
+8. Never invent content the notebooks don't contain. A thin or stub source cell (a heading with no body, an unfinished sentence) gets rendered thin — do not pad it out to match the length of a fuller section; note in the lab's own `NOTES.md` (or a `NOTES.md` in the lecture's folder) that the source material was sparse there, rather than silently inventing lecture content.
+9. Precision-of-language and jargon-awareness rules apply exactly as they do to labs — a lecture page is not exempt from either.
+
+**On `schedule.html`:** each class row gets up to two links, "Lecture NN →" and "Lab NN →", in that order, wherever each exists. `index.html`'s lab-card grid stays lab-focused; consider a separate lecture index or a second link on each card if the number of lectures grows large enough to need one.
 
 ### Quizzes & exams (printable, scantron-ready)
 

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 10 Lecture · The Bootstrap — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 10 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Simulating Sampling Distributions</a></li>
+    <li><a href="#part2">Part 2 · The Bootstrap</a></li>
+    <li class="toc-sub"><a href="#bootstrap-idea">The bootstrap idea</a></li>
+    <li class="toc-sub"><a href="#sampling-replacement">Sampling with replacement</a></li>
+    <li class="toc-sub"><a href="#bootstrapping-dist">Bootstrapping the sampling distribution</a></li>
+    <li class="toc-sub"><a href="#communicating">Communicating results: the confidence interval</a></li>
+    <li class="toc-sub"><a href="#hypothesis-testing-lec">Hypothesis testing</a></li>
+    <li class="toc-sub"><a href="#interpreting">Interpreting the bootstrap and the CI</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 10 Lecture · Sep 29</div>
+    <h1>The Bootstrap</h1>
+    <div class="subtitle">Simulating the sampling distribution you can never observe, from the one sample you have</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">You cannot re-run the world to see how much a statistic would wobble across repeated samples — you are a data scientist, and the data in front of you are usually all the data there will ever be. The bootstrap's answer is almost cheeky: treat your one sample as if it were the entire population, resample from it with replacement, and use the spread of the results as a stand-in for the sampling distribution you could never actually observe.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 10, integrating <a href="#">08_01_sampling_distribution</a> and <a href="#">09_2_intro_to_bootstrap</a>.
+    See the <a href="bootstrap.html">Class 10 lab</a> for the interactive, real-data build of every idea in Part 2.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Simulating Sampling Distributions</h2>
+
+  <p>This class's first notebook is a short pointer rather than a full derivation: the motivating idea is to <em>use simulation to explore sampling distributions</em> — repeat an experiment many times, over and over, and watch the resulting statistic pile up into a distribution of its own. That is exactly what the earlier classes' widgets already did by simulating a data-generating process directly. The problem the rest of this lecture solves is what to do when you cannot simulate the generating process at all, because you only ever get to observe it once.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · The Bootstrap</h2>
+
+  <h3 id="bootstrap-idea">The bootstrap idea</h3>
+  <p>Previously, a statistic's <span class="gloss" data-gloss="sampling-dist-lec">sampling distribution</span> was built by simulating an experiment many times and recomputing the statistic each time — a series of suspiciously bell-shaped curves. In practice you usually cannot run the experiment again: the data you have are often all the data there will ever be.</p>
+
+  <p><strong><span class="gloss" data-gloss="bootstrap-lec">The bootstrap</span></strong>: since your one sample was drawn from the true generating process, simply resample <em>it</em> to simulate that process — treat the sample as a stand-in for the population it came from.</p>
+
+  <h3 id="sampling-replacement">Sampling with replacement</h3>
+  <p>The resampling step draws \(n\) observations from your existing \(n\)-point sample, each draw independent and free to land on any observation — so a single point may be picked several times in one resample and not at all in another. That reuse is exactly what makes each resample differ from the original sample, and from every other resample; a resample drawn <em>without</em> replacement would just be a reordering of the same \(n\) numbers, with zero variation to measure.</p>
+
+  <h3 id="bootstrapping-dist">Bootstrapping the sampling distribution</h3>
+  <p>Fix a number of bootstrap replications \(B\). For \(t = 1,\dots,B\): draw a resample of \(n\) observations with replacement, \(D_t\), and compute the statistic on it, \(\hat S_t = S(D_t)\). The collection \([\hat S_1,\dots,\hat S_B]\) approximates the sampling distribution of \(\hat S\).</p>
+
+  <p>From that collection alone: the ECDF estimates the sampling distribution itself; the KDE estimates its density; and the standard deviation of \([\hat S_1,\dots,\hat S_B]\) is the <span class="gloss" data-gloss="bootstrap-se-lec">standard error</span> of \(\hat S\) — three different summaries of one collection of numbers.</p>
+
+  <h3 id="communicating">Communicating results: the confidence interval</h3>
+  <p>The full distribution of replicates is an honest, complete answer, but people often want a simpler numeric summary. The usual choice: report an interval \((L,H)\) that captures 90/95/99% of the replicates, as a bound on the values this kind of process tends to produce. This is a <strong><span class="gloss" data-gloss="ci-lec">confidence interval</span></strong>.</p>
+
+  <p>Three levels come up constantly: the 90% interval is the 0.05 and 0.95 quantiles of \([\hat S_1,\dots,\hat S_B]\); the 95% interval is the 0.025 and 0.975 quantiles; the 99% interval is the 0.005 and 0.995 quantiles. In general, for level parameter \(\alpha\) (typically 0.10, 0.05, or 0.01), the non-parametric \((1-\alpha)\)-confidence interval is built in two steps: find the \(\alpha/2\) and \(1-\alpha/2\) quantiles of the replicate collection, \(q_{\alpha/2}\) and \(q_{1-\alpha/2}\), and report \((q_{\alpha/2},\, q_{1-\alpha/2})\).</p>
+
+  <h3 id="hypothesis-testing-lec">Hypothesis testing</h3>
+  <p>Suppose there is a <strong>hypothesized value</strong> you particularly care about — often zero, but it could be anything. Asking "is my hypothesized value inside the confidence interval?" is exactly a statistical test: the <strong>null hypothesis</strong> is that the hypothesized value describes reality (\(S=0\), say); the <strong>alternative hypothesis</strong> is that it doesn't (\(S \neq 0\)). The tricky part, psychologically, is that researchers usually <em>want</em> to reject the null and find evidence for the alternative — but the test itself doesn't care which outcome you're hoping for.</p>
+
+  <h3 id="interpreting">Interpreting the bootstrap and the CI</h3>
+  <p>A 95% confidence interval means, literally: "if you repeated this entire procedure many times, 95% of the resulting intervals would contain the true value of \(S\)." It does <em>not</em> mean "there is a 95% probability the true value of \(S\) is in this particular interval" — the true value either is or is not in any one interval, full stop, with no probability attached to it once it's drawn. What the confidence level actually quantifies is how much sampling variation exists in your measurement procedure. A confidence interval is a statement about the reliability of a procedure, not a truth machine that tells you where the truth is.</p>
+
+  <p class="keep-in-present">The <a href="bootstrap.html#hypothesis-testing">Class 10 lab</a> builds this exact reasoning as a live widget: drag a hypothesized value against a real bootstrap confidence interval and watch reject/fail-to-reject flip at exactly the interval's boundary.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does resampling need replacement specifically?</h3>
+  <p>Without replacement, a "resample" of size \(n\) from an \(n\)-point sample is just the original sample shuffled into a new order — every such resample has the exact same statistic as the original, so there is nothing to measure. Replacement is what lets each resample's composition genuinely differ, which is the entire source of the spread the bootstrap reads as uncertainty.</p>
+
+  <h3>Does a wider confidence interval mean a worse experiment?</h3>
+  <p>Not necessarily — it means more sampling variation in that specific statistic, which can come from a smaller sample size, a more variable underlying population, or a statistic that is inherently noisier to estimate (a correlation typically has more sampling variation than a mean, for instance). A wide interval is honest information, not necessarily a flaw.</p>
+
+  <h3>Can hypothesis testing and confidence intervals disagree?</h3>
+  <p>No — by construction they are the same test read two ways. Rejecting the null at level \(\alpha\) is defined as the hypothesized value falling outside the \((1-\alpha)\) confidence interval; the two procedures cannot give contradictory answers because one is just a restatement of the other.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 10 Lecture — The Bootstrap. One sample, resampled, standing in for a population you'll never get to observe twice.
+  </footer>
+</main>
+
+<script>
+  window.GLOSSARY = {
+    'sampling-dist-lec': {
+      title: 'Sampling distribution',
+      body: '<p>The distribution of a statistic across all the samples you could have drawn from the population. Normally unobservable directly, since you only ever have the one sample you actually collected.</p>',
+    },
+    'bootstrap-lec': {
+      title: 'The bootstrap',
+      body: '<p>A resampling method that estimates a statistic\'s sampling distribution using only the single sample available, by treating that sample as a stand-in for the population and resampling from it with replacement.</p>',
+    },
+    'bootstrap-se-lec': {
+      title: 'Standard error',
+      body: '<p>The standard deviation of a statistic\'s sampling distribution. The bootstrap estimates it directly as the standard deviation of the bootstrap replicates.</p>',
+    },
+    'ci-lec': {
+      title: 'Confidence interval',
+      body: '<p>A range of plausible values for a statistic, built to contain the true value in a known fraction (e.g. 95%) of repetitions of the whole sampling-and-estimating procedure.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

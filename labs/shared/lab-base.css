@@ -105,6 +105,24 @@ pre.equation {
 }
 pre.equation code { font-size: 15px; }
 
+/* Lecture pages: a captured notebook cell's printed/returned output,
+ * placed directly under its code block. Dimmer than code so the two
+ * never get visually confused with each other. */
+pre.nb-output {
+  background: transparent;
+  border: 1px dashed var(--rule);
+  margin-top: -8px;
+  color: var(--ink-mute);
+}
+pre.nb-output code { background: transparent; font-size: 13px; color: var(--ink-mute); }
+pre.nb-output::before {
+  content: "Output";
+  display: block;
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--ink-mute); margin-bottom: 4px;
+}
+
 /* Prism CDN theme sets font-size: 1em on .language-* code/pre. The CDN sheet
  * loads after this one, so plain selectors lose; prepending `main` wins on
  * specificity (0,1,2) > Prism's (0,1,1). */
@@ -170,6 +188,11 @@ aside.toc a.active {
   background: var(--bg-elev);
 }
 aside.toc .toc-foot { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rule); font-size: 11px; }
+
+/* Lecture pages: h3-level TOC entries (a lecture runs longer than a lab,
+ * so its TOC nests h3s under each h2 for real navigation utility). */
+aside.toc li.toc-sub { margin-bottom: 2px; }
+aside.toc li.toc-sub a { padding-left: 20px; font-size: 12px; }
 
 @media (max-width: 1180px) {
   aside.toc { display: none; }

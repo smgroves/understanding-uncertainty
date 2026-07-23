@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 05 · Proportions, One-Hot Encoding &amp; the ECDF — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=5">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 05 · Proportions &amp; the ECDF</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#onehot">One indicator, many labels</a></li>
+    <li><a href="#formula">Why the same formula works everywhere</a></li>
+    <li><a href="#ecdf">The ECDF is a proportion too</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 05 · Sep 8</div>
+    <h1>Proportions, One-Hot Encoding &amp; the ECDF</h1>
+    <div class="subtitle">One indicator function, averaged, behind a survival rate, a dummy variable, and a whole distribution</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">182 of 200 patients in this sample survived — a proportion, 0.91. That single number came from averaging a 0/1 indicator, exactly the way a dummy variable's column average is a proportion, and exactly the way the ECDF's height at any threshold is a proportion. Once you know the variance of one sample proportion, \(p(1-p)/n\), you already know the variance of all three.</p>
+
+  <div class="cite">
+    Built on the Class 05 notebooks <a href="lecture.html#bernoulli-props">01_categorical_variables</a> and <a href="lecture.html#ecdf">02_numeric_variables</a> — see the <a href="lecture.html">full lecture</a> for every derivation this lab only sketches.
+    Data: 200 patients' outcomes, triage scores, and heart rates (<code>CardiacPatientData.csv</code>, <code>uu_fa26/class_02/</code>).
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+
+  <p>Drag the sample-size slider and watch the survival proportion \(\hat{p}\) and its standard error move together — same 200 patients, different-sized random subsets of them.</p>
+
+  <div class="viz" id="viz-try-it">
+    <div class="viz-title">Survival proportion · shrinking standard error</div>
+    <div class="viz-description">The dot is \(\hat{p}\); the band is \(\hat{p} \pm \sqrt{\hat{p}(1-\hat{p})/n}\). Smaller subsamples wobble; the full 200 barely does.</div>
+    <div class="eda-board"></div>
+    <div class="eda-controls"></div>
+    <div class="eda-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers compute the same proportions, standard errors, and ECDF values in pure stdlib.</div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="onehot">One indicator, many labels</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>from one column to three</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Triage score has three labels in this sample: 1, 2, 3. One-hot encoding replaces that single column with three 0/1 columns, one per label. Before looking: in any one row, how many of those three new columns can equal 1 at once, and what must the three columns of that row always sum to?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare: exactly one column is 1 per row (a patient has exactly one triage score), so the three columns always sum to exactly 1. That is why one column is redundant given the other two — drop any one of them and you can still recover it from the rest.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on which column you would drop and why it wouldn't lose information, then check the live table below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>A categorical variable with \(L\) labels becomes \(L\) indicator columns — <span class="gloss" data-gloss="one-hot-lab">one-hot encoding</span>. Each column's own average is exactly a sample proportion, \(\hat{p}_\ell\), so everything this lab says about one proportion applies to every column separately.</p>
+
+  <div class="viz" id="viz-onehot">
+    <div class="viz-title">Triage score, one-hot encoded · first 8 patients</div>
+    <div class="viz-description">Each row sums to exactly 1. The column averages at the bottom are the sample proportions \(\hat{p}_1, \hat{p}_2, \hat{p}_3\) over all 200 patients, not just these 8.</div>
+    <div class="eda-board"></div>
+    <div class="eda-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="formula">Why the same formula works everywhere</h2>
+
+  <p>A sample proportion is the average of a 0/1 indicator over \(n\) observations:</p>
+
+  <pre class="equation">$$\hat{p} = \frac{1}{n}\sum_{i=1}^n \mathbb{I}\{c_i = \ell\}$$</pre>
+
+  <p>Because each indicator is itself a Bernoulli trial with success probability \(p_\ell\), linearity of expectation makes \(\hat{p}_\ell\) unbiased, and treating "\(C = \ell\)" as its own coin flip gives the variance for free:</p>
+
+  <pre class="equation">$$\mathbb{E}[\hat{p}_\ell] = p_\ell, \qquad \mathbb{V}[\hat{p}_\ell] = \frac{p_\ell(1-p_\ell)}{n}$$</pre>
+
+  <p>The <span class="gloss" data-gloss="se-lab">standard error</span> — the square root of that variance — is what the shaded band in the Try It widget draws around \(\hat{p}\). Nothing here is specific to survival, triage, or any other label: <em>any</em> proportion computed from an iid sample has exactly this variance. The full derivation, starting from a single coin flip, is in the <a href="lecture.html#bernoulli-props">lecture</a>.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="ecdf">The ECDF is a proportion too</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>a proportion at every threshold</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The ECDF at a heart-rate threshold \(x\) is the proportion of the 200 patients with \(\text{HR} \le x\). If that is a sample proportion like any other, what should its standard error formula be — and at what threshold \(x\) would you expect that standard error to be <em>largest</em>?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare: the same \(\sqrt{\hat{F}(x)(1-\hat{F}(x))/n}\) formula applies, and since \(p(1-p)\) peaks at \(p = 0.5\), the standard error is largest wherever the ECDF itself is near 0.5 — typically near the middle of the data, not out in the tails.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on a predicted threshold where the error band should be widest, then drag the slider below to check.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Fix a heart-rate threshold \(x\). The indicator \(\mathbb{I}\{\text{HR}_i \le x\}\) is 1 for every patient at or below \(x\) and 0 otherwise — a Bernoulli trial with success probability \(F(x)\), the true fraction of the population below \(x\). Averaging it over the sample is the ECDF itself, so every property from the last two sections carries over unchanged.</p>
+
+  <div class="viz" id="viz-ecdf">
+    <div class="viz-title">ECDF of heart rate, with its own standard-error band</div>
+    <div class="viz-description">Drag the threshold. The dashed line is \(\hat{F}(x)\); the shaded band is \(\hat{F}(x) \pm \sqrt{\hat{F}(x)(1-\hat{F}(x))/n}\) — widest near the middle of the curve, narrowest in the tails.</div>
+    <div class="eda-board"></div>
+    <div class="eda-controls"></div>
+    <div class="eda-readout"></div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Check your understanding</div>
+    <p>At HR = 60, \(\hat{F}(60) = 0.14\); at HR = 90, \(\hat{F}(90) = 0.83\). Without computing anything, which threshold has the larger standard error, and why?</p>
+    <details>
+      <summary>Show answer</summary>
+      <p>Neither is that close to 0.5, but 0.14 is farther from it than 0.83 is close to... checking precisely: \(p(1-p)\) at 0.14 is \(0.14 \times 0.86 = 0.1204\); at 0.83 it is \(0.83\times 0.17 = 0.1411\). The threshold at HR = 90 has the larger standard error, because 0.83 sits closer to 0.5 than 0.14 does. The rule is about distance from 0.5, not which side of it you are on.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Implement a sample proportion and its standard error from scratch — no numpy, no <code>statistics</code> module. You are given the data loader and the input/output plumbing the autograder speaks. You write two functions.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>proportion(labels, target)</code> — the fraction of <code>labels</code> equal to <code>target</code>.</li>
+    <li><code>ecdf_at(values, x)</code> — the fraction of <code>values</code> at or below <code>x</code> (the ECDF, evaluated at one threshold).</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 eda.py</code> and sends one query per line on stdin:</p>
+  <pre><code class="language-text">proportion &lt;label1,label2,...&gt; &lt;target&gt;  -> OK: &lt;p_hat, 6 decimals&gt; &lt;se, 6 decimals&gt;
+ecdf &lt;v1,v2,...&gt; &lt;x&gt;                     -> OK: &lt;F_hat, 6 decimals&gt; &lt;se, 6 decimals&gt;
+ERR: unknown query                          # anything else</code></pre>
+  <p>Both replies include the standard error \(\sqrt{\hat{p}(1-\hat{p})/n}\) alongside the estimate itself, computed from your own <code>proportion</code>/<code>ecdf_at</code> result.</p>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>dataset label</td></tr>
+      <tr><td><code>source</code></td><td>string</td><td>original CSV and its location in the source repo</td></tr>
+      <tr><td><code>n</code></td><td>int</td><td>number of patients, 200</td></tr>
+      <tr><td><code>outcome</code></td><td>list[int]</td><td>0/1 survival outcome per patient, length \(n\)</td></tr>
+      <tr><td><code>triage</code></td><td>list[str]</td><td>triage score label ("1", "2", or "3") per patient, length \(n\)</td></tr>
+      <tr><td><code>hr</code></td><td>list[float]</td><td>heart rate per patient, length \(n\)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "proportion 1,1,0,1,1 1" | python3 eda.py     # -> OK: 0.800000 0.178885
+echo "ecdf 3,1,4,1,5,9 4" | python3 eda.py          # -> OK: 0.666667 0.192450
+python3 test_eda.py                                  # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="eda.py" class="chat-dl-btn" download>eda.py (template)</a>
+    <a href="test_eda.py" class="chat-dl-btn" download>test_eda.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td><code>proportion</code> correct, including edge cases (target absent, target is every label)</td><td>25</td></tr>
+      <tr><td><code>ecdf_at</code> correct, including thresholds below the minimum and at or above the maximum</td><td>25</td></tr>
+      <tr><td>Both standard errors match \(\sqrt{\hat p(1-\hat p)/n}\) using each function's own \(\hat p\)</td><td>30</td></tr>
+      <tr><td>Protocol: unknown query reported as <code>ERR:</code>, no crash</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Is the ECDF's standard error the same at every threshold?</h3>
+  <p>No — it depends on \(\hat{F}(x)\) itself through \(\hat{F}(x)(1-\hat{F}(x))\), which peaks at \(\hat{F}(x) = 0.5\) and shrinks toward the tails. The ECDF is least certain near its own median and most certain where almost all, or almost none, of the data has accumulated.</p>
+
+  <h3>Why does one-hot encoding always sum to 1 across a row?</h3>
+  <p>Because each patient has exactly one triage score — the indicator for their actual label is 1, and every other label's indicator is 0 for that same row. That is also why one column is always redundant given the rest, and why models with an intercept typically drop one dummy column.</p>
+
+  <h3>Does a 91% survival proportion mean 91% of any new patient's chance to survive?</h3>
+  <p>Only if this sample is representative of the population you care about predicting for. The proportion and its standard error describe how precisely this particular sample estimates the population probability \(p\) — they say nothing about whether this sample's population matches whatever new patient you are asking about.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 05 — Proportions, One-Hot Encoding &amp; the ECDF. One indicator, averaged three different ways.
+  </footer>
+</main>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="viz.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

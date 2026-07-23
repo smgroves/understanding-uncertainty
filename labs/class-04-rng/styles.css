@@ -1,0 +1,67 @@
+/* ============================================================
+ * Class 04 · Random Numbers & the Sample Mean — lab-specific
+ * widget styles. Palette, typography, .viz/.callout chrome, and
+ * presentation mode live in ../shared/lab-base.css. This sheet is
+ * purely additive: the RNG widgets' controls and furniture.
+ * ============================================================ */
+
+.rng-board { margin: 4px 0 12px; }
+.rng-board svg { max-width: 100%; }
+
+.rng-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+.rng-slider { display: flex; align-items: center; gap: 8px; }
+.rng-slider-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.rng-slider input[type="range"] { width: 140px; accent-color: var(--accent); }
+.rng-slider-out { font-family: var(--mono); font-size: 12px; color: var(--ink); min-width: 60px; }
+
+.rng-radio, .rng-checks { display: flex; align-items: center; gap: 8px; }
+.rng-radio-btn, .rng-check-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border: 1px solid var(--rule); border-radius: 14px;
+  background: var(--bg-elev); cursor: pointer; font-size: 12px;
+}
+.rng-radio-btn input, .rng-check-btn input { accent-color: var(--accent); margin: 0; }
+.rng-radio-btn:hover, .rng-check-btn:hover { border-color: var(--accent-soft); }
+
+.rng-btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.rng-readout {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft);
+  margin-top: 10px; line-height: 1.55;
+}
+.rng-readout code { font-size: 0.92em; }
+.rng-readout strong { color: var(--ink); }
+
+.rng-stats {
+  display: flex; flex-wrap: wrap; gap: 10px 20px;
+  margin-top: 10px; font-family: var(--sans);
+}
+.rng-stat { display: flex; flex-direction: column; gap: 1px; }
+.rng-stat .rng-stat-label {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-mute);
+}
+.rng-stat .rng-stat-val { font-family: var(--mono); font-size: 15px; color: var(--ink); }
+
+/* Urn widget: colored ball chips */
+.rng-ball {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  font-family: var(--mono); font-size: 10px; color: white;
+  margin: 2px; border: 2px solid rgba(0,0,0,0.15);
+}
+.rng-ball.red { background: #b14a2e; }
+.rng-ball.blue { background: #2f6f9e; }
+.rng-ball.green { background: #2f7a4d; }
+.rng-ball.faded { opacity: 0.25; }

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 03 Lecture · Probability &amp; Random Variables — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 03 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Probability</a></li>
+    <li class="toc-sub"><a href="#spaces">Sample spaces, events, and probability spaces</a></li>
+    <li class="toc-sub"><a href="#additivity">Additivity</a></li>
+    <li class="toc-sub"><a href="#complement">Complementary events</a></li>
+    <li class="toc-sub"><a href="#conditioning">Conditional probability, independence, and Bayes' rule</a></li>
+    <li><a href="#part2">Part 2 · Random Variables</a></li>
+    <li class="toc-sub"><a href="#gamble">A coin flip as a gamble</a></li>
+    <li class="toc-sub"><a href="#pmf">The probability mass function</a></li>
+    <li class="toc-sub"><a href="#expectation-rv">Expectation</a></li>
+    <li class="toc-sub"><a href="#variance-rv">Variance</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 03 Lecture · Sep 1</div>
+    <h1>Probability &amp; Random Variables</h1>
+    <div class="subtitle">From sets and outcomes to the machinery of expectation and variance</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">A generating process runs out in the world; sampling it produces data; fitting models to that data is how you learn about the process. All three steps are inherently probabilistic, which is why this lecture starts from raw sets and outcomes and builds up, in order, to the two numbers — expectation and variance — that summarize any random variable at all.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 03, integrating the full content of
+    <a href="#">03_1_probability</a> and <a href="#">03_2_random_variables</a>.
+    See the <a href="binomial.html">Class 03 lab</a> for the interactive, real-data treatment of the binomial — a specific random variable built from exactly this machinery.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Probability</h2>
+
+  <h3 id="spaces">Sample spaces, events, and probability spaces</h3>
+  <p>Roll two six-sided dice and there are 36 possible outcomes, laid out as an ordered pair for each die. Which outcomes make the sum even? Strictly less than 7? Make the two dice match? What proportion of the 36 satisfy each?</p>
+
+  <p>A <strong>set</strong> is just a collection of things. For two sets \(E\) and \(F\): the <strong>union</strong> \(E \cup F\) is everything in either one; the <strong>intersection</strong> \(E \cap F\) is everything in both; the <strong>complement</strong> of \(E\) in \(F\), written \(F \backslash E\) or \(E^c\), is everything in \(F\) but not \(E\). The <strong>empty set</strong> \(\varnothing\) has no elements at all.</p>
+
+  <p>A <strong><span class="gloss" data-gloss="prob-space-lec">probability space</span></strong> \((\mathcal{S}, \mathcal{E}, p)\) has three parts: a sample space \(\mathcal{S}\) of possible outcomes, a set \(\mathcal{E}\) of events (subsets of \(\mathcal{S}\)), and a probability function \(p\) mapping events into \([0,1]\). Events combine outcomes — "roll an even number," "the roll sums to seven" — and the set of events \(\mathcal{E}\) always obeys four rules: nothing happening (\(\varnothing\)) has probability 0; something happening (\(\mathcal{S}\)) has probability 1; every event's complement is also an event; and the union and intersection of any two events are themselves events.</p>
+
+  <h3 id="additivity">Additivity</h3>
+  <p>Union becomes sum, as long as you don't double-count:</p>
+
+  <pre class="equation">$$p(E \cup F) = p(E) + p(F) - \underbrace{p(E \cap F)}_{\text{correction for double-counting}}$$</pre>
+
+  <p>If \(E \cap F = \varnothing\) (they share no outcomes), the correction term vanishes and \(p(E \cup F) = p(E) + p(F)\) exactly. In general \(p(E \cup F) \le p(E) + p(F)\), so probability is <strong>sub-additive</strong>.</p>
+
+  <p>Iterating this rule over disjoint events gives <strong>finite additivity</strong>: if \(E_1, \dots, E_n\) are mutually disjoint (no two share an outcome),</p>
+
+  <pre class="equation">$$p\left(\bigcup_{i=1}^n E_i\right) = \sum_{i=1}^n p(E_i)$$</pre>
+
+  <h3 id="complement">Complementary events</h3>
+  <p>The probability of an event <em>not</em> happening is 1 minus the probability it happens. Since \(E\) and its complement \(E^c\) are disjoint by definition and together cover everything, \(\mathcal{S} = E \cup E^c\):</p>
+
+  <pre class="equation">$$p(\mathcal{S}) = p(E \cup E^c) = p(E) + p(E^c) = 1 \quad\Longrightarrow\quad p(E^c) = 1 - p(E)$$</pre>
+
+  <h3 id="conditioning">Conditional probability, independence, and Bayes' rule</h3>
+  <p>Information is about renormalizing to account for a shrinkage of the possibilities. The <strong><span class="gloss" data-gloss="conditional-prob-lec">conditional probability</span></strong> of \(A\) given \(B\):</p>
+
+  <pre class="equation">$$p[A\mid B] = \frac{p[A\cap B]}{p[B]}$$</pre>
+
+  <p>Sum the probability that \(A\) and \(B\) occur together, then renormalize by \(p[B]\) so the result properly accounts for already knowing \(B\) happened. Event \(A\) is <strong><span class="gloss" data-gloss="independence-lec">independent</span></strong> of \(B\) exactly when \(p[A \cap B] = p[A]\,p[B]\) — their joint probability is not affected by whether the other one occurred.</p>
+
+  <p>Knowing \(B\) happened also lets you renormalize an expectation:</p>
+
+  <pre class="equation">$$\mathbb{E}[X\mid B] = \sum_x x \times p[X=x\mid B] = \sum_x x \times \frac{p[X=x\cap B]}{p[B]}$$</pre>
+
+  <p>Flipping the roles of \(A\) and \(B\) in the conditional-probability definition gives \(p[B\mid A]\,p[A] = p[A\cap B]\); substituting that into the numerator of \(p[A\mid B]\) gives <strong><span class="gloss" data-gloss="bayes-lec">Bayes' rule</span></strong>:</p>
+
+  <pre class="equation">$$p[A\mid B] = \frac{p[B\mid A]\times p[A]}{p[B]}$$</pre>
+
+  <p class="keep-in-present">Bayes' rule is usually read as \(\underbrace{p[\text{hypothesis}\mid\text{data}]}_{\text{posterior}} = \dfrac{\underbrace{p[\text{data}\mid\text{hypothesis}]}_{\text{likelihood}} \times \underbrace{p[\text{hypothesis}]}_{\text{prior}}}{\underbrace{p[\text{data}]}_{\text{marginal}}}\) — a foundational piece of probabilistic reasoning this course returns to repeatedly.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · Random Variables</h2>
+
+  <h3 id="gamble">A coin flip as a gamble</h3>
+  <p>Flip a coin: heads wins a dollar, tails loses one.</p>
+
+  <pre class="equation">$$X(s) = \begin{cases} +1, & s = H \\ -1, & s = T \end{cases}$$</pre>
+
+  <p>This is a gamble — an assignment of numbers to real-world outcomes. If the coin is fair, you expect \(\tfrac12(+1) + \tfrac12(-1) = 0\). Would you take that gamble? What about \(\pm 10\), \(\pm 100\), \(\pm 1000\) — does your willingness change even though the expected value is 0 every time?</p>
+
+  <p>A <strong>random variable</strong> is a function \(X\) assigning numbers to outcomes: \(X : \mathcal{S} \to \mathbb{R}\). Think of it as a bet — on a die, the stock market, any game — and the random variable is the money that changes hands depending on what happens. The probability space \((\mathcal{S}, \mathcal{E}, p)\) represents fundamental uncertainty about the world itself — an outcome could be a temperature, an ice cream flavor, anything — and the random variable is what assigns a number to each one: \(X(95°F) = -6\), \(X(\text{vanilla}) = 4.25\). Choosing sensible numbers is where domain expertise matters.</p>
+
+  <h3 id="pmf">The probability mass function</h3>
+  <p>Once outcomes are mapped to numbers, ask: what is the probability \(X\) takes a given value? For each value \(x\), the <strong><span class="gloss" data-gloss="pmf-lec">probability mass function</span></strong> gives \(p[X=x]\) — the probability of every outcome \(s\) with \(X(s) = x\). If \(X\) only takes values \(x_1, \dots, x_L\), those probabilities sum to 1: \(\sum_{\ell=1}^L p[X=x_\ell] = 1\).</p>
+
+  <p>The random variable is what lets you stop tracking every conceivable event and track only the ones that matter for \(X\) — it partitions the state space by the values \(X\) takes, and "pushes" the whole probability space forward onto just those numbers. Betting on whether a die roll is even or odd rather than which face comes up:</p>
+
+  <pre class="equation">$$X(s) = \begin{cases} +1, & s \text{ is odd, you win} \\ -1, & s \text{ is even, you lose} \end{cases}$$</pre>
+
+  <p>needs only four events — \(\varnothing\), \(\{1,3,5\}\), \(\{2,4,6\}\), and \(\{1,\dots,6\}\), with probabilities 0, 1/2, 1/2, and 1 — instead of tracking all 6 individual faces separately.</p>
+
+  <h3 id="expectation-rv">Expectation</h3>
+  <p>Suppose \(X\) takes only values \(x_1, \dots, x_L\), each with probability \(p_1, \dots, p_L\). A pessimist expects the minimum, an optimist the maximum; something in between is the <strong>expectation</strong>:</p>
+
+  <pre class="equation">$$\mathbb{E}[X] = p_1x_1 + p_2x_2 + \cdots + p_Lx_L = \sum_{\ell=1}^L p_\ell x_\ell$$</pre>
+
+  <p>Weight each outcome by how often it occurs, and sum. Expectation is <strong>linear</strong>: transforming every value by \(a + bX\),</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\sum_{\ell=1}^L p_\ell(a+bx_\ell) &=& \sum_{\ell=1}^L (p_\ell a + bp_\ell x_\ell) \quad &(\text{Definition})\\
+&=& \sum_{\ell=1}^L p_\ell a + \sum_{\ell=1}^L p_\ell b x_\ell \quad &(\text{Break up the sum})\\
+&=& a\sum_{\ell=1}^L p_\ell + b\sum_{\ell=1}^L p_\ell x_\ell \quad &(\text{Factor out } a \text{ and } b)\\
+\underbrace{\sum_{\ell=1}^L p_\ell(a+bx_\ell)}_{\mathbb{E}[a+bX]} &=& a + b\underbrace{\sum_{\ell=1}^L p_\ell x_\ell}_{\mathbb{E}[X]} \quad &(\textstyle\sum p_\ell = 1)
+\end{alignat*}$$</pre>
+
+  <p>so \(\mathbb{E}[a+bX] = a + b\,\mathbb{E}[X]\) — expectation commutes with any linear function. Since \(\mathbb{E}[X]\) is itself just a number, \(\mathbb{E}[\mathbb{E}[X]] = \mathbb{E}[X]\). It only commutes with <em>linear</em> functions in general (Jensen's inequality is the statement of how it fails for non-linear ones).</p>
+
+  <h3 id="variance-rv">Variance</h3>
+  <p>The <strong>variance</strong> of \(X\) is the expected squared deviation from its own expectation — how dispersed \(X\) is around its center:</p>
+
+  <pre class="equation">$$\mathbb{V}[X] = \mathbb{E}\big[(X-\mathbb{E}[X])^2\big] = \sum_{\ell=1}^L p_\ell(x_\ell - \mathbb{E}[X])^2$$</pre>
+
+  <p>Expanding that square gives the computational shortcut used constantly throughout this course:</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{V}[X] &=& \mathbb{E}\big[(X-\mathbb{E}[X])^2\big] \quad &(\text{Definition})\\
+&=& \mathbb{E}\big[X^2 - 2X\mathbb{E}[X] + \mathbb{E}[X]^2\big] \quad &(\text{FOIL})\\
+&=& \mathbb{E}[X^2] - 2\mathbb{E}[X]\mathbb{E}[X] + \mathbb{E}[X]^2 \quad &(\text{Linearity})\\
+&=& \mathbb{E}[X^2] - \mathbb{E}[X]^2 \quad &(\text{Simplify})
+\end{alignat*}$$</pre>
+
+  <p>Variance does <em>not</em> commute with a linear transformation the same simple way expectation does. For \(Y = a + bX\):</p>
+
+  <pre class="equation">$$\begin{alignat*}{2}
+\mathbb{V}[Y] &=& \sum_{\ell=1}^L p_\ell(y_\ell - \mathbb{E}[Y])^2 \quad &(\text{Definition})\\
+&=& \sum_{\ell=1}^L p_\ell(a+bx_\ell - \mathbb{E}[a+bX])^2 \quad &(Y=a+bX)\\
+&=& \sum_{\ell=1}^L p_\ell(a+bx_\ell - a - b\mathbb{E}[X])^2 \quad &(\text{Linearity of } \mathbb{E})\\
+&=& \sum_{\ell=1}^L p_\ell(bx_\ell - b\mathbb{E}[X])^2 \quad &(\text{Cancel the } a\text{'s})\\
+&=& b^2\sum_{\ell=1}^L p_\ell(x_\ell-\mathbb{E}[X])^2 \quad &(\text{Factor out } b)\\
+\mathbb{V}[Y] &=& b^2\,\mathbb{V}[X]
+\end{alignat*}$$</pre>
+
+  <p class="keep-in-present">Adding a constant \(a\) never changes the spread; scaling by \(b\) scales the variance by \(b^2\), not by \(b\) — variance is <em>not</em> \(a + b\,\mathbb{V}[X]\). The <a href="binomial.html">Class 03 lab</a> specializes this whole machinery to one concrete random variable, the binomial, and builds its PMF from scratch.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does variance scale by \(b^2\) and not by \(b\)?</h3>
+  <p>Because variance is defined in squared units of \(X\) — it measures a squared deviation. Scaling \(X\) by \(b\) scales every deviation by \(b\), and squaring that deviation scales the variance by \(b^2\). Adding a constant \(a\) shifts every value equally without changing how spread out they are relative to each other, so it drops out entirely.</p>
+
+  <h3>Is independence the same as "not correlated"?</h3>
+  <p>Independence (\(p[A\cap B] = p[A]p[B]\)) is a stronger, more general condition than zero correlation. Two variables can have zero linear correlation while still being dependent in some non-linear way; genuine independence rules out <em>any</em> relationship, linear or not.</p>
+
+  <h3>Why does Bayes' rule matter if it's "just" conditional probability rearranged?</h3>
+  <p>Because the rearrangement flips which conditional probability you need. Often \(p[\text{data}\mid\text{hypothesis}]\) (the likelihood) is easy to compute or reason about directly, while \(p[\text{hypothesis}\mid\text{data}]\) (the posterior — what you actually want to know) is not. Bayes' rule is the bridge between the direction you can compute and the direction you care about.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 03 Lecture — Probability &amp; Random Variables. Sets, events, and one number-assigning function away from expectation and variance.
+  </footer>
+</main>
+
+<script>
+  window.GLOSSARY = {
+    'prob-space-lec': {
+      title: 'Probability space',
+      body: '<p>The triple (sample space, events, probability function) that formalizes an uncertain process: the set of possible outcomes, the collection of things you can ask about, and how likely each one is.</p>',
+    },
+    'conditional-prob-lec': {
+      title: 'Conditional probability',
+      body: '<p>The probability of one event given that another has already happened: p[A|B] = p[A∩B]/p[B]. Renormalizes the probabilities to account for the information that B occurred.</p>',
+    },
+    'independence-lec': {
+      title: 'Independence',
+      body: '<p>Two events are independent if p[A∩B] = p[A]p[B] — knowing one occurred tells you nothing about whether the other did.</p>',
+    },
+    'bayes-lec': {
+      title: "Bayes' rule",
+      body: '<p>A formula for reversing a conditional probability: p[A|B] = p[B|A]p[A]/p[B]. Lets you compute p[hypothesis|data] from p[data|hypothesis], the prior, and the marginal probability of the data.</p>',
+    },
+    'pmf-lec': {
+      title: 'Probability mass function',
+      body: '<p>For a discrete random variable X, the function giving p[X=x] for every value x it can take. Summing the PMF over all possible values always gives exactly 1.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

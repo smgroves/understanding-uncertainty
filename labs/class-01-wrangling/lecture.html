@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 01 Lecture · Wrangling &amp; EDA — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="lecture.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">Class 01 · Lecture</div>
+  <ul>
+    <li><a href="#part1">Part 1 · Wrangling</a></li>
+    <li class="toc-sub"><a href="#workflow">The wrangling workflow</a></li>
+    <li class="toc-sub"><a href="#dataframes">Dataframes: variables, observations, values</a></li>
+    <li class="toc-sub"><a href="#types">Variable types and casting</a></li>
+    <li class="toc-sub"><a href="#missing">Missing values and imputation</a></li>
+    <li class="toc-sub"><a href="#filtering">Filtering and saving</a></li>
+    <li><a href="#part2">Part 2 · Exploratory Data Analysis</a></li>
+    <li class="toc-sub"><a href="#statistics">Statistics and single variables</a></li>
+    <li class="toc-sub"><a href="#mean-var">Mean and variance</a></li>
+    <li class="toc-sub"><a href="#median-quantiles">Median and quantiles</a></li>
+    <li class="toc-sub"><a href="#transforms">Taming long tails</a></li>
+    <li class="toc-sub"><a href="#pairs">Pairs of variables</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 01 Lecture · Aug 27</div>
+    <h1>Wrangling &amp; Exploratory Data Analysis</h1>
+    <div class="subtitle">Making a dataset trustworthy, then summarizing it one variable — and one pair — at a time</div>
+    <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
+  </header>
+
+  <p class="lede">Data cleaning is roughly 80% of data science, and this lecture is about the other side of that same coin: once a dataset is clean enough to trust, what do you actually compute to understand it? The first half is a fixed six-step wrangling workflow; the second half is the statistics — mean, median, quantiles, covariance — that only make sense once wrangling is done.</p>
+
+  <div class="cite">
+    Comprehensive lecture notes for Class 01, integrating the full content of
+    <a href="#">01_1_wrangling</a> and <a href="#">01_2_eda</a>.
+    See the <a href="wrangling.html">Class 01 lab</a> for the interactive, real-data treatment of mean vs. median, quantiles, and transforms this lecture derives.
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="part1">Part 1 · Wrangling</h2>
+
+  <h3 id="workflow">The wrangling workflow</h3>
+  <p>Data wrangling follows six fixed steps: make the data accessible, determine the schema, verify and cast data types, assess missing values, filter to the rows and columns you need, and save your work. "Data cleaning is approximately 80% of data science" — most of the effort in any real analysis is here, before a single statistic gets computed.</p>
+
+  <p>The standard stack for nearly every step: <code>numpy</code> for numerical arrays, <code>matplotlib.pyplot</code> for plots, <code>pandas</code> for dataframes, and <code>seaborn</code> for a friendlier statistical plotting API on top of matplotlib. <code>pip install &lt;package&gt;</code> adds any of them to your environment.</p>
+
+  <h3 id="dataframes">Dataframes: variables, observations, values</h3>
+  <p>Loading a dataframe is three lines: <code>df = pd.read_csv('these_data.csv', low_memory=False)</code>, then <code>df.shape</code> to verify its dimensions and <code>df.head()</code> to verify its integrity by eye.</p>
+
+  <p>Inside that dataframe, <strong>columns are variables</strong> — features of the phenomenon you are studying — and <strong>rows are observations</strong> — one instance of that phenomenon. Build a new variable from a list with <code>df[var] = pd.Series(list)</code>, or derive one from an existing column with <code>df[var_transform] = transformation(df[var])</code>. Add a new observation by building a one-row dataframe with matching column names and <code>pd.concat([df, new_obs], ignore_index=True)</code>. The <strong>values</strong> are the actual recorded numbers or labels at the intersection of one observation and one variable. "What is an observation?" is one of the most powerful questions in data science — get it wrong and every downstream statistic answers a different question than you think it does.</p>
+
+  <p>The <strong><span class="gloss" data-gloss="schema-lec">schema</span></strong> describes how the data are organized: what tables exist, what variables they contain, what type each variable has, and how tables connect to each other. Data are <strong>tabular</strong> when they form rows of observations and columns of variables in a rectangular shape. In Pandas, <code>df.columns</code> returns the schema directly.</p>
+
+  <h3 id="types">Variable types and casting</h3>
+  <p>Six conceptually distinct variable types recur constantly: numeric splits into <strong>integer</strong> (whole numbers, stored as <code>int64</code>) and <strong>real-ish</strong> (floating point, stored as <code>float64</code>); categorical is a <strong>string</strong> with a fixed list of labels (color, brand, zip code), usually stored as Pandas' <code>category</code> type; <strong>logical</strong> is binary <code>True</code>/<code>False</code>; <strong>date</strong> is a <code>datetime</code>; unstructured text is a string with no fixed label list (reviews, notes); and <strong>object</strong> is Pandas' catch-all when none of the above quite fits.</p>
+
+  <p>To get acquainted with any one variable: its current type (<code>df[var].dtype</code>), how many values are missing (<code>df[var].isna().sum()</code>), what distinct values it takes (<code>df[var].unique()</code>), how often each occurs (<code>df[var].value_counts()</code>), and a histogram of those counts (<code>df[var].hist(bins=35)</code>). From that, you should be able to decide whether a variable needs substantial cleaning before you trust it.</p>
+
+  <p>Computers frequently infer the wrong type. A monetary value stored as <code>"-$1,320.15"</code> or a temperature as <code>"23C"</code> gets read as text, because the extra symbols make it look like one. Forcing a variable into a different type than it arrived in is <strong><span class="gloss" data-gloss="typecast-lec">type casting</span></strong> (or coercion): strip the offending symbol (<code>df[var] = df[var].str.replace('$', '')</code>), then convert (<code>df[var] = pd.to_numeric(df[var], errors='coerce')</code>). For other conversions, <code>df[var].astype(str)</code> or <code>.astype(int)</code> handle the rest.</p>
+
+  <h3 id="missing">Missing values and imputation</h3>
+  <p>The single most important wrangling problem is <strong>missing data</strong> — values never recorded for some observations. Mishandling or misunderstanding why data are missing can bias every downstream analysis; missing data is not a mere inconvenience, it is information about how the data were gathered in the first place.</p>
+
+  <p>The workflow: count missing values per variable (<code>number_missing = df.isna().sum()</code>), then create a missing-value dummy for every affected column:</p>
+
+  <pre><code class="language-python">schema = df.columns
+for var in schema:
+    if df[var].isna().any():
+        df[f'{var}_NA'] = df[var].isna()</code></pre>
+
+  <p>If you must fill the gap, <strong>imputation</strong> replaces a numeric variable's missing values with its median (<code>df[f'{var}_imp'] = df[var].fillna(df[var].median())</code>) or gives a categorical variable an explicit new category (<code>df[var].fillna('NA')</code> or <code>'Missing'</code>).</p>
+
+  <h3 id="filtering">Filtering and saving</h3>
+  <p>Column filtering keeps only variables of interest: given a list <code>columns</code>, <code>df[columns]</code> returns just those. Row filtering keeps only observations satisfying a condition: given a boolean <code>row_condition</code> like <code>df[price] &gt; 1000</code>, <code>df[row_condition]</code> returns just those rows. Doing both at once: <code>df.loc[row_condition, columns]</code>. Overwriting <code>df</code> itself with either filter (<code>df = df[columns]</code>) discards the other columns permanently from that variable, forcing a reload if you need them again.</p>
+
+  <p>Never overwrite the original data file — always keep it for reproducibility. CSV (<code>df.to_csv('data_cleaned.csv', index=False)</code>) is human-readable and universal; Parquet is more efficient for large or complex data.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="part2">Part 2 · Exploratory Data Analysis</h2>
+
+  <p>A random variable is a phenomenon whose outcome is not yet known; statistics and machine learning guess future values of that phenomenon from past observations. <strong>Exploratory data analysis</strong> is the step before any of that guessing: discovering the basic features of your variables, one at a time and then in pairs.</p>
+
+  <h3 id="statistics">Statistics and single variables</h3>
+  <p>Recall the same "getting to know a variable" checklist from wrangling — dtype, missing count, unique values, value counts, histogram — because EDA does not replace wrangling, it depends on it: only a clean-enough variable is worth summarizing.</p>
+
+  <p>A <strong><span class="gloss" data-gloss="statistic-eda">statistic</span></strong> is any function that maps data to a number — a proportion (what fraction of observations take a particular label) or a mean (the average of the recorded values) are the two most common. Analyzing a <strong>categorical</strong> variable \(C\) means computing how often it takes each label: <code>df[var].value_counts(normalize=True)</code> for proportions among non-missing values, adding <code>dropna=False</code> to fold missingness in as its own category, or <code>sns.countplot(data=df, x=var, stat='proportion')</code> to visualize it. Analyzing a <strong>numeric</strong> variable \(x\) means seeing how its values spread out: <code>sns.histplot(df[var], bins=50)</code> for the shape, <code>df[var].describe()</code> for the standard numeric summary.</p>
+
+  <h3 id="mean-var">Mean and variance</h3>
+  <p>The <strong>sample mean</strong> is the standard measure of central tendency:</p>
+
+  <pre class="equation">$$M(X) = \frac{x_1+x_2+\cdots+x_n}{n} = \frac{1}{n}\sum_{i=1}^n x_i$$</pre>
+
+  <p>The <strong>sample variance</strong> is the average squared distance from that mean, and the <strong>sample standard deviation</strong> its square root:</p>
+
+  <pre class="equation">$$V(X) = \frac{1}{n}\sum_{i=1}^n \big(x_i - M(X)\big)^2, \qquad \mathrm{sd}(X) = \sqrt{V(X)}$$</pre>
+
+  <h3 id="median-quantiles">Median and quantiles</h3>
+  <p>The mean and variance are particularly sensitive to <span class="gloss" data-gloss="outlier-eda">outliers</span> — atypically high or low values that exert outsized leverage on both. <span class="gloss" data-gloss="robust-eda">Robust statistics</span> studies estimators less sensitive to them. The <strong>sample median</strong> is the robust measure of central tendency: the value with half the sample above it and half below.</p>
+
+  <pre><code class="language-python">def median(X):
+    values = sorted(X)          # Sort the observations
+    n = len(values)              # Number of observations
+    middle_index = n // 2        # Determine the middle index
+
+    if middle_index != n / 2:    # If the middle index is odd,
+        median = values[middle_index]              # that value is the median
+    else:                        # If the middle index is even,
+        median = (values[middle_index - 1] + values[middle_index]) / 2  # average values
+    return median</code></pre>
+
+  <p>The median generalizes to any split point via the <strong><span class="gloss" data-gloss="quantile-eda">\(f\)-th quantile</span></strong> — the value with a fraction \(f\) of the sample below it and \(1-f\) above:</p>
+
+  <pre><code class="language-python">from math import ceil
+
+def quantile(X, frac):
+    values = sorted(X)                          # Sort the observations
+    n = len(values)                               # Number of observations
+    index = max(ceil(n * frac) - 1, 0)            # Find frac-th index
+    q = values[index]                             # Determine quantile value
+    return q</code></pre>
+
+  <p><code>np.quantile(X, f)</code> does this for you in practice. The robust analog of the variance is the <strong>interquartile range</strong>, the gap between the 0.75 and 0.25 quantiles:</p>
+
+  <pre><code class="language-python">IQR = np.quantile(X, .75) - np.quantile(X, .50)</code></pre>
+
+  <p class="keep-in-present">The median, IQR, and outliers all show up together in a <strong>boxplot</strong> — the standard single-picture summary of a numeric variable's robust center and spread. The <a href="wrangling.html#viz-toystat">Class 01 lab</a> builds exactly this median/quantile machinery interactively, using the pinned toy set \(\{12, 34, 41, 58, 1018\}\) — the same numbers this lecture's code would produce if you ran it.</p>
+
+  <h3 id="transforms">Taming long tails</h3>
+  <p>Almost every real dataset has a handful of variables with long tails — the mean sits far from the median because a small number of very large values pull it away. The traditional fix is the <strong>natural logarithm</strong> (<code>df['var_ln'] = np.log(df[var])</code>), which compresses large values much more than small ones — but it is undefined at zero and for negative numbers. The better choice is the <strong><span class="gloss" data-gloss="arcsinh-eda">inverse hyperbolic sine</span></strong> (arcsinh), defined everywhere, including zero and negative inputs, where it evaluates to 0 and to negative outputs respectively:</p>
+
+  <pre class="equation">$$i(x) = \ln\!\left(x + \sqrt{x^2+1}\right)$$</pre>
+
+  <h3 id="pairs">Pairs of variables</h3>
+  <p>Everything so far summarizes one variable. For two categoricals at once, a <strong><span class="gloss" data-gloss="contingency-eda">contingency table</span></strong> (<code>pd.crosstab(df[var1], df[var2])</code>) gives the joint counts, showing how the two vary together or independently.</p>
+
+  <p>For two numerics, the visual analog of a contingency table is a scatterplot (<code>sns.scatterplot(x=df[var1], y=df[var2], alpha=.15)</code>), usually summarized numerically by the <strong>covariance</strong>:</p>
+
+  <pre class="equation">$$\mathrm{cov}(X,Y) = \frac{\sum_{i=1}^n (x_i - M(X))(y_i - M(Y))}{n}$$</pre>
+
+  <p>computed directly with <code>df[[var1, var2]].cov()</code>.</p>
+
+  <p>To condition a numeric variable on a categorical one — analyze it separately within each category — split the data by label first. Visually, <code>sns.kdeplot(x=df[num], hue=df[cat], fill=True)</code> overlays one density per group; numerically, <code>df[[cat, num]].groupby(cat).describe()</code> gives a full summary per group, or <code>.mean()</code>, <code>.sum()</code>, <code>.count()</code> for one statistic at a time, or <code>.agg(fcn)</code> for a custom function. When you are hunting for the top or bottom of a group, <code>.sort()</code> at the end orders the result.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why compute missing-value dummies instead of just dropping incomplete rows?</h3>
+  <p>Because whether a value is missing is itself information about the data-gathering process — a survey question skipped disproportionately by one group, a sensor that fails under specific conditions. Dropping incomplete rows silently discards that pattern; keeping a dummy variable lets you check whether "missingness" itself predicts anything, before deciding it's safe to ignore.</p>
+
+  <h3>Why does imputing with the median matter, specifically, versus the mean?</h3>
+  <p>Because the median is robust to the same outliers that would otherwise distort the mean you'd be filling gaps with. Imputing with a mean that is itself dragged off-center by a few extreme values compounds the original data quality problem instead of routing around it.</p>
+
+  <h3>Why does covariance divide by n, and not leave the raw sum alone?</h3>
+  <p>So that covariance is an average paired deviation, not a quantity that mechanically grows just because you added more observations — the same reason the sample mean divides by n instead of reporting a raw sum.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 01 Lecture — Wrangling &amp; Exploratory Data Analysis. Clean first; then one variable, one pair, one statistic at a time.
+  </footer>
+</main>
+
+<script>
+  window.GLOSSARY = {
+    'schema-lec': {
+      title: 'Schema',
+      body: '<p>The organization of a dataset: what tables exist, what variables they contain, and what type each variable is. The first thing to check before trusting any statistic.</p>',
+    },
+    'typecast-lec': {
+      title: 'Type casting (coercion)',
+      body: '<p>Forcing a variable into a different data type than the one it was loaded as — turning text like "$1,320.15" into the number 1320.15. Real data is rarely typed correctly on arrival.</p>',
+    },
+    'statistic-eda': {
+      title: 'Statistic',
+      body: '<p>Any function that maps a sample of data to a single number — a proportion, a mean, a variance. Distinct from a parameter, which is the corresponding fixed number for the whole population.</p>',
+    },
+    'outlier-eda': {
+      title: 'Outlier',
+      body: '<p>An observation that is atypically high or low relative to the rest of the sample, and that exerts disproportionate influence on statistics like the mean and variance that weight every value equally.</p>',
+    },
+    'robust-eda': {
+      title: 'Robust statistic',
+      body: '<p>A summary statistic whose value barely changes when a small number of observations are extreme or wrong. The median and IQR are robust; the mean and variance are not.</p>',
+    },
+    'quantile-eda': {
+      title: 'Quantile',
+      body: '<p>The value below which a given fraction f of the sorted data falls. The median is the 0.5 quantile; quantiles generalize "the middle" to any split point.</p>',
+    },
+    'arcsinh-eda': {
+      title: 'Inverse hyperbolic sine (arcsinh)',
+      body: '<p>A transformation that compresses a long right tail like a logarithm does, but stays defined at zero and for negative numbers, unlike the logarithm.</p>',
+    },
+    'contingency-eda': {
+      title: 'Contingency table',
+      body: '<p>A cross-tabulation of two categorical variables: one row per label of the first, one column per label of the second, and a count in every cell.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

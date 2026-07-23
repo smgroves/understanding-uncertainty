@@ -463,61 +463,7 @@
       body: '<p>A cross-tabulation of two categorical variables: one row per label of the first, one column per label of the second, and a count in every cell. It shows how two categoricals vary together.</p>',
     },
   };
-  (function initGlossary() {
-    const panel = document.getElementById('glossary-panel');
-    const content = document.getElementById('glossary-content');
-    const closeBtn = document.getElementById('glossary-close');
-    if (!panel || !content) return;
-    const terms = Array.from(document.querySelectorAll('.gloss[data-gloss]'));
-    if (!terms.length) return;
-    let activeTerm = null;
 
-    function blockFor(node) {
-      let n = node;
-      while (n && n !== document.body) {
-        if (n.tagName && /^(P|LI|H2|H3|H4|FIGURE|TABLE|BLOCKQUOTE|PRE)$/.test(n.tagName)) {
-          if (n.tagName === 'LI') {
-            const list = n.closest('ul, ol');
-            if (list) return list;
-          }
-          return n;
-        }
-        n = n.parentElement;
-      }
-      return node;
-    }
-    function show(term) {
-      const key = term.getAttribute('data-gloss');
-      const g = GLOSSARY[key];
-      if (!g) return;
-      const block = blockFor(term);
-      block.parentNode.insertBefore(panel, block.nextSibling);
-      content.innerHTML = '<div class="glossary-panel-title">' + g.title + '</div><div class="glossary-content">' + g.body + '</div>';
-      panel.hidden = false;
-      terms.forEach(t => t.classList.toggle('active', t === term));
-      activeTerm = term;
-    }
-    function hide() {
-      panel.hidden = true;
-      terms.forEach(t => t.classList.remove('active'));
-      activeTerm = null;
-    }
-    terms.forEach(term => {
-      term.setAttribute('tabindex', '0');
-      term.setAttribute('role', 'button');
-      term.addEventListener('mouseenter', () => show(term));
-      term.addEventListener('click', () => (activeTerm === term ? hide() : show(term)));
-      term.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activeTerm === term ? hide() : show(term); }
-      });
-    });
-    if (closeBtn) closeBtn.addEventListener('click', hide);
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !panel.hidden) {
-        if (e.target.matches && e.target.matches('input, textarea')) return;
-        hide();
-      }
-    });
-  })();
+  window.GLOSSARY = GLOSSARY;
 
 })();

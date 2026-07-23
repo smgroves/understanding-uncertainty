@@ -1,0 +1,7 @@
+/* ============================================================
+ * Class 11 Lecture — page-specific styles.
+ * Palette, typography, .viz/.callout/.equation/.nb-output chrome,
+ * and presentation mode all live in ../shared/lab-base.css. This
+ * sheet is purely additive; lecture pages need very little beyond
+ * the shared base since they are mostly prose, equations, and code.
+ * ============================================================ */

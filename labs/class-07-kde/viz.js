@@ -432,61 +432,7 @@
       body: '<p>A rule that lets arrays of different shapes combine without explicit loops. <code>x_grid[:,None] − X[None,:]</code> subtracts every data point from every grid point, producing a full grid-by-data matrix in one vectorised expression.</p>',
     },
   };
-  (function initGlossary() {
-    const panel = document.getElementById('glossary-panel');
-    const content = document.getElementById('glossary-content');
-    const closeBtn = document.getElementById('glossary-close');
-    if (!panel || !content) return;
-    const terms = Array.from(document.querySelectorAll('.gloss[data-gloss]'));
-    if (!terms.length) return;
-    let activeTerm = null;
 
-    function blockFor(node) {
-      let n = node;
-      while (n && n !== document.body) {
-        if (n.tagName && /^(P|LI|H2|H3|H4|FIGURE|TABLE|BLOCKQUOTE|PRE)$/.test(n.tagName)) {
-          if (n.tagName === 'LI') {
-            const list = n.closest('ul, ol');
-            if (list) return list;
-          }
-          return n;
-        }
-        n = n.parentElement;
-      }
-      return node;
-    }
-    function show(term) {
-      const key = term.getAttribute('data-gloss');
-      const g = GLOSSARY[key];
-      if (!g) return;
-      const block = blockFor(term);
-      block.parentNode.insertBefore(panel, block.nextSibling);
-      content.innerHTML = '<div class="glossary-panel-title">' + g.title + '</div><div class="glossary-content">' + g.body + '</div>';
-      panel.hidden = false;
-      terms.forEach(t => t.classList.toggle('active', t === term));
-      activeTerm = term;
-    }
-    function hide() {
-      panel.hidden = true;
-      terms.forEach(t => t.classList.remove('active'));
-      activeTerm = null;
-    }
-    terms.forEach(term => {
-      term.setAttribute('tabindex', '0');
-      term.setAttribute('role', 'button');
-      term.addEventListener('mouseenter', () => show(term));
-      term.addEventListener('click', () => (activeTerm === term ? hide() : show(term)));
-      term.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activeTerm === term ? hide() : show(term); }
-      });
-    });
-    if (closeBtn) closeBtn.addEventListener('click', hide);
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !panel.hidden) {
-        if (e.target.matches && e.target.matches('input, textarea')) return;
-        hide();
-      }
-    });
-  })();
+  window.GLOSSARY = GLOSSARY;
 
 })();

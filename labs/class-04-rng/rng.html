@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class 04 · Random Numbers &amp; the Sample Mean — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=4">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<!-- Prism for code highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<!-- MathJax. Inline math uses \( \) so literal currency ($5k) is never
+     mistaken for a delimiter; display math uses $$ … $$ inside
+     <pre class="equation">. Code stays in skipHtmlTags so Prism owns it. -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<!-- Presentation-mode toggle (lab-base.js wraps it + adds nav) -->
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<!-- Sticky table of contents -->
+<aside class="toc">
+  <div class="toc-title">Class 04 · RNGs &amp; the Sample Mean</div>
+  <ul>
+    <li><a href="#try-it">Try it</a></li>
+    <li><a href="#mse">The best guess: minimizing squared error</a></li>
+    <li><a href="#seeds">Seeds you can trust</a></li>
+    <li><a href="#replacement">With replacement vs. without</a></li>
+    <li><a href="#speed">Writing it fast</a></li>
+    <li><a href="#assignment">Assignment</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · Class 04 · Sep 3</div>
+    <h1>Random Numbers &amp; the Sample Mean</h1>
+    <div class="subtitle">Reproducible randomness, and why squared error makes the mean the best guess</div>
+    <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
+  </header>
+
+  <p class="lede">Before you can test any statistical idea, you need randomness you can reproduce on demand — the same seed, the same sequence, every time. Once you have that, the first question worth asking is: given a sample of patients, what single number best predicts the next one? Calculus has an answer, and it is not a guess — it is exactly the sample mean, the unique number that minimizes squared error against the data you already have.</p>
+
+  <div class="cite">
+    Built on the Class 04 notebooks <a href="lecture.html#why-mean">04_1_learning_from_data</a> and <a href="lecture.html#not-random">04_2_random_number_generation</a> — see the <a href="lecture.html">full lecture</a> for every derivation this lab only sketches.
+    Data: 40 patients' ages (<code>CardiacPatientData.csv</code>, <code>uu_fa26/class_02/</code>).
+  </div>
+
+  <p class="glossary-hint">
+    New vocabulary is <span class="gloss gloss-demo">underlined like this</span> —
+    hover or tap any term for a one-line explanation that appears right below the line you are reading.
+  </p>
+  <div class="glossary-panel" id="glossary-panel" hidden>
+    <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+    <div id="glossary-content"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="try-it">Try it</h2>
+
+  <p>Drag the slider to guess a single number \(\hat{x}\) that predicts every one of 40 patients' ages at once. The readout is your average squared error — how far off you are, squared, averaged over all 40 patients. Find the guess that makes it smallest.</p>
+
+  <div class="viz" id="viz-mse">
+    <div class="viz-title">Minimize the squared error · 40 patient ages</div>
+    <div class="viz-description">The curve is mean squared error as a function of your guess \(\hat{x}\) — it is always a parabola, for any dataset. The dot marks your current guess; the dashed line marks the true minimum.</div>
+    <div class="rng-board"></div>
+    <div class="rng-controls"></div>
+    <div class="rng-readout"></div>
+    <div class="chat-downloads">
+      <span class="chat-downloads-label">Take it with you:</span>
+      <a href="#" class="chat-dl-btn" data-dl="data">data.json</a>
+      <a href="#" class="chat-dl-btn" data-dl="js">sampler.js</a>
+      <a href="#" class="chat-dl-btn" data-dl="py">sampler.py</a>
+    </div>
+    <div class="viz-caption">The two downloadable samplers compute this exact MSE curve and the LCG-seeded random draws below in pure stdlib.</div>
+  </div>
+
+  <p>However you got there, the slider position with the lowest curve is the sample mean, 58.7 years. The <a href="lecture.html#why-mean">lecture</a> derives that in closed form with one line of calculus; this widget lets you find it by search first.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="mse">The best guess: minimizing squared error</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>why a parabola</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Every dataset you could ever hand this widget produces a smooth U-shaped curve, never a jagged or multi-humped one. Each term in the sum being minimized is \((\text{age}_i - \hat{x})^2\) — a single parabola in \(\hat{x}\), shifted to be centered at \(\text{age}_i\). Why does averaging many shifted parabolas always produce one parabola, rather than something lumpier?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare answers. Expand \((\text{age}_i - \hat{x})^2 = \hat{x}^2 - 2\,\text{age}_i\hat{x} + \text{age}_i^2\): every term is quadratic in \(\hat{x}\) with the same leading coefficient. Summing quadratics with the same leading coefficient always gives back a quadratic — the shape can shift left or right, but it can never grow a second dip.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what that guarantees about how many minima the curve can have, then check the derivation below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Predicting a new patient's age with a single guess \(\hat{x}\), the natural way to score yourself is <span class="gloss" data-gloss="mse">mean squared error</span> against the sample you have:</p>
+
+  <pre class="equation">$$\text{MSE}(\hat{x}) = \frac{1}{n}\sum_{i=1}^n (x_i - \hat{x})^2$$</pre>
+
+  <p>Because that curve is always a parabola opening upward, it has exactly one minimum, found by setting its derivative to zero:</p>
+
+  <pre class="equation">$$\frac{d}{d\hat{x}}\,\text{MSE}(\hat{x}) = \frac{1}{n}\sum_{i=1}^n 2(x_i - \hat{x})\cdot(-1) = 0 \quad\Longrightarrow\quad \hat{x} = \frac{1}{n}\sum_{i=1}^n x_i$$</pre>
+
+  <p>The minimizing guess is the sample mean — not by convention, but because it is the unique answer to "which single number is closest, in squared distance, to all of these numbers at once." The full derivation of why that same mean is also an <span class="gloss" data-gloss="estimator-props">unbiased estimator</span> with variance \(\mathbb{V}[X]/n\) is in the <a href="lecture.html#expectation-mean">lecture</a>; this section is just the "why the mean, and not the median or something else" half of the story.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="seeds">Seeds you can trust</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>same seed, same numbers</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>A computer cannot generate true randomness — every "random" draw comes from a formula applied to a starting number, the seed. If two people run the exact same code with the exact same seed, on different computers, what do you predict about their sequences of "random" draws? Would you expect that to be a bug, or the entire point?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare: the sequences would be identical, bit for bit — and that is the entire point, not a bug. It is what makes a randomized experiment reproducible and debuggable.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on why "the results of your analysis should never depend on which seed you chose" is compatible with "always fix a seed," then test both seeds below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>Every widget on this site draws its "randomness" from a <span class="gloss" data-gloss="lcg">seeded generator</span> — a formula that turns one seed number into a long stream of numbers with no detectable pattern from one to the next, but that reproduces exactly the same stream every time it starts from the same seed.</p>
+
+  <div class="viz" id="viz-seed">
+    <div class="viz-title">Same seed, same sequence</div>
+    <div class="viz-description">Pick a seed and draw 8 numbers. Draw again with the same seed and you get the identical 8 numbers back; change the seed and you get a different — but equally valid — sequence.</div>
+    <div class="rng-board"></div>
+    <div class="rng-controls"></div>
+    <div class="rng-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="replacement">With replacement vs. without</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>can the same ball come up twice?</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>An urn has 8 balls: 3 red, 3 blue, 2 green. You draw 8 times. Drawing <em>with</em> replacement, can you end up with 8 reds? Drawing <em>without</em> replacement, what must your 8 draws look like, no matter what order they come out in?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare: with replacement, 8 reds in a row is unlikely but entirely possible — every draw sees all 8 balls again. Without replacement, 8 draws from an 8-ball urn must be a full reshuffle of the urn: exactly 3 red, 3 blue, 2 green, every single time, just in some order.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on which mode you would want for the bootstrap, later in the course, and why — then test both below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>NumPy's <code>rng.choice(A, size=N)</code> draws with replacement by default: every draw sees the full set again, so the same element can appear more than once. Passing <code>replace=False</code> removes each drawn element from further consideration, so \(N\) draws from an \(N\)-element set is always a full permutation.</p>
+
+  <div class="viz" id="viz-urn">
+    <div class="viz-title">An 8-ball urn, drawn 8 times</div>
+    <div class="viz-description">3 red, 3 blue, 2 green. Toggle replacement and redraw — with replacement, some balls repeat and some vanish; without, every ball appears exactly once.</div>
+    <div class="rng-board"></div>
+    <div class="rng-controls"></div>
+    <div class="rng-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="speed">Writing it fast</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>same answer, different speed</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Two pieces of code compute the exact same 20,000 sample means from the exact same random draws. One builds a plain array with a loop and calls a function on it; the other pre-allocates one flat array and fills it with a tight loop, no function-call overhead per element. Predict which is faster, and roughly by how much — 10%? 2×? 10×?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare guesses, then run both below. The gap is usually several-fold, not a rounding error — allocating fresh arrays and calling functions per element carries real, measurable overhead that a tight, pre-allocated loop avoids.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what this implies about writing simulation code for a homework due in three hours versus code that will run in a production pipeline.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>The <a href="lecture.html#writing-fast">lecture</a> compares four ways to write the same NumPy simulation — a naive loop, a list comprehension, vectorized NumPy, and compiled Numba — and finds roughly an order of magnitude between the slowest and fastest. The browser cannot run NumPy, but the same lesson holds in plain JavaScript: measure, do not assume.</p>
+
+  <div class="viz" id="viz-speed">
+    <div class="viz-title">Time it yourself · 20,000 sample means, n = 100 each</div>
+    <div class="viz-description">Both methods compute the same 20,000 means from the same seeded draws. Press Run and read real wall-clock time off your own browser.</div>
+    <div class="rng-board"></div>
+    <div class="rng-controls"></div>
+    <div class="rng-readout"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="assignment">Assignment</h2>
+
+  <p>Implement the recurrence behind a seeded random number generator, and a sampling function built on top of it — no built-in random module, no shortcuts. You are given the data loader and the input/output plumbing the autograder speaks. You write two functions.</p>
+
+  <h3>What you build</h3>
+  <ul>
+    <li><code>lcg_next(state)</code> — advance a <span class="gloss" data-gloss="lcg">linear congruential generator</span> one step: given the current integer state, return <code>(new_state, uniform)</code> where <code>uniform</code> is a float in <code>[0, 1)</code>.</li>
+    <li><code>choice(items, k, seed, replace)</code> — draw <code>k</code> elements from the list <code>items</code>, using repeated calls to <code>lcg_next</code> seeded with <code>seed</code>, with or without replacement depending on the flag.</li>
+  </ul>
+
+  <h3>I/O protocol</h3>
+  <p>The grader launches <code>python3 rng.py</code> and sends one query per line on stdin:</p>
+  <pre><code class="language-text">next &lt;state&gt;                          -> OK: &lt;new_state&gt; &lt;uniform, 6 decimals&gt;
+choice &lt;items,comma,sep&gt; &lt;k&gt; &lt;seed&gt; &lt;0|1&gt;   -> OK: &lt;k comma-separated items&gt;
+ERR: unknown query                      # anything else, or k too large without replacement</code></pre>
+  <p>The last argument to <code>choice</code> is <code>1</code> for with-replacement, <code>0</code> for without.</p>
+
+  <h3>data.json structure</h3>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>variable</code></td><td>string</td><td>dataset label</td></tr>
+      <tr><td><code>source</code></td><td>string</td><td>original CSV and its location in the source repo</td></tr>
+      <tr><td><code>n</code></td><td>int</td><td>number of patients, 40</td></tr>
+      <tr><td><code>age</code></td><td>list[float]</td><td>patient age in years, length \(n\)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run it</h3>
+  <pre><code class="language-bash">echo "next 12345" | python3 rng.py                       # -> OK: &lt;new_state&gt; &lt;uniform&gt;
+echo "choice a,b,c,d 4 7 0" | python3 rng.py               # -> OK: &lt;a permutation of a,b,c,d&gt;
+python3 test_rng.py                                        # local autograder</code></pre>
+
+  <div class="chat-downloads">
+    <span class="chat-downloads-label">Downloads:</span>
+    <a href="rng.py" class="chat-dl-btn" download>rng.py (template)</a>
+    <a href="test_rng.py" class="chat-dl-btn" download>test_rng.py</a>
+    <a href="data.json" class="chat-dl-btn" download>data.json</a>
+  </div>
+
+  <h3>Rubric</h3>
+  <table>
+    <thead><tr><th>Criterion</th><th>Points</th></tr></thead>
+    <tbody>
+      <tr><td><code>lcg_next</code> reproducible: same state always gives the same (new_state, uniform)</td><td>20</td></tr>
+      <tr><td><code>lcg_next</code> output is a valid uniform in <code>[0, 1)</code> across many states</td><td>15</td></tr>
+      <tr><td><code>choice</code> with replacement: length <code>k</code>, every element drawn from <code>items</code>, repeats allowed</td><td>20</td></tr>
+      <tr><td><code>choice</code> without replacement: length <code>k</code>, no repeats, matches reference for a given seed</td><td>25</td></tr>
+      <tr><td>Protocol: <code>k &gt; len(items)</code> without replacement reported as <code>ERR:</code>, no crash</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does the MSE curve have to be a parabola?</h3>
+  <p>Because it is a sum of terms of the form \((x_i - \hat{x})^2\), and expanding the square shows every term is quadratic in \(\hat{x}\) with the same leading coefficient (1, after expansion). Summing quadratics that share a leading coefficient always produces another quadratic — the sum can never develop a second bend.</p>
+
+  <h3>Is the sample mean always the best guess?</h3>
+  <p>Only under squared error. Switch the loss function to mean <em>absolute</em> error, \(\frac{1}{n}\sum |x_i - \hat{x}|\), and the minimizing guess becomes the median instead. The "best" predictor is a property of the loss function you chose, not an absolute fact about the data.</p>
+
+  <h3>Why does a real linear congruential generator need such a specific-looking formula?</h3>
+  <p>The multiplier, increment, and modulus in a real LCG are chosen so the generator has the longest possible cycle before it repeats itself and so consecutive outputs show no easily detectable correlation. A carelessly chosen set of constants can produce a generator that repeats after only a few thousand draws, or whose low-order bits cycle in an obvious pattern — both of which numpy's own generator is engineered to avoid.</p>
+
+  <h3>Does vectorized code always beat a loop?</h3>
+  <p>Almost always for array-at-a-time numeric work, but not by magic — it wins because the per-element work happens inside pre-compiled, optimized code instead of the interpreter's own step-by-step execution. If the "vectorized" version has to allocate a much larger intermediate array than the loop ever holds in memory, that memory cost can erase some or all of the advantage. Measure on your own machine before assuming.</p>
+
+  <footer>
+    Understanding Uncertainty · Class 04 — Random Numbers &amp; the Sample Mean. One seed, one formula, and the one number that minimizes squared error.
+  </footer>
+</main>
+
+<!-- Shared base first, then this lab's widgets -->
+<script src="../shared/lab-base.js?v=6"></script>
+<script src="viz.js?v=2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>
