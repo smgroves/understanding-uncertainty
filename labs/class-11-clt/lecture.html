@@ -6,7 +6,7 @@
 <title>Class 11 Lecture · Bootstrap Inference &amp; the CLT — Understanding Uncertainty</title>
 
 <link rel="stylesheet" href="../shared/lab-base.css?v=6">
-<link rel="stylesheet" href="lecture.css?v=1">
+<link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
 
@@ -124,6 +124,11 @@
     <p>Let \(X_1,\dots,X_n\) be an iid sample of size \(n\) from a distribution with mean \(\mathbb{E}[X_i]=\mu\) and finite variance \(\mathbb{V}[X_i]=\sigma^2 \lt \infty\). Then as \(n \to \infty\), the distribution of \(Z_n = \sqrt n(\bar X_n-\mu)/\sigma\) converges to the standard normal, \(\Phi(z)\).</p>
   </div>
 
+  <div class="viz" id="viz-clt-demo">
+    <div class="viz-title">Watching the CLT happen</div>
+    <div class="viz-description">Population: Exponential(1) — heavily right-skewed, nothing like a bell curve. Each button draws 2,000 sample means of size \(n\), standardizes each to \(Z_n\), and histograms the result against the standard normal (blue). At \(n=1\), \(Z_n\) is just the population, skewed; by \(n=30\)–\(100\) it is indistinguishable from \(\Phi(z)\).</div>
+  </div>
+
   <h3 id="using-clt">Using the CLT</h3>
   <p>Every bootstrap inference in Part 1 used a bootstrapped sampling distribution built by resampling. The CLT says that for large samples, the sampling distribution of a statistic is always approximately bell-shaped — so the standard normal can be substituted for the bootstrapped distribution, and confidence intervals and p-values become "asymptotically, approximately exact" closed-form calculations instead of simulations.</p>
 
@@ -213,7 +218,8 @@
   };
 </script>
 
-<script src="../shared/lab-base.js?v=6"></script>
+<script src="../shared/lab-base.js?v=7"></script>
+<script src="lecture-viz.js?v=1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>

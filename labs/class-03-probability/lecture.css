@@ -5,3 +5,20 @@
  * sheet is purely additive; lecture pages need very little beyond
  * the shared base since they are mostly prose, equations, and code.
  * ============================================================ */
+
+.coin-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.coin-controls input[type="range"] { vertical-align: middle; margin-left: 4px; }
+.coin-readout {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-align: center;
+  margin-top: 4px;
+}

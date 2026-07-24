@@ -5,3 +5,10 @@
  * sheet is purely additive; lecture pages need very little beyond
  * the shared base since they are mostly prose, equations, and code.
  * ============================================================ */
+
+.grid-limit-controls {
+  font-family: var(--sans);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.grid-limit-controls input[type="range"] { vertical-align: middle; margin-left: 6px; width: 200px; }

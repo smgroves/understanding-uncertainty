@@ -5,3 +5,6 @@
  * sheet is purely additive; lecture pages need very little beyond
  * the shared base since they are mostly prose, equations, and code.
  * ============================================================ */
+
+.tail-controls { display: flex; gap: 6px; margin-bottom: 8px; }
+.tail-readout { font-family: var(--mono); font-size: 12.5px; text-align: center; margin-top: 4px; }

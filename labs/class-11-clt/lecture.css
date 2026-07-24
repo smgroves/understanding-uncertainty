@@ -5,3 +5,10 @@
  * sheet is purely additive; lecture pages need very little beyond
  * the shared base since they are mostly prose, equations, and code.
  * ============================================================ */
+
+.clt-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}

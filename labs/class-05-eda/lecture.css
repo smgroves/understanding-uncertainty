@@ -5,3 +5,10 @@
  * sheet is purely additive; lecture pages need very little beyond
  * the shared base since they are mostly prose, equations, and code.
  * ============================================================ */
+
+.ecdf-drag-readout {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-align: center;
+  margin-top: 4px;
+}

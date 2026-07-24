@@ -5,3 +5,11 @@
  * sheet is purely additive; lecture pages need very little beyond
  * the shared base since they are mostly prose, equations, and code.
  * ============================================================ */
+
+.dot-readout {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-align: center;
+  margin-top: 6px;
+  line-height: 1.6;
+}

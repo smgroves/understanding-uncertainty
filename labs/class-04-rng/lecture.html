@@ -6,7 +6,7 @@
 <title>Class 04 Lecture · Learning From Data &amp; Random Numbers — Understanding Uncertainty</title>
 
 <link rel="stylesheet" href="../shared/lab-base.css?v=4">
-<link rel="stylesheet" href="lecture.css?v=1">
+<link rel="stylesheet" href="lecture.css?v=2">
 
 <!-- Prism for code highlighting -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -190,6 +190,11 @@
 
   <h3 id="not-random">Random numbers aren't random</h3>
   <p>Computers are deterministic machines and cannot create true randomness on their own. A <span class="gloss" data-gloss="rng-seed-lec">pseudorandom number generator</span> starts from a <code>seed</code> value and performs calculations that produce a sequence of numbers with no detectable correlation from value to value. Your analysis's conclusions should never depend on which seed you happened to pick — but fixing the seed is exactly what makes debugging and reproducibility possible: the same seed always regenerates the same sequence.</p>
+
+  <div class="viz" id="viz-lcg-step">
+    <div class="viz-title">Stepping a linear congruential generator by hand</div>
+    <div class="viz-description">This is the exact recurrence this site's own widgets use. Each click applies the formula once more; the scatter plots every consecutive pair \((u_i, u_{i+1})\) — a bad generator would show visible stripes or a grid here instead of an even scatter.</div>
+  </div>
 
   <h3 id="generating-random">Generating random numbers</h3>
   <p>To create a stream of random numbers: <code>rng = np.random.default_rng(seed=100)</code>. Each draw from the stream is then a method call on <code>rng</code>:</p>
@@ -391,7 +396,8 @@ Compiled Numba time: 0.00272 seconds</code></pre>
 </script>
 
 <!-- Shared base first, then this lecture's minimal styles -->
-<script src="../shared/lab-base.js?v=6"></script>
+<script src="../shared/lab-base.js?v=7"></script>
+<script src="lecture-viz.js?v=1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>

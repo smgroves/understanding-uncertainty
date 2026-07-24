@@ -6,7 +6,7 @@
 <title>Class 10 Lecture · The Bootstrap — Understanding Uncertainty</title>
 
 <link rel="stylesheet" href="../shared/lab-base.css?v=6">
-<link rel="stylesheet" href="lecture.css?v=1">
+<link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
 
@@ -32,6 +32,7 @@
     <li class="toc-sub"><a href="#statistic-as-rv">A statistic is itself a random variable</a></li>
     <li class="toc-sub"><a href="#sim-matrix">The simulation matrix</a></li>
     <li class="toc-sub"><a href="#frequentist-thought-experiment">The frequentist thought experiment</a></li>
+    <li class="toc-sub"><a href="#sim-stability">How many replications is "enough"?</a></li>
     <li><a href="#part2">Part 2 · The Bootstrap</a></li>
     <li class="toc-sub"><a href="#bootstrap-idea">The bootstrap idea</a></li>
     <li class="toc-sub"><a href="#sampling-replacement">Sampling with replacement</a></li>
@@ -91,7 +92,23 @@ $$</pre>
   <p>Each column is one simulated sample; each row is the position of a draw within its sample, so \(X_{it}\) is the \(i\)-th draw of the \(t\)-th simulation. Growing the number of rows grows the sample size \(N\); growing the number of columns grows the number of simulated repetitions \(T\). The question this whole class is building toward: as \(T\to\infty\), what does the distribution of \(S_t = S(X_{1t},\dots,X_{Nt})\) look like, for a fixed sample size \(N\)?</p>
 
   <h3 id="frequentist-thought-experiment">The frequentist thought experiment</h3>
-  <p>For the sample mean specifically, the answer is already in hand from earlier classes: \(\mathbb{E}[\bar X_N] = \mathbb{E}[X]\), \(\mathbb{V}[\bar X_N] = \mathbb{V}[X]/N\), and \(pr[|\bar X_N - \mathbb{E}[X]| > d] \le \mathbb{V}[X]/Nd^2\) by Chebyshev. Each of those facts describes one column of the matrix above, for a fixed \(N\); replicating the study many times is exactly what growing \(T\) means. This is the foundational thought experiment of <strong>frequentist statistics</strong>: if I repeated this entire analysis many times, what would typically happen? The sample mean has a closed-form answer to that question. Most statistics of interest — a median, a correlation, an odds ratio — do not. Simulation is how you answer the same question for those, by literally building the \(T\)-column matrix and watching what \(S_t\) does. Part 2 replaces even the simulation step: instead of drawing fresh columns from a generating process you don't have direct access to, you resample the one column of real data you actually collected.</p>
+  <p>For the sample mean specifically, the answer is already in hand from earlier classes: \(\mathbb{E}[\bar X_N] = \mathbb{E}[X]\), \(\mathbb{V}[\bar X_N] = \mathbb{V}[X]/N\), and \(pr[|\bar X_N - \mathbb{E}[X]| > d] \le \mathbb{V}[X]/Nd^2\) by Chebyshev. Each of those facts describes one column of the matrix above, for a fixed \(N\); replicating the study many times is exactly what growing \(T\) means. This is the foundational thought experiment of <strong>frequentist statistics</strong>: if I repeated this entire analysis many times (large \(T\)), what would typically happen? The sample mean has a closed-form answer to that question. Most statistics of interest — a median, a correlation, an odds ratio — do not. Simulation is how you answer the same question for those, by literally building the \(T\)-column matrix and watching what \(S_t\) does. Part 2 replaces even the simulation step: instead of drawing fresh columns from a generating process you don't have direct access to, you resample the one column of real data you actually collected.</p>
+
+  <h3 id="sim-stability">How many replications is "enough"? A non-normal example</h3>
+  <p>Take a process with no bell-curve shape at all: lightbulb lifetimes, modeled as \(X \sim \text{Exponential}(\text{scale}=0.5)\), so \(F(x) = 1-e^{-x/0.5}\). Run an experiment of \(N=20\) lightbulbs, compute the sample mean lifetime, and repeat that whole experiment \(T\) times — exactly one column-generation of the simulation matrix above, for \(T\) columns. The question this section answers visually: how large does \(T\) have to be before the resulting picture of the sampling distribution stops depending on which particular batch of \(T\) replications you happened to draw?</p>
+
+  <div class="viz" id="viz-sim-stability">
+    <div class="viz-caption">Each curve is a KDE of \(T\) simulated sample means (\(N=20\) lightbulbs each); 10 independent redraws are overlaid per \(T\). Small \(T\) means the picture itself is unreliable — rerun it and it changes. Large \(T\) means the picture has converged: rerun it and the curves land on top of each other.</div>
+    <div class="sim-preset-row"></div>
+  </div>
+
+  <p>At \(T=10\), the ten overlaid curves disagree wildly — with so few replications, the "estimated sampling distribution" is itself a noisy, one-off object. By \(T=100{,}000\) the ten curves are visually indistinguishable: enough replications wash out the randomness of any one batch, and what's left is a stable estimate of the true sampling distribution of \(\bar X_{20}\). This is <strong>frequentism</strong> made visible: "if we repeated the fixed-\(N\) experiment many times in \(T\)," is only a well-posed question once \(T\) is actually large — and this holds regardless of the shape of the underlying process, exponential included.</p>
+
+  <p>The source notebook closes Part 1 with the general version of what the widget shows: if \([\hat S_1,\dots,\hat S_T]\) is an iid sequence of a statistic with finite mean and variance, then</p>
+
+  <pre class="equation">$$Z_T = \sqrt{T}\,\frac{\frac1T\sum_{t=1}^T \hat S_t - \mathbb{E}[S]}{\sqrt{\mathbb{V}[S]}}$$</pre>
+
+  <p>converges to a standard normal as \(T \to \infty\) — the <span class="gloss" data-gloss="clt-preview-lec">Central Limit Theorem</span> applied not to the original data, but to the statistic \(\hat S_t\) itself, across replications. This is exactly the WLLN-to-CLT machinery from Part 1's earlier classes, one level removed: average enough copies of *anything* with finite variance, in this case a whole simulated experiment's worth of a statistic, and the average of those copies becomes normal.</p>
 
   <!-- ============================================================ -->
   <h2 id="part2">Part 2 · The Bootstrap</h2>
@@ -178,10 +195,15 @@ $$</pre>
       title: 'Confidence interval',
       body: '<p>A range of plausible values for a statistic, built to contain the true value in a known fraction (e.g. 95%) of repetitions of the whole sampling-and-estimating procedure.</p>',
     },
+    'clt-preview-lec': {
+      title: 'Central Limit Theorem',
+      body: '<p>Average enough iid copies of anything with finite variance and the average becomes normally distributed, regardless of the shape of the original thing being averaged. Covered in full in the Class 11 lecture; previewed here applied to a statistic across simulation replications.</p>',
+    },
   };
 </script>
 
-<script src="../shared/lab-base.js?v=6"></script>
+<script src="../shared/lab-base.js?v=7"></script>
+<script src="lecture-viz.js?v=1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>

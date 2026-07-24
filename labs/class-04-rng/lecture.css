@@ -8,3 +8,7 @@
 
 main ol { font-family: var(--serif); font-size: 16px; line-height: 1.6; }
 main ol li { margin-bottom: 6px; }
+
+.lcg-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.lcg-trace { font-family: var(--mono); font-size: 12px; text-align: center; color: var(--ink-soft); }
+.lcg-readout { font-family: var(--mono); font-size: 12.5px; text-align: center; margin-top: 4px; }
