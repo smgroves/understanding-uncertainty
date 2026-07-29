@@ -1,0 +1,1915 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Statistics Zoo — Understanding Uncertainty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F4F6;
+    --paper2: #E7EBEE;
+    --ink: #1B2430;
+    --ink-soft: #4A5568;
+    --teal: #2B7A78;
+    --teal-soft: #DCEBEA;
+    --amber: #C9852B;
+    --amber-soft: #F5E6D3;
+    --rule: #D3D9DE;
+    --serif: 'Source Serif 4', Georgia, 'Iowan Old Style', serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.6;
+  }
+  a { color: var(--teal); }
+
+  header.site {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(242,244,246,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 20px;
+  }
+  .site-inner { max-width: 980px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+  .site-title { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink); text-decoration: none; white-space: nowrap; }
+  .site-title .dot { color: var(--teal); }
+  nav.zoo-nav { display: flex; flex-wrap: wrap; gap: 4px 2px; font-family: var(--mono); font-size: 12px; }
+  nav.zoo-nav a { color: var(--ink-soft); text-decoration: none; padding: 4px 8px; border-radius: 5px; }
+  nav.zoo-nav a:hover { background: var(--paper2); color: var(--ink); }
+  .home-link { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-soft); text-decoration: none; }
+  .home-link:hover { color: var(--teal); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  .hero h1 { font-size: 40px; font-weight: 600; margin: 0 0 10px; line-height: 1.15; }
+  .hero .sub { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; }
+  .hero p { font-size: 17px; color: var(--ink-soft); max-width: 62ch; }
+
+  .zoo-card {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 26px 26px 22px;
+    margin: 34px 0;
+    scroll-margin-top: 74px;
+  }
+  .card-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .card-num { font-family: var(--mono); font-size: 13px; color: var(--teal); font-weight: 600; }
+  .zoo-card h2 { font-size: 26px; font-weight: 600; margin: 0; }
+  .definition { font-size: 17px; color: var(--ink); margin: 10px 0 18px; max-width: 66ch; }
+  .definition strong { color: var(--teal); font-weight: 600; }
+
+  .viz-well {
+    background: var(--paper2);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+  }
+  .viz-well canvas { width: 100%; max-width: 660px; height: 260px; display: block; cursor: pointer; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin-top: 14px;
+    font-family: var(--mono); font-size: 13px;
+  }
+  .btn {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+    background: var(--teal); color: #fff; border: none;
+    padding: 7px 14px; border-radius: 7px; cursor: pointer;
+  }
+  .btn:hover { background: #236360; }
+  .btn.ghost { background: transparent; color: var(--teal); border: 1px solid var(--teal); }
+  .btn.ghost:hover { background: var(--teal-soft); }
+  .readout { color: var(--ink-soft); }
+  .readout strong { color: var(--ink); font-weight: 600; }
+  input[type="range"] { accent-color: var(--teal); vertical-align: middle; width: 160px; }
+  .note {
+    font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink-soft);
+    margin-top: 10px; min-height: 1.4em;
+  }
+
+  .connects {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--rule);
+  }
+  .connects-label {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--amber); margin-right: 2px;
+  }
+  .tag {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    background: var(--amber-soft); color: var(--amber);
+    padding: 4px 10px; border-radius: 999px; text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .tag:hover { border-color: var(--amber); }
+
+  footer.site {
+    max-width: 760px; margin: 40px auto 0; padding: 20px;
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="site-title" href="#top">the stats<span class="dot">·</span>zoo</a>
+    <nav class="zoo-nav">
+      <a href="#rv">Random Variable</a>
+      <a href="#ecdf">eCDF</a>
+      <a href="#pmf-pdf">PMF / PDF</a>
+      <a href="#cdf">CDF</a>
+      <a href="#nonparam-param">Nonparametric → Parametric</a>
+      <a href="#bootstrap">Bootstrap</a>
+      <a href="#mle">MLE</a>
+      <a href="#kde">KDE</a>
+      <a href="#pvalue-ci">p-value / CI</a>
+      <a href="#sampling">Sampling</a>
+      <a href="#iid">iid</a>
+      <a href="#expectation">Expectation</a>
+      <a href="#estimator">Estimator</a>
+      <a href="#likelihood">Likelihood</a>
+      <a href="#lln">LLN</a>
+      <a href="#covariate">Covariate</a>
+      <a href="#markov">Markov Chain</a>
+    </nav>
+    <a class="home-link" href="index.html">← Course home</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="sub">Understanding Uncertainty · extra resource</div>
+    <h1>The Statistics Zoo</h1>
+    <p>Statistics vocabulary makes simple ideas sound like separate species. Most of them aren't — a random variable, a PMF, a CDF, an eCDF, and the bootstrap are the same handful of moves, worn as different costumes. Each card below gives one concept a plain-English definition, one thing you can touch, and an honest list of what it's secretly the same as.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="rv">
+    <div class="card-head"><span class="card-num">01</span><h2>Random Variable</h2></div>
+    <p class="definition">A random variable is just a rule that turns an outcome into a number. Flip a coin — "heads" and "tails" aren't numbers, but <strong>"heads = 1, tails = 0"</strong> is a random variable.</p>
+    <div class="viz-well"><canvas id="rv-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="rv-flip">Flip the coin</button>
+      <button class="btn ghost" id="rv-reset">Reset</button>
+      <span class="readout" id="rv-readout"><strong>0</strong> flips</span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ecdf">eCDF</a>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="ecdf">
+    <div class="card-head"><span class="card-num">02</span><h2>Empirical CDF (eCDF)</h2></div>
+    <p class="definition">The eCDF just answers: <strong>what fraction of my data is at or below this value?</strong> Click anywhere below to drop a data point and watch the staircase build itself, one step per point.</p>
+    <div class="viz-well"><canvas id="ecdf-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="ecdf-bulk">Add 20 random points</button>
+      <button class="btn ghost" id="ecdf-reset">Reset</button>
+      <span class="readout" id="ecdf-readout"><strong>0</strong> points</span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#cdf">CDF</a>
+      <a class="tag" href="#nonparam-param">Nonparametric ↔ Parametric</a>
+      <a class="tag" href="#bootstrap">Bootstrap</a>
+      <a class="tag" href="#kde">KDE</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="pmf-pdf">
+    <div class="card-head"><span class="card-num">03</span><h2>PMF vs. PDF</h2></div>
+    <p class="definition">For a PMF, <strong>bar height IS the probability</strong>. For a PDF, height is not a probability at all — only the shaded <strong>area</strong> between two points is.</p>
+    <div class="viz-well"><canvas id="pmfpdf-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="pmfpdf-toggle">Switch to continuous (PDF)</button>
+      <span id="pmfpdf-sliders" style="display:none">
+        a = <input type="range" id="pmfpdf-a" min="-4" max="4" step="0.05" value="-1">
+        b = <input type="range" id="pmfpdf-b" min="-4" max="4" step="0.05" value="1">
+      </span>
+      <span class="readout" id="pmfpdf-readout"></span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#cdf">CDF</a>
+      <a class="tag" href="#rv">Random Variable</a>
+      <a class="tag" href="#mle">MLE</a>
+      <a class="tag" href="#likelihood">Likelihood</a>
+      <a class="tag" href="#expectation">Expectation</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="cdf">
+    <div class="card-head"><span class="card-num">04</span><h2>CDF</h2></div>
+    <p class="definition">The CDF answers "what's the probability of this value or less" — for the whole population, not just a sample (that's the eCDF's job). Drag the slider and read the probability straight off the curve.</p>
+    <div class="viz-well"><canvas id="cdf-canvas"></canvas></div>
+    <div class="controls">
+      x = <input type="range" id="cdf-x" min="-4" max="4" step="0.05" value="0">
+      <span class="readout" id="cdf-readout"></span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ecdf">eCDF</a>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="nonparam-param">
+    <div class="card-head"><span class="card-num">05</span><h2>Nonparametric → Parametric</h2></div>
+    <p class="definition"><strong>Nonparametric:</strong> let the data speak for itself, no assumed shape. <strong>Parametric:</strong> assume a shape (like Normal) and estimate just a couple of numbers. Same data, drawn both ways — slide between them.</p>
+    <div class="viz-well"><canvas id="npp-canvas"></canvas></div>
+    <div class="controls">
+      <input type="range" id="npp-slider" min="0" max="1" step="0.01" value="0">
+    </div>
+    <p class="note" id="npp-note"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ecdf">eCDF</a>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+      <a class="tag" href="#bootstrap">Bootstrap</a>
+      <a class="tag" href="#mle">MLE</a>
+      <a class="tag" href="#kde">KDE</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="bootstrap">
+    <div class="card-head"><span class="card-num">06</span><h2>Bootstrap</h2></div>
+    <p class="definition">Can't re-run the experiment? <strong>Resample your own data with replacement</strong> instead — treat the sample you already have as a stand-in population.</p>
+    <div class="viz-well"><canvas id="boot-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="boot-1">Draw 1 resample</button>
+      <button class="btn" id="boot-200">Draw 200 resamples</button>
+      <button class="btn ghost" id="boot-reset">Reset</button>
+      <span class="readout" id="boot-readout"></span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ecdf">eCDF</a>
+      <a class="tag" href="#nonparam-param">Nonparametric ↔ Parametric</a>
+      <a class="tag" href="#pvalue-ci">p-value / CI</a>
+      <a class="tag" href="#sampling">Sampling</a>
+      <a class="tag" href="#lln">LLN</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="mle">
+    <div class="card-head"><span class="card-num">07</span><h2>Maximum Likelihood Estimation</h2></div>
+    <p class="definition"><strong>Pick the parameter values that make your observed data least surprising</strong> — the ones that maximize the probability (or density) of seeing exactly this data. <em>Method of moments</em> is the older, simpler cousin: just match the sample's own mean and variance to the distribution's formulas for mean and variance, and solve. For the Normal, both methods land on the exact same answer — that is a coincidence of the Normal, not a general law.</p>
+    <div class="viz-well"><canvas id="mle-canvas"></canvas></div>
+    <div class="controls">
+      μ = <input type="range" id="mle-mu" min="0" max="8" step="0.05" value="2">
+      σ = <input type="range" id="mle-sigma" min="0.3" max="4" step="0.05" value="2.5">
+      <button class="btn ghost" id="mle-snap">Snap to the MLE</button>
+    </div>
+    <p class="note" id="mle-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#nonparam-param">Nonparametric ↔ Parametric</a>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+      <a class="tag" href="#estimator">Estimator</a>
+      <a class="tag" href="#likelihood">Likelihood</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="kde">
+    <div class="card-head"><span class="card-num">08</span><h2>Kernel Density Estimation (KDE)</h2></div>
+    <p class="definition">The smooth cousin of the histogram: instead of binning, <strong>drop a little bump on top of every data point and add them all up</strong>. Same data as the card above — drag the bandwidth from spiky to oversmoothed.</p>
+    <div class="viz-well"><canvas id="kde-canvas"></canvas></div>
+    <div class="controls">
+      bandwidth h = <input type="range" id="kde-h" min="0.08" max="2.5" step="0.02" value="0.15">
+      <span class="readout" id="kde-readout"></span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ecdf">eCDF</a>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+      <a class="tag" href="#nonparam-param">Nonparametric ↔ Parametric</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="pvalue-ci">
+    <div class="card-head"><span class="card-num">09</span><h2>p-value vs. Confidence Interval</h2></div>
+    <p class="definition">Both answer the same question — <strong>how much does sampling variability alone explain what I'm seeing</strong> — just phrased two ways. A p-value is "how extreme is this, on a probability scale." A CI is "which null values would I <em>not</em> have rejected." Drag the hypothesized value below and watch them agree, every time, right at the CI's edge.</p>
+    <div class="viz-well"><canvas id="pvci-canvas"></canvas></div>
+    <div class="controls">
+      hypothesized value s₀ = <input type="range" id="pvci-s0" min="40" max="60" step="0.2" value="50">
+    </div>
+    <p class="note" id="pvci-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#bootstrap">Bootstrap</a>
+      <a class="tag" href="#cdf">CDF</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="sampling">
+    <div class="card-head"><span class="card-num">10</span><h2>Sampling</h2></div>
+    <p class="definition">Sampling is just <strong>drawing some observations out of a much bigger population or process</strong> — the sample is the small part you actually got to see. Click to draw a fresh sample from the population below.</p>
+    <div class="viz-well"><canvas id="sampling-canvas"></canvas></div>
+    <div class="controls">
+      sample size n = <input type="range" id="sampling-n" min="5" max="150" step="5" value="20">
+      <button class="btn ghost" id="sampling-redraw">Draw a new sample</button>
+      <span class="readout" id="sampling-readout"></span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#bootstrap">Bootstrap</a>
+      <a class="tag" href="#iid">iid</a>
+      <a class="tag" href="#rv">Random Variable</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="iid">
+    <div class="card-head"><span class="card-num">11</span><h2>iid</h2></div>
+    <p class="definition"><strong>Independent</strong>: knowing one draw tells you nothing about the next. <strong>Identically distributed</strong>: every draw comes from the exact same process. Toggle between an iid sequence and a sequence that breaks one of those two rules.</p>
+    <div class="viz-well"><canvas id="iid-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="iid-toggle">Switch to a non-iid sequence</button>
+      <button class="btn ghost" id="iid-redraw">Redraw</button>
+    </div>
+    <p class="note" id="iid-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#sampling">Sampling</a>
+      <a class="tag" href="#rv">Random Variable</a>
+      <a class="tag" href="#mle">MLE</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="expectation">
+    <div class="card-head"><span class="card-num">12</span><h2>Expectation</h2></div>
+    <p class="definition">Expectation is a <strong>probability-weighted average</strong> — not the middle of your data, the middle of the process generating it. Drag a bar's height and watch the others renormalize so they still sum to 1.</p>
+    <div class="viz-well"><canvas id="expectation-canvas"></canvas></div>
+    <p class="note" id="expectation-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+      <a class="tag" href="#rv">Random Variable</a>
+      <a class="tag" href="#estimator">Estimator</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="estimator">
+    <div class="card-head"><span class="card-num">13</span><h2>Estimator</h2></div>
+    <p class="definition">An estimator is just <strong>a recipe — a function of your data — for guessing something you can't observe directly</strong>. Different recipes applied to the same data give different answers. Drag the points and watch all three estimators move.</p>
+    <div class="viz-well"><canvas id="estimator-canvas"></canvas></div>
+    <p class="note" id="estimator-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#mle">MLE</a>
+      <a class="tag" href="#sampling">Sampling</a>
+      <a class="tag" href="#ecdf">eCDF</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="likelihood">
+    <div class="card-head"><span class="card-num">14</span><h2>Likelihood</h2></div>
+    <p class="definition">A likelihood is the <strong>same density formula as a PDF, just read backwards</strong>: fix the data you actually saw, and ask how the probability of seeing it changes as you vary the unknown parameter. Toggle the view below — same formula, swapped axis.</p>
+    <div class="viz-well"><canvas id="likelihood-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="likelihood-toggle">Switch to likelihood view</button>
+      data point x₀ = <input type="range" id="likelihood-x0" min="-3" max="7" step="0.1" value="2">
+    </div>
+    <p class="note" id="likelihood-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#pmf-pdf">PMF / PDF</a>
+      <a class="tag" href="#mle">MLE</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="lln">
+    <div class="card-head"><span class="card-num">15</span><h2>Law of Large Numbers</h2></div>
+    <p class="definition">As you collect more data, <strong>your sample average settles down and converges to the true population average</strong> — reliably, not just by luck. This is the "weak law" (WLLN); draw more data and watch the path stop wandering.</p>
+    <div class="viz-well"><canvas id="lln-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="lln-1">Draw 1 more</button>
+      <button class="btn" id="lln-100">Draw 100 more</button>
+      <button class="btn ghost" id="lln-reset">Reset</button>
+      <span class="readout" id="lln-readout"></span>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#sampling">Sampling</a>
+      <a class="tag" href="#iid">iid</a>
+      <a class="tag" href="#expectation">Expectation</a>
+      <a class="tag" href="#bootstrap">Bootstrap</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="covariate">
+    <div class="card-head"><span class="card-num">16</span><h2>Covariate</h2></div>
+    <p class="definition">A covariate is a variable you measure alongside your outcome, hoping it helps <strong>explain or predict it</strong> — the X in "predict Y from X." Drag any point and watch the fitted line and correlation update.</p>
+    <div class="viz-well"><canvas id="covariate-canvas"></canvas></div>
+    <p class="note" id="covariate-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#estimator">Estimator</a>
+      <a class="tag" href="#expectation">Expectation</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="markov">
+    <div class="card-head"><span class="card-num">17</span><h2>Markov Chain</h2></div>
+    <p class="definition">A Markov chain is a sequence of random states where <strong>the future depends only on where you are right now</strong> — not on the path you took to get here. Step through it and watch time-in-each-state settle into a stable long-run split.</p>
+    <div class="viz-well"><canvas id="markov-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="markov-1">Step once</button>
+      <button class="btn" id="markov-100">Step 100 times</button>
+      <button class="btn ghost" id="markov-reset">Reset</button>
+    </div>
+    <p class="note" id="markov-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#sampling">Sampling</a>
+      <a class="tag" href="#estimator">Estimator</a>
+    </div>
+  </section>
+
+  <footer class="site">
+    The Statistics Zoo · Understanding Uncertainty · six ideas, one underlying move: count, average, or resample. <a href="index.html">← back to the course</a>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const ZOO = {};
+
+  ZOO.rng = Math.random;
+  ZOO.normal = function () {
+    const u1 = Math.max(ZOO.rng(), 1e-9), u2 = ZOO.rng();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  };
+  ZOO.mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+  ZOO.std = arr => { const m = ZOO.mean(arr); return Math.sqrt(ZOO.mean(arr.map(x => (x - m) * (x - m)))); };
+  ZOO.normalPdf = (x, mu, sigma) => Math.exp(-((x - mu) * (x - mu)) / (2 * sigma * sigma)) / (sigma * Math.sqrt(2 * Math.PI));
+  ZOO.normalCdf = function (x, mu, sigma) {
+    const z = (x - mu) / (sigma * Math.sqrt(2));
+    const t = 1 / (1 + 0.3275911 * Math.abs(z));
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z);
+    const erf = z >= 0 ? y : -y;
+    return 0.5 * (1 + erf);
+  };
+  ZOO.choice = arr => arr[Math.floor(ZOO.rng() * arr.length)];
+
+  const INK = '#1B2430', INK_SOFT = '#4A5568', TEAL = '#2B7A78', TEAL_SOFT = '#9FC6C4', AMBER = '#C9852B', RULE = '#C7CDD3';
+
+  ZOO.setupCanvas = function (canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 660, height = rect.height || 260;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, width, height };
+  };
+
+  ZOO.scales = function (xmin, xmax, ymin, ymax, width, height, margin) {
+    const pw = width - margin.left - margin.right;
+    const ph = height - margin.top - margin.bottom;
+    return {
+      xToPx: x => margin.left + (x - xmin) / (xmax - xmin) * pw,
+      yToPx: y => margin.top + (1 - (y - ymin) / (ymax - ymin)) * ph,
+      pxToX: px => xmin + (px - margin.left) / pw * (xmax - xmin),
+    };
+  };
+
+  ZOO.drawAxis = function (ctx, width, height, margin) {
+    ctx.strokeStyle = RULE;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, height - margin.bottom);
+    ctx.lineTo(width - margin.right, height - margin.bottom);
+    ctx.stroke();
+  };
+
+  const redrawFns = [];
+  window.addEventListener('resize', () => redrawFns.forEach(fn => fn()));
+
+  /* ============================================================
+   * Card 1 — Random Variable
+   * ============================================================ */
+  (function initRV() {
+    const canvas = document.getElementById('rv-canvas');
+    const flipBtn = document.getElementById('rv-flip');
+    const resetBtn = document.getElementById('rv-reset');
+    const readout = document.getElementById('rv-readout');
+
+    let history = [];
+    let anim = null; // { value, t0, from:{x,y}, to:{x,y} }
+    const margin = { left: 40, right: 40, top: 30, bottom: 40 };
+
+    function layout(width, height) {
+      const lineY = height - margin.bottom;
+      const x0 = margin.left + (width - margin.left - margin.right) * 0.28;
+      const x1 = margin.left + (width - margin.left - margin.right) * 0.72;
+      return { lineY, x0, x1 };
+    }
+
+    function render(tsOverride) {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const { lineY, x0, x1 } = layout(width, height);
+
+      ctx.strokeStyle = RULE;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, lineY);
+      ctx.lineTo(width - margin.right, lineY);
+      ctx.stroke();
+
+      ctx.font = '12px "IBM Plex Mono", monospace';
+      ctx.fillStyle = INK_SOFT;
+      ctx.textAlign = 'center';
+      [[x0, 0, 'Tails → 0'], [x1, 1, 'Heads → 1']].forEach(([x, , label]) => {
+        ctx.beginPath();
+        ctx.moveTo(x, lineY - 6);
+        ctx.lineTo(x, lineY + 6);
+        ctx.stroke();
+        ctx.fillText(label, x, lineY + 22);
+      });
+
+      const counts = { 0: 0, 1: 0 };
+      const r = 7, gap = 3;
+      history.forEach(v => {
+        const x = v === 0 ? x0 : x1;
+        const y = lineY - 12 - counts[v] * (2 * r + gap);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = TEAL;
+        ctx.globalAlpha = 0.85;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        counts[v]++;
+      });
+
+      if (anim) {
+        const t = Math.min(1, (performance.now() - anim.t0) / 420);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const x = anim.from.x + (anim.to.x - anim.from.x) * ease;
+        const y = anim.from.y + (anim.to.y - anim.from.y) * ease;
+
+        ctx.beginPath();
+        ctx.arc(anim.from.x, anim.from.y0, 16, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.strokeStyle = AMBER;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = AMBER;
+        ctx.font = 'bold 13px "IBM Plex Mono", monospace';
+        ctx.fillText(anim.value === 1 ? 'H' : 'T', anim.from.x, anim.from.y0 + 5);
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = AMBER;
+        ctx.fill();
+
+        if (t < 1) {
+          requestAnimationFrame(render);
+        } else {
+          anim = null;
+          render();
+        }
+      }
+    }
+
+    function flip() {
+      const value = ZOO.rng() < 0.5 ? 0 : 1;
+      const { width, height } = canvas.getBoundingClientRect();
+      const { lineY, x0, x1 } = layout(width, height);
+      const targetX = value === 0 ? x0 : x1;
+      const counts = { 0: 0, 1: 0 };
+      history.forEach(v => counts[v]++);
+      const r = 7, gap = 3;
+      const targetY = lineY - 12 - counts[value] * (2 * r + gap);
+      anim = { value, t0: performance.now(), from: { x: targetX, y0: margin.top + 6 }, to: { x: targetX, y: targetY } };
+      history.push(value);
+      readout.innerHTML = `<strong>${history.length}</strong> flips &nbsp;·&nbsp; <strong>${counts[1] + (value === 1 ? 1 : 0)}</strong> heads`;
+      render();
+    }
+
+    flipBtn.addEventListener('click', flip);
+    resetBtn.addEventListener('click', () => { history = []; anim = null; readout.innerHTML = '<strong>0</strong> flips'; render(); });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 2 — Empirical CDF
+   * ============================================================ */
+  (function initECDF() {
+    const canvas = document.getElementById('ecdf-canvas');
+    const bulkBtn = document.getElementById('ecdf-bulk');
+    const resetBtn = document.getElementById('ecdf-reset');
+    const readout = document.getElementById('ecdf-readout');
+
+    let points = [];
+    const xmin = -4, xmax = 4;
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      const s = ZOO.scales(xmin, xmax, 0, 1, width, height, margin);
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.strokeStyle = RULE;
+      ctx.lineWidth = 1;
+      [0, 0.5, 1].forEach(y => {
+        ctx.beginPath();
+        ctx.moveTo(margin.left, s.yToPx(y));
+        ctx.lineTo(width - margin.right, s.yToPx(y));
+        ctx.stroke();
+        ctx.fillStyle = INK_SOFT;
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(y.toFixed(1), margin.left - 6, s.yToPx(y) + 4);
+      });
+      ZOO.drawAxis(ctx, width, height, margin);
+      ctx.fillStyle = INK_SOFT;
+      ctx.textAlign = 'center';
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.fillText('click to add a point', width / 2, height - 8);
+
+      const sorted = points.slice().sort((a, b) => a - b);
+      const n = sorted.length;
+      ctx.strokeStyle = TEAL;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(xmin), s.yToPx(0));
+      let cum = 0;
+      sorted.forEach(x => {
+        ctx.lineTo(s.xToPx(x), s.yToPx(cum / n));
+        cum++;
+        ctx.lineTo(s.xToPx(x), s.yToPx(cum / n));
+      });
+      ctx.lineTo(s.xToPx(xmax), s.yToPx(n ? 1 : 0));
+      ctx.stroke();
+
+      ctx.fillStyle = TEAL;
+      sorted.forEach(x => {
+        ctx.beginPath();
+        ctx.arc(s.xToPx(x), s.yToPx(0.02) + (height - margin.bottom - s.yToPx(0.02)) - 0, 2.4, 0, 2 * Math.PI);
+      });
+      points.forEach(x => {
+        ctx.beginPath();
+        ctx.arc(s.xToPx(x), height - margin.bottom + 2, 2.6, 0, 2 * Math.PI);
+        ctx.fillStyle = INK_SOFT;
+        ctx.fill();
+      });
+    }
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const s = ZOO.scales(xmin, xmax, 0, 1, rect.width, rect.height, margin);
+      const x = s.pxToX(e.clientX - rect.left);
+      if (x < xmin || x > xmax) return;
+      points.push(x);
+      readout.innerHTML = `<strong>${points.length}</strong> points`;
+      render();
+    });
+    bulkBtn.addEventListener('click', () => {
+      for (let i = 0; i < 20; i++) points.push(Math.max(xmin, Math.min(xmax, ZOO.normal())));
+      readout.innerHTML = `<strong>${points.length}</strong> points`;
+      render();
+    });
+    resetBtn.addEventListener('click', () => { points = []; readout.innerHTML = '<strong>0</strong> points'; render(); });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 3 — PMF vs PDF
+   * ============================================================ */
+  (function initPmfPdf() {
+    const canvas = document.getElementById('pmfpdf-canvas');
+    const toggleBtn = document.getElementById('pmfpdf-toggle');
+    const sliders = document.getElementById('pmfpdf-sliders');
+    const aInput = document.getElementById('pmfpdf-a');
+    const bInput = document.getElementById('pmfpdf-b');
+    const readout = document.getElementById('pmfpdf-readout');
+
+    let mode = 'discrete';
+    const nBinom = 10, pBinom = 0.5;
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+
+    function choose(n, k) {
+      let r = 1;
+      for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+      return r;
+    }
+    function binomPmf(k) { return choose(nBinom, k) * Math.pow(pBinom, k) * Math.pow(1 - pBinom, nBinom - k); }
+
+    function renderDiscrete() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const probs = [];
+      for (let k = 0; k <= nBinom; k++) probs.push(binomPmf(k));
+      const pmax = Math.max(...probs);
+      const s = ZOO.scales(-0.5, nBinom + 0.5, 0, pmax * 1.15, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      const barW = (s.xToPx(1) - s.xToPx(0)) * 0.7;
+      probs.forEach((p, k) => {
+        const x = s.xToPx(k) - barW / 2;
+        const y = s.yToPx(p);
+        ctx.fillStyle = TEAL;
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(x, y, barW, (height - margin.bottom) - y);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = INK_SOFT;
+        ctx.font = '10.5px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(k, s.xToPx(k), height - margin.bottom + 16);
+        if (p > pmax * 0.06) ctx.fillText(p.toFixed(2), s.xToPx(k), y - 5);
+      });
+      readout.innerHTML = `Binomial(n=10, p=0.5) &nbsp;·&nbsp; <strong>bar height = P(X=k)</strong>, they sum to 1`;
+    }
+
+    function renderContinuous() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const xmin = -4, xmax = 4;
+      const ymax = ZOO.normalPdf(0, 0, 1) * 1.15;
+      const s = ZOO.scales(xmin, xmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      let a = parseFloat(aInput.value), b = parseFloat(bInput.value);
+      if (a > b) { const t = a; a = b; b = t; }
+
+      ctx.beginPath();
+      const steps = 300;
+      let area = 0;
+      const dx = (xmax - xmin) / steps;
+      for (let i = 0; i <= steps; i++) {
+        const x = xmin + i * dx;
+        const y = ZOO.normalPdf(x, 0, 1);
+        if (i === 0) ctx.moveTo(s.xToPx(x), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(x), s.yToPx(y));
+        if (x >= a && x <= b) area += y * dx;
+      }
+      ctx.strokeStyle = TEAL;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(a), s.yToPx(0));
+      for (let i = 0; i <= steps; i++) {
+        const x = xmin + i * dx;
+        if (x < a || x > b) continue;
+        ctx.lineTo(s.xToPx(x), s.yToPx(ZOO.normalPdf(x, 0, 1)));
+      }
+      ctx.lineTo(s.xToPx(b), s.yToPx(0));
+      ctx.closePath();
+      ctx.fillStyle = AMBER;
+      ctx.globalAlpha = 0.28;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      [a, b].forEach(v => {
+        ctx.beginPath();
+        ctx.moveTo(s.xToPx(v), margin.top);
+        ctx.lineTo(s.xToPx(v), height - margin.bottom);
+        ctx.strokeStyle = AMBER;
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+      });
+
+      readout.innerHTML = `Normal(0,1) &nbsp;·&nbsp; height ≠ probability &nbsp;·&nbsp; <strong>P(${a.toFixed(2)} ≤ X ≤ ${b.toFixed(2)}) ≈ ${area.toFixed(3)}</strong>`;
+    }
+
+    function render() { mode === 'discrete' ? renderDiscrete() : renderContinuous(); }
+
+    toggleBtn.addEventListener('click', () => {
+      mode = mode === 'discrete' ? 'continuous' : 'discrete';
+      toggleBtn.textContent = mode === 'discrete' ? 'Switch to continuous (PDF)' : 'Switch to discrete (PMF)';
+      sliders.style.display = mode === 'continuous' ? 'inline' : 'none';
+      render();
+    });
+    [aInput, bInput].forEach(el => el.addEventListener('input', render));
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 4 — CDF
+   * ============================================================ */
+  (function initCDF() {
+    const canvas = document.getElementById('cdf-canvas');
+    const xInput = document.getElementById('cdf-x');
+    const readout = document.getElementById('cdf-readout');
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+    const xmin = -4, xmax = 4;
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const s = ZOO.scales(xmin, xmax, 0, 1, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+      [0, 0.5, 1].forEach(y => {
+        ctx.strokeStyle = RULE;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(margin.left, s.yToPx(y));
+        ctx.lineTo(width - margin.right, s.yToPx(y));
+        ctx.stroke();
+      });
+
+      ctx.beginPath();
+      const steps = 200;
+      for (let i = 0; i <= steps; i++) {
+        const x = xmin + (xmax - xmin) * i / steps;
+        const y = ZOO.normalCdf(x, 0, 1);
+        if (i === 0) ctx.moveTo(s.xToPx(x), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(x), s.yToPx(y));
+      }
+      ctx.strokeStyle = TEAL;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      const x = parseFloat(xInput.value);
+      const y = ZOO.normalCdf(x, 0, 1);
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(x), height - margin.bottom);
+      ctx.lineTo(s.xToPx(x), s.yToPx(y));
+      ctx.lineTo(margin.left, s.yToPx(y));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(s.xToPx(x), s.yToPx(y), 4.5, 0, 2 * Math.PI);
+      ctx.fillStyle = AMBER;
+      ctx.fill();
+
+      readout.innerHTML = `x = ${x.toFixed(2)} &nbsp;·&nbsp; <strong>Φ(x) = P(X ≤ x) = ${y.toFixed(3)}</strong>`;
+    }
+
+    xInput.addEventListener('input', render);
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 5 — Nonparametric → Parametric
+   * ============================================================ */
+  (function initNPP() {
+    const canvas = document.getElementById('npp-canvas');
+    const slider = document.getElementById('npp-slider');
+    const note = document.getElementById('npp-note');
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+
+    const data = [];
+    for (let i = 0; i < 160; i++) data.push(4 + 1.6 * ZOO.normal());
+    const mu = ZOO.mean(data), sigma = ZOO.std(data);
+    const xmin = mu - 4.2 * sigma, xmax = mu + 4.2 * sigma;
+    ZOO.shared = ZOO.shared || {};
+    ZOO.shared.npp = { data, mu, sigma, xmin, xmax };
+
+    const K = 20;
+    const binW = (xmax - xmin) / K;
+    const counts = new Array(K).fill(0);
+    data.forEach(x => {
+      let b = Math.floor((x - xmin) / binW);
+      if (b < 0) b = 0; if (b >= K) b = K - 1;
+      counts[b]++;
+    });
+    const density = counts.map(c => c / (data.length * binW));
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const ymax = Math.max(...density, ZOO.normalPdf(mu, mu, sigma)) * 1.15;
+      const s = ZOO.scales(xmin, xmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      const t = parseFloat(slider.value);
+
+      ctx.globalAlpha = 1 - t;
+      for (let b = 0; b < K; b++) {
+        const x0 = xmin + b * binW, x1 = xmin + (b + 1) * binW;
+        ctx.fillStyle = TEAL;
+        const y = s.yToPx(density[b]);
+        ctx.fillRect(s.xToPx(x0), y, Math.max(0, s.xToPx(x1) - s.xToPx(x0) - 1), (height - margin.bottom) - y);
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.globalAlpha = t;
+      ctx.beginPath();
+      const steps = 200;
+      for (let i = 0; i <= steps; i++) {
+        const x = xmin + (xmax - xmin) * i / steps;
+        const y = ZOO.normalPdf(x, mu, sigma);
+        if (i === 0) ctx.moveTo(s.xToPx(x), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(x), s.yToPx(y));
+      }
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      let msg;
+      if (t < 0.25) msg = 'Nonparametric: no assumed shape — just the data\'s own histogram, bin by bin.';
+      else if (t < 0.75) msg = 'Blending: the same data, fading from "just count it" toward "assume a shape."';
+      else msg = `Parametric: assume Normal(μ,σ) and boil the whole dataset down to two numbers — μ ≈ ${mu.toFixed(2)}, σ ≈ ${sigma.toFixed(2)}.`;
+      note.textContent = msg;
+    }
+
+    slider.addEventListener('input', render);
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 6 — Bootstrap
+   * ============================================================ */
+  (function initBootstrap() {
+    const canvas = document.getElementById('boot-canvas');
+    const btn1 = document.getElementById('boot-1');
+    const btn200 = document.getElementById('boot-200');
+    const resetBtn = document.getElementById('boot-reset');
+    const readout = document.getElementById('boot-readout');
+    const margin = { left: 40, right: 20, top: 16, bottom: 34 };
+
+    const sample = [];
+    for (let i = 0; i < 25; i++) sample.push(50 + 10 * ZOO.normal());
+    const sampleMean = ZOO.mean(sample);
+    ZOO.shared = ZOO.shared || {};
+    ZOO.shared.bootstrap = { sample, sampleMean };
+
+    let bootMeans = [];
+
+    function resampleOnce() {
+      const rs = [];
+      for (let i = 0; i < sample.length; i++) rs.push(ZOO.choice(sample));
+      return ZOO.mean(rs);
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+
+      const topH = 70, gapH = 18;
+      const xmin = 15, xmax = 85;
+      const topMargin = { left: margin.left, right: margin.right, top: margin.top, bottom: height - (margin.top + topH) };
+      const sTop = ZOO.scales(xmin, xmax, 0, 1, width, margin.top + topH, topMargin);
+
+      ctx.strokeStyle = RULE;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, margin.top + topH);
+      ctx.lineTo(width - margin.right, margin.top + topH);
+      ctx.stroke();
+
+      ctx.fillStyle = TEAL;
+      sample.forEach(x => {
+        ctx.beginPath();
+        ctx.arc(sTop.xToPx(x), margin.top + topH - 10 - ZOO.rng() * 30, 3, 0, 2 * Math.PI);
+        ctx.globalAlpha = 0.7;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(sTop.xToPx(sampleMean), margin.top);
+      ctx.lineTo(sTop.xToPx(sampleMean), margin.top + topH);
+      ctx.stroke();
+      ctx.fillStyle = INK_SOFT;
+      ctx.font = '10.5px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('original sample (n=25), mean = ' + sampleMean.toFixed(1), width / 2, margin.top - 4);
+
+      const histTop = margin.top + topH + gapH;
+      const histBottom = height - margin.bottom;
+      const bmargin = { left: margin.left, right: margin.right, top: histTop, bottom: height - histBottom };
+
+      if (bootMeans.length > 0) {
+        const bmin = Math.min(...bootMeans, sampleMean - 2), bmax = Math.max(...bootMeans, sampleMean + 2);
+        const K = 24;
+        const binW = (bmax - bmin) / K || 1;
+        const counts = new Array(K).fill(0);
+        bootMeans.forEach(m => {
+          let b = Math.floor((m - bmin) / binW);
+          if (b < 0) b = 0; if (b >= K) b = K - 1;
+          counts[b]++;
+        });
+        const cmax = Math.max(...counts);
+        const s = ZOO.scales(bmin, bmax, 0, cmax * 1.15, width, height, bmargin);
+        for (let b = 0; b < K; b++) {
+          const x0 = bmin + b * binW, x1 = bmin + (b + 1) * binW;
+          const y = s.yToPx(counts[b]);
+          ctx.fillStyle = AMBER;
+          ctx.globalAlpha = 0.75;
+          ctx.fillRect(s.xToPx(x0), y, Math.max(0, s.xToPx(x1) - s.xToPx(x0) - 1), histBottom - y);
+          ctx.globalAlpha = 1;
+        }
+      } else {
+        ctx.fillStyle = INK_SOFT;
+        ctx.font = '12px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('draw resamples to build a histogram of resampled means', width / 2, (histTop + histBottom) / 2);
+      }
+
+      if (bootMeans.length > 0) {
+        const bootSE = ZOO.std(bootMeans);
+        readout.innerHTML = `B = <strong>${bootMeans.length}</strong> resamples &nbsp;·&nbsp; SD of resampled means (bootstrap SE) = <strong>${bootSE.toFixed(3)}</strong>`;
+      } else {
+        readout.innerHTML = 'B = <strong>0</strong> resamples';
+      }
+    }
+
+    btn1.addEventListener('click', () => { bootMeans.push(resampleOnce()); render(); });
+    btn200.addEventListener('click', () => { for (let i = 0; i < 200; i++) bootMeans.push(resampleOnce()); render(); });
+    resetBtn.addEventListener('click', () => { bootMeans = []; render(); });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 7 — Maximum Likelihood Estimation
+   * ============================================================ */
+  (function initMLE() {
+    const canvas = document.getElementById('mle-canvas');
+    const muInput = document.getElementById('mle-mu');
+    const sigmaInput = document.getElementById('mle-sigma');
+    const snapBtn = document.getElementById('mle-snap');
+    const readout = document.getElementById('mle-readout');
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+
+    const shared = ZOO.shared.npp;
+    const data = shared.data, trueMu = shared.mu, trueSigma = shared.sigma, xmin = shared.xmin, xmax = shared.xmax;
+
+    function logLikelihood(mu, sigma) {
+      let ll = 0;
+      for (let i = 0; i < data.length; i++) ll += Math.log(ZOO.normalPdf(data[i], mu, sigma));
+      return ll;
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const mu = parseFloat(muInput.value), sigma = parseFloat(sigmaInput.value);
+      const ymax = Math.max(ZOO.normalPdf(mu, mu, sigma), ZOO.normalPdf(trueMu, trueMu, trueSigma)) * 1.15;
+      const s = ZOO.scales(xmin, xmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      ctx.strokeStyle = INK_SOFT;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.6;
+      data.forEach(x => {
+        ctx.beginPath();
+        ctx.moveTo(s.xToPx(x), height - margin.bottom);
+        ctx.lineTo(s.xToPx(x), height - margin.bottom - 7);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+
+      ctx.beginPath();
+      const steps = 200;
+      for (let i = 0; i <= steps; i++) {
+        const x = xmin + (xmax - xmin) * i / steps;
+        const y = ZOO.normalPdf(x, mu, sigma);
+        if (i === 0) ctx.moveTo(s.xToPx(x), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(x), s.yToPx(y));
+      }
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      const ll = logLikelihood(mu, sigma);
+      readout.innerHTML = `μ = ${mu.toFixed(2)}, σ = ${sigma.toFixed(2)} &nbsp;·&nbsp; log-likelihood = <strong>${ll.toFixed(1)}</strong> — drag until this number is as large as you can make it, then compare to "snap to the MLE"`;
+    }
+
+    snapBtn.addEventListener('click', () => {
+      muInput.value = trueMu.toFixed(2);
+      sigmaInput.value = trueSigma.toFixed(2);
+      render();
+    });
+    [muInput, sigmaInput].forEach(el => el.addEventListener('input', render));
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 8 — Kernel Density Estimation
+   * ============================================================ */
+  (function initKDE() {
+    const canvas = document.getElementById('kde-canvas');
+    const hInput = document.getElementById('kde-h');
+    const readout = document.getElementById('kde-readout');
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+
+    const shared = ZOO.shared.npp;
+    const data = shared.data, xmin = shared.xmin, xmax = shared.xmax;
+    const K = 20;
+    const binW = (xmax - xmin) / K;
+    const counts = new Array(K).fill(0);
+    data.forEach(x => {
+      let b = Math.floor((x - xmin) / binW);
+      if (b < 0) b = 0; if (b >= K) b = K - 1;
+      counts[b]++;
+    });
+    const histDensity = counts.map(c => c / (data.length * binW));
+
+    function kdeAt(x, h) {
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += ZOO.normalPdf((x - data[i]) / h, 0, 1) / h;
+      return sum / data.length;
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const h = parseFloat(hInput.value);
+
+      const G = 160;
+      const grid = [];
+      for (let i = 0; i <= G; i++) grid.push(xmin + (xmax - xmin) * i / G);
+      const kdeVals = grid.map(x => kdeAt(x, h));
+      const ymax = Math.max(...histDensity, ...kdeVals) * 1.15;
+      const s = ZOO.scales(xmin, xmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      ctx.globalAlpha = 0.32;
+      for (let b = 0; b < K; b++) {
+        const x0 = xmin + b * binW, x1 = xmin + (b + 1) * binW;
+        const y = s.yToPx(histDensity[b]);
+        ctx.fillStyle = TEAL;
+        ctx.fillRect(s.xToPx(x0), y, Math.max(0, s.xToPx(x1) - s.xToPx(x0) - 1), (height - margin.bottom) - y);
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.beginPath();
+      grid.forEach((x, i) => {
+        const y = kdeVals[i];
+        if (i === 0) ctx.moveTo(s.xToPx(x), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(x), s.yToPx(y));
+      });
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      let msg;
+      if (h < 0.3) msg = 'spiky — overfit, chasing individual points';
+      else if (h > 1.2) msg = 'oversmoothed — real structure erased';
+      else msg = 'a reasonable bandwidth';
+      readout.innerHTML = `h = ${h.toFixed(2)} &nbsp;·&nbsp; ${msg} &nbsp;·&nbsp; teal = histogram, amber = KDE`;
+    }
+
+    hInput.addEventListener('input', render);
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 9 — p-value vs. Confidence Interval
+   * ============================================================ */
+  (function initPvalueCI() {
+    const canvas = document.getElementById('pvci-canvas');
+    const s0Input = document.getElementById('pvci-s0');
+    const readout = document.getElementById('pvci-readout');
+    const margin = { left: 40, right: 20, top: 16, bottom: 34 };
+
+    const shared = ZOO.shared.bootstrap;
+    const sample = shared.sample, sampleMean = shared.sampleMean;
+    const B = 2000;
+    const bootMeans = [];
+    for (let b = 0; b < B; b++) {
+      let sum = 0;
+      for (let i = 0; i < sample.length; i++) sum += ZOO.choice(sample);
+      bootMeans.push(sum / sample.length);
+    }
+    const bootSE = ZOO.std(bootMeans);
+    const absZs = bootMeans.map(m => Math.abs((m - sampleMean) / bootSE)).sort((a, b) => a - b);
+    const c = absZs[Math.min(absZs.length - 1, Math.round(0.95 * (absZs.length - 1)))];
+    const ciLo = sampleMean - c * bootSE, ciHi = sampleMean + c * bootSE;
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const bmin = Math.min(...bootMeans), bmax = Math.max(...bootMeans);
+      const K = 26;
+      const binW = (bmax - bmin) / K || 1;
+      const counts = new Array(K).fill(0);
+      bootMeans.forEach(m => {
+        let b = Math.floor((m - bmin) / binW);
+        if (b < 0) b = 0; if (b >= K) b = K - 1;
+        counts[b]++;
+      });
+      const cmax = Math.max(...counts);
+      const s = ZOO.scales(bmin, bmax, 0, cmax * 1.15, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      for (let b = 0; b < K; b++) {
+        const x0 = bmin + b * binW, x1 = bmin + (b + 1) * binW;
+        const center = (x0 + x1) / 2;
+        const inCI = center >= ciLo && center <= ciHi;
+        const y = s.yToPx(counts[b]);
+        ctx.fillStyle = inCI ? TEAL : '#B7C1C6';
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(s.xToPx(x0), y, Math.max(0, s.xToPx(x1) - s.xToPx(x0) - 1), (height - margin.bottom) - y);
+        ctx.globalAlpha = 1;
+      }
+
+      const s0 = parseFloat(s0Input.value);
+      const z0 = (sampleMean - s0) / bootSE;
+      let extreme = 0;
+      bootMeans.forEach(m => { const zb = (m - sampleMean) / bootSE; if (Math.abs(zb) > Math.abs(z0)) extreme++; });
+      const p = extreme / bootMeans.length;
+      const reject = s0 < ciLo || s0 > ciHi;
+
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(s0), margin.top);
+      ctx.lineTo(s.xToPx(s0), height - margin.bottom);
+      ctx.strokeStyle = reject ? AMBER : INK;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      readout.innerHTML = `95% CI = (${ciLo.toFixed(2)}, ${ciHi.toFixed(2)}) &nbsp;·&nbsp; s₀ = ${s0.toFixed(1)} &nbsp;·&nbsp; p ≈ ${p.toFixed(3)} &nbsp;·&nbsp; <strong style="color:${reject ? AMBER : TEAL}">${reject ? 'REJECT' : 'FAIL TO REJECT'} H₀: S = s₀ at α = 0.05</strong>`;
+    }
+
+    s0Input.addEventListener('input', render);
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 10 — Sampling
+   * ============================================================ */
+  (function initSampling() {
+    const canvas = document.getElementById('sampling-canvas');
+    const nInput = document.getElementById('sampling-n');
+    const redrawBtn = document.getElementById('sampling-redraw');
+    const readout = document.getElementById('sampling-readout');
+    if (!canvas) return;
+
+    const N = 200;
+    const population = [];
+    for (let i = 0; i < N; i++) population.push({ x: ZOO.rng(), y: ZOO.rng() });
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const n = parseInt(nInput.value, 10);
+
+      const idx = population.map((_, i) => i);
+      for (let i = idx.length - 1; i > 0; i--) {
+        const j = Math.floor(ZOO.rng() * (i + 1));
+        [idx[i], idx[j]] = [idx[j], idx[i]];
+      }
+      const sampled = new Set(idx.slice(0, n));
+
+      const pad = 16;
+      population.forEach((p, i) => {
+        const px = pad + p.x * (width - 2 * pad);
+        const py = pad + p.y * (height - 2 * pad);
+        const inSample = sampled.has(i);
+        ctx.beginPath();
+        ctx.arc(px, py, inSample ? 4 : 2.6, 0, 2 * Math.PI);
+        ctx.fillStyle = inSample ? TEAL : '#C7CDD3';
+        ctx.globalAlpha = inSample ? 0.9 : 0.7;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      readout.innerHTML = `n = <strong>${n}</strong> sampled out of a population of ${N} (${(100 * n / N).toFixed(0)}%)`;
+    }
+
+    nInput.addEventListener('input', render);
+    redrawBtn.addEventListener('click', render);
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 11 — iid
+   * ============================================================ */
+  (function initIID() {
+    const canvas = document.getElementById('iid-canvas');
+    const toggleBtn = document.getElementById('iid-toggle');
+    const redrawBtn = document.getElementById('iid-redraw');
+    const readout = document.getElementById('iid-readout');
+    if (!canvas) return;
+
+    let mode = 'iid';
+    const M = 60;
+    const margin = { left: 34, right: 16, top: 16, bottom: 26 };
+
+    function genIID() {
+      const vals = [];
+      for (let i = 0; i < M; i++) vals.push(ZOO.normal());
+      return vals;
+    }
+    function genNonIID() {
+      const vals = [];
+      let y = 0;
+      for (let i = 0; i < M; i++) { y = 0.92 * y + 0.35 * ZOO.normal(); vals.push(y); }
+      return vals;
+    }
+
+    let data = genIID();
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const ymin = Math.min(...data) - 0.5, ymax = Math.max(...data) + 0.5;
+      const s = ZOO.scales(0, M - 1, ymin, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      if (mode === 'non-iid') {
+        ctx.beginPath();
+        data.forEach((v, i) => {
+          if (i === 0) ctx.moveTo(s.xToPx(i), s.yToPx(v));
+          else ctx.lineTo(s.xToPx(i), s.yToPx(v));
+        });
+        ctx.strokeStyle = AMBER;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      }
+      ctx.fillStyle = mode === 'iid' ? TEAL : AMBER;
+      data.forEach((v, i) => {
+        ctx.beginPath();
+        ctx.arc(s.xToPx(i), s.yToPx(v), 3, 0, 2 * Math.PI);
+        ctx.globalAlpha = 0.85;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      readout.textContent = mode === 'iid'
+        ? 'iid: each point drawn fresh from the same Normal(0,1) — no line connects them because knowing one tells you nothing about the next.'
+        : 'non-iid: each point is 92% of the last plus a nudge — independence is broken, so the path drifts and wanders instead of scattering.';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      mode = mode === 'iid' ? 'non-iid' : 'iid';
+      toggleBtn.textContent = mode === 'iid' ? 'Switch to a non-iid sequence' : 'Switch to an iid sequence';
+      data = mode === 'iid' ? genIID() : genNonIID();
+      render();
+    });
+    redrawBtn.addEventListener('click', () => { data = mode === 'iid' ? genIID() : genNonIID(); render(); });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 12 — Expectation
+   * ============================================================ */
+  (function initExpectation() {
+    const canvas = document.getElementById('expectation-canvas');
+    const readout = document.getElementById('expectation-readout');
+    if (!canvas) return;
+
+    const values = [-2, -1, 0, 2, 4];
+    let probs = [0.2, 0.2, 0.2, 0.2, 0.2];
+    const margin = { left: 34, right: 16, top: 16, bottom: 36 };
+    const xmin = -3, xmax = 5;
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const ymax = 1;
+      const s = ZOO.scales(xmin, xmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      const barW = 34;
+      values.forEach((x, i) => {
+        const px = s.xToPx(x);
+        const y = s.yToPx(probs[i]);
+        ctx.fillStyle = TEAL;
+        ctx.globalAlpha = 0.75;
+        ctx.fillRect(px - barW / 2, y, barW, (height - margin.bottom) - y);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = INK_SOFT;
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(x.toString(), px, height - margin.bottom + 16);
+        ctx.fillText(probs[i].toFixed(3), px, y - 5);
+      });
+
+      const ex = values.reduce((acc, x, i) => acc + x * probs[i], 0);
+      const ePx = s.xToPx(ex);
+      ctx.beginPath();
+      ctx.moveTo(ePx, margin.top);
+      ctx.lineTo(ePx, height - margin.bottom);
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ePx - 6, height - margin.bottom + 4);
+      ctx.lineTo(ePx + 6, height - margin.bottom + 4);
+      ctx.lineTo(ePx, height - margin.bottom - 4);
+      ctx.closePath();
+      ctx.fillStyle = AMBER;
+      ctx.fill();
+
+      readout.innerHTML = `E[X] = ${values.map((x, i) => `(${probs[i].toFixed(3)})(${x})`).join(' + ')} = <strong>${ex.toFixed(2)}</strong> &nbsp;·&nbsp; probabilities sum to ${probs.reduce((a, b) => a + b, 0).toFixed(2)}`;
+
+      canvas._hit = values.map((x, i) => ({ i, px: s.xToPx(x), topPx: s.yToPx(probs[i]) }));
+    }
+
+    let dragging = null;
+    canvas.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left, py = e.clientY - rect.top;
+      const hit = canvas._hit || [];
+      let best = null, bestDist = 18;
+      hit.forEach(h => {
+        const d = Math.abs(h.px - px) + Math.max(0, h.topPx - py, py - h.topPx - 40);
+        if (Math.abs(h.px - px) < 20 && Math.abs(h.topPx - py) < 60 && Math.abs(h.px - px) < bestDist) { best = h.i; bestDist = Math.abs(h.px - px); }
+      });
+      if (best !== null) { dragging = best; canvas.setPointerCapture(e.pointerId); }
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (dragging === null) return;
+      const rect = canvas.getBoundingClientRect();
+      const s = ZOO.scales(xmin, xmax, 0, 1, rect.width, rect.height, margin);
+      let p = 1 - (e.clientY - rect.top - margin.top) / (rect.height - margin.top - margin.bottom);
+      p = Math.max(0.02, Math.min(0.9, p));
+      const others = probs.reduce((a, v, i) => a + (i === dragging ? 0 : v), 0);
+      const remaining = 1 - p;
+      probs = probs.map((v, i) => i === dragging ? p : (others > 0 ? v / others * remaining : remaining / (probs.length - 1)));
+      render();
+    });
+    canvas.addEventListener('pointerup', () => { dragging = null; });
+    canvas.addEventListener('pointerleave', () => { dragging = null; });
+
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 13 — Estimator
+   * ============================================================ */
+  (function initEstimator() {
+    const canvas = document.getElementById('estimator-canvas');
+    const readout = document.getElementById('estimator-readout');
+    if (!canvas) return;
+
+    const margin = { left: 24, right: 24, top: 20, bottom: 44 };
+    const xmin = 0, xmax = 10;
+    let X = [1.5, 2.5, 3, 5, 6.5, 7, 9];
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const lineY = height - margin.bottom;
+      const x2px = x => margin.left + (x - xmin) / (xmax - xmin) * (width - margin.left - margin.right);
+
+      ctx.strokeStyle = RULE;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, lineY);
+      ctx.lineTo(width - margin.right, lineY);
+      ctx.stroke();
+
+      ctx.fillStyle = TEAL;
+      X.forEach(x => {
+        ctx.beginPath();
+        ctx.arc(x2px(x), lineY, 6, 0, 2 * Math.PI);
+        ctx.globalAlpha = 0.25;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = TEAL;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      });
+
+      const sorted = X.slice().sort((a, b) => a - b);
+      const n = sorted.length;
+      const mean = ZOO.mean(X);
+      const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+      const midrange = (Math.min(...X) + Math.max(...X)) / 2;
+
+      const markers = [
+        { v: mean, color: AMBER, label: 'mean' },
+        { v: median, color: INK, label: 'median' },
+        { v: midrange, color: '#3a6ea5', label: 'midrange' },
+      ];
+      markers.forEach((m, i) => {
+        const px = x2px(m.v);
+        ctx.beginPath();
+        ctx.moveTo(px, margin.top);
+        ctx.lineTo(px, lineY);
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = '10px "IBM Plex Mono", monospace';
+        ctx.fillStyle = m.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(m.label, px, margin.top + 10 + i * 12);
+      });
+
+      readout.innerHTML = `mean = <strong style="color:${AMBER}">${mean.toFixed(2)}</strong> &nbsp;·&nbsp; median = <strong>${median.toFixed(2)}</strong> &nbsp;·&nbsp; midrange = <strong style="color:#3a6ea5">${midrange.toFixed(2)}</strong> — three recipes, three different answers, same data`;
+
+      canvas._hit = X.map((x, i) => ({ i, px: x2px(x) }));
+    }
+
+    let dragging = null;
+    canvas.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const hit = canvas._hit || [];
+      let best = null, bestDist = 16;
+      hit.forEach(h => { if (Math.abs(h.px - px) < bestDist) { best = h.i; bestDist = Math.abs(h.px - px); } });
+      if (best !== null) { dragging = best; canvas.setPointerCapture(e.pointerId); }
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (dragging === null) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      let x = xmin + (px - margin.left) / (rect.width - margin.left - margin.right) * (xmax - xmin);
+      x = Math.max(xmin, Math.min(xmax, Math.round(x * 4) / 4));
+      X[dragging] = x;
+      render();
+    });
+    canvas.addEventListener('pointerup', () => { dragging = null; });
+    canvas.addEventListener('pointerleave', () => { dragging = null; });
+
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 14 — Likelihood
+   * ============================================================ */
+  (function initLikelihood() {
+    const canvas = document.getElementById('likelihood-canvas');
+    const toggleBtn = document.getElementById('likelihood-toggle');
+    const x0Input = document.getElementById('likelihood-x0');
+    const readout = document.getElementById('likelihood-readout');
+    if (!canvas) return;
+
+    let mode = 'pdf';
+    const margin = { left: 34, right: 16, top: 16, bottom: 26 };
+    const THETA = 2, SIGMA = 1;
+
+    function renderPdf() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const xmin = -3, xmax = 7;
+      const ymax = ZOO.normalPdf(THETA, THETA, SIGMA) * 1.15;
+      const s = ZOO.scales(xmin, xmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      ctx.beginPath();
+      for (let i = 0; i <= 200; i++) {
+        const x = xmin + (xmax - xmin) * i / 200;
+        const y = ZOO.normalPdf(x, THETA, SIGMA);
+        if (i === 0) ctx.moveTo(s.xToPx(x), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(x), s.yToPx(y));
+      }
+      ctx.strokeStyle = TEAL;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      const x0 = parseFloat(x0Input.value);
+      const fx0 = ZOO.normalPdf(x0, THETA, SIGMA);
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(x0), height - margin.bottom);
+      ctx.lineTo(s.xToPx(x0), s.yToPx(fx0));
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(s.xToPx(x0), s.yToPx(fx0), 4.5, 0, 2 * Math.PI);
+      ctx.fillStyle = AMBER;
+      ctx.fill();
+
+      readout.innerHTML = `<strong>PDF view</strong>: x varies, θ = ${THETA} fixed. f(x₀=${x0.toFixed(1)}; θ=${THETA}) = ${fx0.toFixed(3)} — the height at your one observed point.`;
+    }
+
+    function renderLikelihood() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const x0 = parseFloat(x0Input.value);
+      const thmin = -3, thmax = 7;
+      const ymax = ZOO.normalPdf(x0, x0, SIGMA) * 1.15;
+      const s = ZOO.scales(thmin, thmax, 0, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      ctx.beginPath();
+      for (let i = 0; i <= 200; i++) {
+        const th = thmin + (thmax - thmin) * i / 200;
+        const y = ZOO.normalPdf(x0, th, SIGMA);
+        if (i === 0) ctx.moveTo(s.xToPx(th), s.yToPx(y));
+        else ctx.lineTo(s.xToPx(th), s.yToPx(y));
+      }
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(x0), height - margin.bottom);
+      ctx.lineTo(s.xToPx(x0), s.yToPx(ZOO.normalPdf(x0, x0, SIGMA)));
+      ctx.strokeStyle = TEAL;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      readout.innerHTML = `<strong>Likelihood view</strong>: θ varies, x₀ = ${x0.toFixed(1)} fixed. L(θ) = f(${x0.toFixed(1)}; θ) peaks exactly at θ = ${x0.toFixed(1)} — the maximum-likelihood estimate of θ, for this one data point.`;
+    }
+
+    function render() { mode === 'pdf' ? renderPdf() : renderLikelihood(); }
+
+    toggleBtn.addEventListener('click', () => {
+      mode = mode === 'pdf' ? 'likelihood' : 'pdf';
+      toggleBtn.textContent = mode === 'pdf' ? 'Switch to likelihood view' : 'Switch to PDF view';
+      render();
+    });
+    x0Input.addEventListener('input', render);
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 15 — Law of Large Numbers
+   * ============================================================ */
+  (function initLLN() {
+    const canvas = document.getElementById('lln-canvas');
+    const btn1 = document.getElementById('lln-1');
+    const btn100 = document.getElementById('lln-100');
+    const resetBtn = document.getElementById('lln-reset');
+    const readout = document.getElementById('lln-readout');
+    if (!canvas) return;
+
+    const margin = { left: 36, right: 16, top: 16, bottom: 26 };
+    const TRUE_MEAN = 3.5;
+    let draws = [];
+    let running = [];
+
+    function drawDie() { return 1 + Math.floor(ZOO.rng() * 6); }
+
+    function drawMore(k) {
+      for (let i = 0; i < k; i++) {
+        draws.push(drawDie());
+        const prevSum = running.length ? running[running.length - 1] * running.length : 0;
+        running.push((prevSum + draws[draws.length - 1]) / draws.length);
+      }
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const n = Math.max(1, running.length);
+      const s = ZOO.scales(1, n, 1, 6, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      ctx.beginPath();
+      ctx.moveTo(margin.left, s.yToPx(TRUE_MEAN));
+      ctx.lineTo(width - margin.right, s.yToPx(TRUE_MEAN));
+      ctx.strokeStyle = '#3a6ea5';
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([5, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      if (running.length > 1) {
+        ctx.beginPath();
+        running.forEach((v, i) => {
+          const x = s.xToPx(i + 1);
+          if (i === 0) ctx.moveTo(x, s.yToPx(v));
+          else ctx.lineTo(x, s.yToPx(v));
+        });
+        ctx.strokeStyle = TEAL;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      const current = running.length ? running[running.length - 1] : 0;
+      readout.innerHTML = `n = <strong>${draws.length}</strong> die rolls &nbsp;·&nbsp; running mean = <strong>${current.toFixed(3)}</strong> &nbsp;·&nbsp; true mean = ${TRUE_MEAN}`;
+    }
+
+    btn1.addEventListener('click', () => { drawMore(1); render(); });
+    btn100.addEventListener('click', () => { drawMore(100); render(); });
+    resetBtn.addEventListener('click', () => { draws = []; running = []; render(); });
+    redrawFns.push(render);
+    drawMore(1);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 16 — Covariate
+   * ============================================================ */
+  (function initCovariate() {
+    const canvas = document.getElementById('covariate-canvas');
+    const readout = document.getElementById('covariate-readout');
+    if (!canvas) return;
+
+    const margin = { left: 36, right: 16, top: 16, bottom: 30 };
+    const xmin = 0, xmax = 10, ymin = 0, ymax = 10;
+    let pts = [];
+    for (let i = 0; i < 12; i++) {
+      const x = 1 + ZOO.rng() * 8;
+      const y = 1 + 0.7 * x + ZOO.normal() * 1.1;
+      pts.push({ x, y: Math.max(0, Math.min(10, y)) });
+    }
+
+    function fit() {
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+      const mx = ZOO.mean(xs), my = ZOO.mean(ys);
+      let sxy = 0, sxx = 0, syy = 0;
+      for (let i = 0; i < pts.length; i++) {
+        sxy += (xs[i] - mx) * (ys[i] - my);
+        sxx += (xs[i] - mx) * (xs[i] - mx);
+        syy += (ys[i] - my) * (ys[i] - my);
+      }
+      const slope = sxy / sxx;
+      const intercept = my - slope * mx;
+      const r = sxy / Math.sqrt(sxx * syy);
+      return { slope, intercept, r };
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const s = ZOO.scales(xmin, xmax, ymin, ymax, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+      ctx.strokeStyle = RULE;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, margin.top);
+      ctx.lineTo(margin.left, height - margin.bottom);
+      ctx.stroke();
+
+      const { slope, intercept, r } = fit();
+      ctx.beginPath();
+      ctx.moveTo(s.xToPx(xmin), s.yToPx(intercept + slope * xmin));
+      ctx.lineTo(s.xToPx(xmax), s.yToPx(intercept + slope * xmax));
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = TEAL;
+      pts.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(s.xToPx(p.x), s.yToPx(p.y), 5.5, 0, 2 * Math.PI);
+        ctx.globalAlpha = 0.8;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      readout.innerHTML = `Y ≈ ${intercept.toFixed(2)} + ${slope.toFixed(2)}·X &nbsp;·&nbsp; correlation r = <strong>${r.toFixed(2)}</strong>`;
+      canvas._hit = pts.map((p, i) => ({ i, px: s.xToPx(p.x), py: s.yToPx(p.y) }));
+    }
+
+    let dragging = null;
+    canvas.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left, py = e.clientY - rect.top;
+      const hit = canvas._hit || [];
+      let best = null, bestDist = 14;
+      hit.forEach(h => {
+        const d = Math.hypot(h.px - px, h.py - py);
+        if (d < bestDist) { best = h.i; bestDist = d; }
+      });
+      if (best !== null) { dragging = best; canvas.setPointerCapture(e.pointerId); }
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (dragging === null) return;
+      const rect = canvas.getBoundingClientRect();
+      const s = ZOO.scales(xmin, xmax, ymin, ymax, rect.width, rect.height, margin);
+      const x = Math.max(xmin, Math.min(xmax, s.pxToX(e.clientX - rect.left)));
+      const yFrac = 1 - (e.clientY - rect.top - margin.top) / (rect.height - margin.top - margin.bottom);
+      const y = Math.max(ymin, Math.min(ymax, ymin + yFrac * (ymax - ymin)));
+      pts[dragging] = { x, y };
+      render();
+    });
+    canvas.addEventListener('pointerup', () => { dragging = null; });
+    canvas.addEventListener('pointerleave', () => { dragging = null; });
+
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 17 — Markov Chain
+   * ============================================================ */
+  (function initMarkov() {
+    const canvas = document.getElementById('markov-canvas');
+    const btn1 = document.getElementById('markov-1');
+    const btn100 = document.getElementById('markov-100');
+    const resetBtn = document.getElementById('markov-reset');
+    const readout = document.getElementById('markov-readout');
+    if (!canvas) return;
+
+    const states = ['A', 'B', 'C'];
+    const P = [
+      [0.5, 0.3, 0.2],
+      [0.2, 0.5, 0.3],
+      [0.3, 0.2, 0.5],
+    ];
+    const positions = [{ x: 0.5, y: 0.12 }, { x: 0.15, y: 0.75 }, { x: 0.85, y: 0.75 }];
+    let current = 0;
+    let visits = [1, 0, 0];
+
+    function step() {
+      const row = P[current];
+      const u = ZOO.rng();
+      let acc = 0, next = row.length - 1;
+      for (let j = 0; j < row.length; j++) {
+        acc += row[j];
+        if (u < acc) { next = j; break; }
+      }
+      current = next;
+      visits[current]++;
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+
+      const diagH = height * 0.62;
+      const pts = positions.map(p => ({ x: p.x * width, y: p.y * diagH + 10 }));
+
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (i === j) continue;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = RULE;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      pts.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 20, 0, 2 * Math.PI);
+        ctx.fillStyle = i === current ? TEAL : '#fff';
+        ctx.fill();
+        ctx.strokeStyle = i === current ? TEAL : INK_SOFT;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = i === current ? '#fff' : INK;
+        ctx.font = 'bold 13px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(states[i], p.x, p.y + 5);
+      });
+
+      const barTop = diagH + 26;
+      const barAreaH = height - barTop - 14;
+      const total = visits.reduce((a, b) => a + b, 0);
+      const barW = 50;
+      states.forEach((st, i) => {
+        const frac = visits[i] / total;
+        const bx = width / 2 + (i - 1) * (barW + 24) - barW / 2;
+        const bh = frac * barAreaH;
+        ctx.fillStyle = AMBER;
+        ctx.globalAlpha = 0.75;
+        ctx.fillRect(bx, barTop + barAreaH - bh, barW, bh);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = INK_SOFT;
+        ctx.font = '10.5px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${st}: ${(frac * 100).toFixed(0)}%`, bx + barW / 2, barTop + barAreaH + 12);
+      });
+
+      readout.innerHTML = `${total - 1} steps taken &nbsp;·&nbsp; currently in state <strong>${states[current]}</strong> &nbsp;·&nbsp; long-run visit share is converging toward 33% / 33% / 33% for this chain`;
+    }
+
+    btn1.addEventListener('click', () => { step(); render(); });
+    btn100.addEventListener('click', () => { for (let i = 0; i < 100; i++) step(); render(); });
+    resetBtn.addEventListener('click', () => { current = 0; visits = [1, 0, 0]; render(); });
+    redrawFns.push(render);
+    render();
+  })();
+
+})();
+</script>
+</body>
+</html>

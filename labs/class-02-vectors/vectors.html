@@ -6,7 +6,7 @@
 <title>Class 02 · Vectors, Distance &amp; the Inner Product — Understanding Uncertainty</title>
 
 <link rel="stylesheet" href="../shared/lab-base.css?v=4">
-<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="styles.css?v=2">
 
 <!-- Prism for code highlighting -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -49,7 +49,7 @@
 
 <main>
   <header class="hero">
-    <div class="eyebrow">Understanding Uncertainty · Class 02 · Aug 27</div>
+    <div class="eyebrow">Understanding Uncertainty · Class 02 · Sep 1</div>
     <h1>Vectors, Distance &amp; the Inner Product</h1>
     <div class="subtitle">One operation — multiply and add — underneath length, distance, covariance, and matrix multiplication</div>
     <div class="byline">Understanding Uncertainty · a build-it-from-scratch walkthrough</div>
@@ -213,6 +213,27 @@
     <div class="vc-readout"></div>
   </div>
 
+  <p>Zero covariance means "no <em>linear</em> information," not "no relationship at all" — a centered dot product of zero only rules out a straight-line pattern; \(Y\) can still be a perfectly deterministic, strongly nonlinear function of \(X\) and still dot to zero once centered. The challenge below asks you to build exactly that.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Build it: nonlinear, but covariance zero</div>
+    <p>Nine points sit at fixed, evenly spaced \(x\)-values. Drag each point up or down to set its \(y\)-value. Shape a clearly <strong>nonlinear</strong> curve — a U, a V, a wave, anything that is not a straight line — while pushing cov(X, Y) down toward zero. Both are checked live below the board.</p>
+    <div class="viz" id="viz-zero-cov">
+      <div class="viz-title">Drag the points · make it curve, keep the covariance flat</div>
+      <div class="viz-description">The dashed lines mark \(x=0\) and \(y=0\) after centering. \(\hat{y}\) values are drawn connected so the shape you're building is easy to see.</div>
+      <div class="zc-board"></div>
+      <div class="zc-readout"></div>
+      <div class="controls-row">
+        <button class="btn" id="zc-reset">Reset to a line</button>
+      </div>
+    </div>
+    <details>
+      <summary>Need a hint?</summary>
+      <p>Try making the two end points high, the middle point high, and the points in between low — a symmetric U centered on \(x=0\). Because the shape is symmetric around the mean of \(X\), every positive \(x\) has a mirror-image negative \(x\) with the <em>same</em> \(y\): the positive and negative cross-terms in \(c_X \cdot c_Y\) cancel exactly, no matter how tall you make the U. The same trick works upside down (a Λ / inverted-U), or with a symmetric wave.</p>
+      <p>Symmetry is not required — it is just the easiest route in. With \(X\) fixed and already centered (\(m(X)=0\)), the zero-covariance condition is a single linear equation in the nine \(y\)-values: \(\sum_i x_i y_i = 0\). That equation has an 8-dimensional space of solutions, and almost none of them are symmetric — a completely asymmetric, jagged zig-zag can dot to zero too, as long as its positive and negative contributions happen to balance in total rather than pair-by-pair. Symmetry is the special case where that balancing is obvious by inspection; it is not the only way to get there.</p>
+    </details>
+  </div>
+
   <!-- ============================================================ -->
   <h2 id="orthogonality">Orthogonality</h2>
 
@@ -329,7 +350,7 @@ python3 test_vectors.py                                       # local autograder
 
 <!-- Shared base first, then this lab's widgets -->
 <script src="../shared/lab-base.js?v=7"></script>
-<script src="viz.js?v=2"></script>
+<script src="viz.js?v=4"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>

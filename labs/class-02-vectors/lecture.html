@@ -49,7 +49,7 @@
 
 <main>
   <header class="hero">
-    <div class="eyebrow">Understanding Uncertainty · Class 02 Lecture · Aug 27</div>
+    <div class="eyebrow">Understanding Uncertainty · Class 02 Lecture · Sep 1</div>
     <h1>Vectors, Matrices &amp; the Inner Product</h1>
     <div class="subtitle">From dataframe notation to the one operation underneath length, distance, and matrix multiplication</div>
     <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
@@ -155,7 +155,7 @@ print(np.sqrt((x.reshape(1, -1) - y.reshape(-1, 1)) ** 2))</code></pre>
 
   <div class="viz" id="viz-dot-product">
     <div class="viz-title">Two vectors, one dot product</div>
-    <div class="viz-description">Drag either arrowhead. The shaded bar is the projection of y onto x — its length is exactly what the dot product is measuring.</div>
+    <div class="viz-description">Drag either arrowhead. The shaded bar is the <em>projection</em> of y onto x, with length \((x\cdot y)/\|x\|\) — not the dot product itself, only proportional to it. That length looks asymmetric on purpose: project x onto y instead and you'd get a different length, \((x\cdot y)/\|y\|\). The dot product \(x\cdot y\) is the one symmetric number underneath both pictures — the readout below shows it directly.</div>
   </div>
 
   <h3 id="length-distance-lec">Length and distance</h3>

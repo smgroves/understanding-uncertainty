@@ -213,6 +213,89 @@
       (cov > 0 ? 'positive: patients above-average in one tend to be above-average in the other.' : 'negative or near zero.');
   }
 
+  // ---------- zero-covariance challenge (self-contained toy example) ----------
+  function initZeroCovChallenge() {
+    const host = document.getElementById('viz-zero-cov');
+    if (!host) return;
+    const board = host.querySelector('.zc-board');
+    const readout = host.querySelector('.zc-readout');
+    const resetBtn = document.getElementById('zc-reset');
+
+    const X = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+    const initialY = X.slice();
+    let Y = initialY.slice();
+
+    const width = 640, height = 300;
+    const ml = 44, mr = 20, mt = 20, mb = 34;
+    const plotW = width - ml - mr, plotH = height - mt - mb;
+    const xmin = -5, xmax = 5, ymin = -6, ymax = 6;
+    const x2px = v => ml + (v - xmin) / (xmax - xmin) * plotW;
+    const y2px = v => mt + plotH - (v - ymin) / (ymax - ymin) * plotH;
+    const px2y = py => ymin + (1 - (py - mt) / plotH) * (ymax - ymin);
+
+    const svg = svgBox(width, height);
+    board.innerHTML = ''; board.appendChild(svg);
+
+    const gGrid = el('g'); svg.appendChild(gGrid);
+    const gLine = el('g'); svg.appendChild(gLine);
+    const gPts = el('g'); svg.appendChild(gPts);
+
+    function render() {
+      gGrid.textContent = ''; gLine.textContent = ''; gPts.textContent = '';
+
+      svg.appendChild(gGrid); svg.appendChild(gLine); svg.appendChild(gPts);
+      gGrid.appendChild(el('line', { x1: ml, y1: mt + plotH, x2: ml + plotW, y2: mt + plotH, stroke: '#cfc9bd' }));
+      gGrid.appendChild(el('line', { x1: ml, y1: mt, x2: ml, y2: mt + plotH, stroke: '#cfc9bd' }));
+
+      const my = VEC.mean(Y);
+      gGrid.appendChild(el('line', { x1: x2px(0), y1: mt, x2: x2px(0), y2: mt + plotH, stroke: '#e0d8c6', 'stroke-dasharray': '3 3' }));
+      gGrid.appendChild(el('line', { x1: ml, y1: y2px(my), x2: ml + plotW, y2: y2px(my), stroke: '#e0d8c6', 'stroke-dasharray': '3 3' }));
+
+      let d = '';
+      X.forEach((x, i) => { d += (i === 0 ? 'M' : 'L') + x2px(x) + ',' + y2px(Y[i]) + ' '; });
+      gLine.appendChild(el('path', { d, fill: 'none', stroke: NORMAL, 'stroke-width': 1.6, opacity: 0.55 }));
+
+      X.forEach((x, i) => {
+        const c = el('circle', {
+          cx: x2px(x), cy: y2px(Y[i]), r: 8, fill: ACCENT, 'fill-opacity': 0.2,
+          stroke: ACCENT, 'stroke-width': 2, style: 'cursor:grab',
+        });
+        c.dataset.i = String(i);
+        gPts.appendChild(c);
+      });
+
+      const cov = VEC.covariance(X, Y);
+      const varY = VEC.mean(Y.map(y => (y - my) * (y - my)));
+      const pass = Math.abs(cov) < 1e-6 && varY > 1.5;
+
+      readout.className = 'zc-readout ' + (pass ? 'zc-pass' : 'zc-fail');
+      readout.innerHTML =
+        `cov(X, Y) = <strong>${fmt(cov, 3)}</strong> &nbsp;·&nbsp; var(Y) = ${fmt(varY, 2)} &nbsp;·&nbsp; ` +
+        `<strong class="zc-status">${pass ? '✓ nonlinear and orthogonal — you found one' : 'keep shaping: need |cov| small with real up-and-down spread'}</strong>`;
+    }
+
+    let dragging = null;
+    svg.addEventListener('pointerdown', e => {
+      if (e.target.dataset && e.target.dataset.i !== undefined) { dragging = +e.target.dataset.i; svg.setPointerCapture(e.pointerId); }
+    });
+    svg.addEventListener('pointermove', e => {
+      if (dragging === null) return;
+      const rect = svg.getBoundingClientRect();
+      const py = (e.clientY - rect.top) * (height / rect.height);
+      let y = px2y(py);
+      y = Math.max(ymin, Math.min(ymax, Math.round(y * 2) / 2));
+      Y[dragging] = y;
+      render();
+    });
+    svg.addEventListener('pointerup', () => { dragging = null; });
+    svg.addEventListener('pointerleave', () => { dragging = null; });
+
+    resetBtn.addEventListener('click', () => { Y = initialY.slice(); render(); });
+
+    render();
+  }
+  initZeroCovChallenge();
+
   // ---------- boot: one fetch, then all data-driven widgets ----------
   fetch('data.json').then(r => r.json()).then(data => {
     initTryIt(data);

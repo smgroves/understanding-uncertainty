@@ -71,8 +71,10 @@
       const angleDeg = Math.acos(cosang) * 180 / Math.PI;
 
       // projection of y onto x
+      let projLen = 0;
       if (lx > 1e-6) {
         const t = dot / (lx * lx);
+        projLen = t * lx; // signed length of the shadow, in the direction of x
         const proj = { x: vx.x * t, y: vx.y * t };
         const a = toPx(proj), b = toPx(vy);
         gProj.appendChild(el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: '#9a9488', 'stroke-width': 1, 'stroke-dasharray': '4,3' }));
@@ -94,6 +96,7 @@
         `<span style="color:${ACCENT}">x = (${vx.x.toFixed(1)}, ${vx.y.toFixed(1)})</span>, ` +
         `<span style="color:${BLUE}">y = (${vy.x.toFixed(1)}, ${vy.y.toFixed(1)})</span><br>` +
         `x·y = ${dot.toFixed(2)} &nbsp;·&nbsp; ‖x‖ = ${lx.toFixed(2)} &nbsp;·&nbsp; ‖y‖ = ${ly.toFixed(2)} &nbsp;·&nbsp; angle = ${angleDeg.toFixed(0)}°<br>` +
+        `shadow length = ${projLen.toFixed(2)} &nbsp;·&nbsp; shadow × ‖x‖ = ${(projLen * lx).toFixed(2)} = x·y <em>(the asymmetric shadow, times the vector it's cast on, always reconstructs the symmetric dot product)</em><br>` +
         `<strong>${relation}</strong>`;
     }
 
