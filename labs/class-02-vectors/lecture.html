@@ -39,6 +39,9 @@
     <li class="toc-sub"><a href="#inner-def">The inner product</a></li>
     <li class="toc-sub"><a href="#length-distance-lec">Length and distance</a></li>
     <li class="toc-sub"><a href="#covariance-lec">Covariance: the statistical dot product</a></li>
+    <li class="toc-sub"><a href="#correlation-lec">Correlation: covariance, normalized</a></li>
+    <li class="toc-sub"><a href="#cosine-lec">Cosine similarity</a></li>
+    <li class="toc-sub"><a href="#invariance-lec">What each one is invariant to</a></li>
     <li class="toc-sub"><a href="#orthogonality-lec">Orthogonality</a></li>
     <li class="toc-sub"><a href="#ds-applications">DS applications of the inner product</a></li>
     <li class="toc-sub"><a href="#matmul-lec">Matrix multiplication as stacked dot products</a></li>
@@ -49,7 +52,7 @@
 
 <main>
   <header class="hero">
-    <div class="eyebrow">Understanding Uncertainty · Class 02 Lecture · Sep 1</div>
+    <div class="eyebrow">Understanding Uncertainty · Class 02 Lecture · Aug 27</div>
     <h1>Vectors, Matrices &amp; the Inner Product</h1>
     <div class="subtitle">From dataframe notation to the one operation underneath length, distance, and matrix multiplication</div>
     <div class="byline">Understanding Uncertainty · lecture notes, digitized</div>
@@ -176,6 +179,33 @@ print(np.sqrt((x.reshape(1, -1) - y.reshape(-1, 1)) ** 2))</code></pre>
 
   <p>Positive covariance means \(X\) tends to run above its own mean exactly when \(Y\) runs above its mean (and below together too); negative means they tend to move in opposite directions; zero means \(X\) carries no linear information about \(Y\), or vice versa.</p>
 
+  <h3 id="correlation-lec">Correlation: covariance, normalized</h3>
+  <p>Covariance carries the units of \(X\) and \(Y\) multiplied together, which makes its raw size hard to read. <strong><span class="gloss" data-gloss="correlation-lec">Correlation</span></strong> fixes that by dividing by each variable's own standard deviation, so the result always lands in \([-1, 1]\):</p>
+
+  <pre class="equation">$$\mathrm{corr}(X,Y) = \frac{\mathrm{cov}(X,Y)}{\sigma_X\,\sigma_Y}$$</pre>
+
+  <p>Everything in this section and the next is stated for two plain vectors \(x\) and \(y\); a whole matrix of many variables just repeats the same pairwise calculation once per pair, the same way matrix multiplication (Part 2's closing section) is nothing but many dot products computed at once. Nothing new happens when you go from two vectors to a matrix of them — only the bookkeeping changes.</p>
+
+  <h3 id="cosine-lec">Cosine similarity</h3>
+  <p><strong><span class="gloss" data-gloss="cosine-lec">Cosine similarity</span></strong> normalizes the dot product a third way: by length only, with no centering at all.</p>
+
+  <pre class="equation">$$\cos(X,Y) = \frac{X\cdot Y}{\|X\|\,\|Y\|}$$</pre>
+
+  <p>Geometrically, \(\cos(X,Y)\) is exactly the cosine of the angle between the two vectors — \(1\) when they point the same way, \(0\) when they are orthogonal, \(-1\) when they point in opposite directions. It never centers the data first, which is exactly what makes it different from correlation rather than a second name for the same thing.</p>
+
+  <h3 id="invariance-lec">What each one is invariant to</h3>
+  <p>The cleanest way to tell covariance, correlation, and cosine similarity apart is not the formula — it is asking which transformations of \(X\) and \(Y\) leave the number unchanged.</p>
+
+  <ul>
+    <li><strong>Covariance</strong> subtracts the mean before dotting, so it is invariant to <strong>shifts</strong>: adding any constant to every entry of \(X\) (or \(Y\)) does not change \(\mathrm{cov}(X,Y)\), because centering removes it. It is not invariant to scaling — doubling every entry of \(X\) doubles the covariance.</li>
+    <li><strong>Correlation</strong> subtracts the mean <em>and</em> divides by the standard deviation, so it is invariant to shifts <em>and</em> to scaling (up to the sign of the scale factor): stretching or shrinking \(X\) changes \(\sigma_X\) by exactly the amount needed to cancel out.</li>
+    <li><strong>Cosine similarity</strong> divides by length only, with no centering, so it is invariant to scaling but <em>not</em> to shifts: it only sees direction, and shifting a vector changes its direction relative to the origin.</li>
+  </ul>
+
+  <p>All three are built from the same dot product, so all three can only detect <strong>linear</strong> structure — a variable that depends on another in a perfectly deterministic but curved way can still score zero covariance, zero correlation, or an uninformative cosine similarity, exactly as the zero-covariance-but-nonlinear exercise in the <a href="vectors.html#covariance">Class 02 lab</a> demonstrates by construction.</p>
+
+  <p class="keep-in-present">For dependence that is not linear at all, <span class="gloss" data-gloss="mutual-information-lec">mutual information</span> is fully general — it can detect structure between any two variables, of any shape. The tradeoff is that it is considerably harder to estimate from a finite sample than covariance or correlation, and it measures <em>whether</em> two variables depend on each other without saying which direction that dependence runs (a variable and its exact negative can have the same mutual information as a variable and itself). If the relationship you suspect is nonlinear but still monotonic — always increasing, never reversing — <span class="gloss" data-gloss="spearman-lec">Spearman rank correlation</span> and Kendall's \(\tau\) are the standard middle ground: still built from ranks rather than raw values, so they catch curved-but-monotonic relationships that Pearson correlation misses, without the estimation difficulty of full mutual information.</p>
+
   <h3 id="orthogonality-lec">Orthogonality</h3>
   <p>Two vectors are <strong><span class="gloss" data-gloss="orthogonal-lec">orthogonal</span></strong> exactly when \(X \cdot Y = 0\). This single equation recurs across the rest of this course and well beyond it — independence of random variables, the optimality conditions that pin down a regression's coefficients, unsupervised learning methods like PCA all reduce to some version of "these two things are orthogonal."</p>
 
@@ -237,6 +267,22 @@ print(np.sqrt((x.reshape(1, -1) - y.reshape(-1, 1)) ** 2))</code></pre>
     'orthogonal-lec': {
       title: 'Orthogonal',
       body: '<p>Two vectors whose inner product is exactly zero — they share no component in common. The formal statement behind independence of random variables and many optimality conditions.</p>',
+    },
+    'correlation-lec': {
+      title: 'Correlation',
+      body: '<p>Covariance, rescaled by each variable\'s own standard deviation so the result always lands between -1 and 1. Invariant to shifting or scaling either variable, which covariance alone is not.</p>',
+    },
+    'cosine-lec': {
+      title: 'Cosine similarity',
+      body: '<p>The dot product normalized by length only, with no centering: cos(X,Y) = (X·Y) / (‖X‖‖Y‖). Geometrically, the cosine of the angle between the two vectors — invariant to scaling, but not to shifting, since shifting a vector changes its direction from the origin.</p>',
+    },
+    'mutual-information-lec': {
+      title: 'Mutual information',
+      body: '<p>A fully general measure of dependence between two variables, not limited to linear relationships the way covariance and correlation are. Harder to estimate accurately from a finite sample, and it reports whether two variables depend on each other without saying in which direction.</p>',
+    },
+    'spearman-lec': {
+      title: 'Spearman rank correlation',
+      body: '<p>Ordinary correlation computed on the <em>ranks</em> of the data rather than the raw values. Because it only cares about relative order, it detects any monotonic relationship — not just a straight-line one — while remaining far easier to estimate than full mutual information.</p>',
     },
   };
 </script>

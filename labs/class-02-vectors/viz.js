@@ -27,6 +27,17 @@
       const cx = X.map(x => x - mx), cy = Y.map(y => y - my);
       return this.dot(cx, cy) / X.length;
     },
+    correlation(X, Y) {
+      const mx = this.mean(X), my = this.mean(Y);
+      const cx = X.map(x => x - mx), cy = Y.map(y => y - my);
+      const sx = Math.sqrt(this.dot(cx, cx) / X.length);
+      const sy = Math.sqrt(this.dot(cy, cy) / Y.length);
+      return (sx > 1e-12 && sy > 1e-12) ? this.dot(cx, cy) / (X.length * sx * sy) : 0;
+    },
+    cosineSimilarity(X, Y) {
+      const nx = this.norm(X), ny = this.norm(Y);
+      return (nx > 1e-12 && ny > 1e-12) ? this.dot(X, Y) / (nx * ny) : 0;
+    },
   };
   window.VEC = VEC; // exposed for console tinkering
 
@@ -166,6 +177,107 @@
   }
 
   // ============================================================
+  // Widget — same two vectors, four numbers (toy, draggable arrows)
+  // ============================================================
+  function initFourNumbers() {
+    const host = document.getElementById('viz-four-numbers');
+    if (!host) return;
+    const board = host.querySelector('.vc-board');
+    const readout = host.querySelector('.vc-readout');
+
+    const width = 320, height = 320;
+    const cx = width / 2, cy = height / 2;
+    const scale = 24;
+
+    const svg = svgBox(width, height);
+    board.innerHTML = ''; board.appendChild(svg);
+
+    const gGrid = el('g'); svg.appendChild(gGrid);
+    for (let i = -6; i <= 6; i++) {
+      gGrid.appendChild(el('line', { x1: cx + i * scale, y1: 0, x2: cx + i * scale, y2: height, stroke: '#e7e2d6', 'stroke-width': 1 }));
+      gGrid.appendChild(el('line', { x1: 0, y1: cy + i * scale, x2: width, y2: cy + i * scale, stroke: '#e7e2d6', 'stroke-width': 1 }));
+    }
+    gGrid.appendChild(el('line', { x1: 0, y1: cy, x2: width, y2: cy, stroke: '#b6afa0', 'stroke-width': 1.2 }));
+    gGrid.appendChild(el('line', { x1: cx, y1: 0, x2: cx, y2: height, stroke: '#b6afa0', 'stroke-width': 1.2 }));
+
+    const gVecs = el('g'); svg.appendChild(gVecs);
+
+    function toPx(v) { return { x: cx + v.x * scale, y: cy - v.y * scale }; }
+    function toUnit(px, py) { return { x: (px - cx) / scale, y: -(py - cy) / scale }; }
+
+    function arrow(v, color) {
+      const p = toPx(v);
+      const g = el('g');
+      g.appendChild(el('line', { x1: cx, y1: cy, x2: p.x, y2: p.y, stroke: color, 'stroke-width': 2.2 }));
+      const ang = Math.atan2(cy - p.y, p.x - cx);
+      const ah = 8;
+      const p1 = { x: p.x - ah * Math.cos(ang - 0.4), y: p.y + ah * Math.sin(ang - 0.4) };
+      const p2 = { x: p.x - ah * Math.cos(ang + 0.4), y: p.y + ah * Math.sin(ang + 0.4) };
+      g.appendChild(el('path', { d: `M${p.x},${p.y} L${p1.x},${p1.y} M${p.x},${p.y} L${p2.x},${p2.y}`, stroke: color, 'stroke-width': 2.2, 'stroke-linecap': 'round' }));
+      return g;
+    }
+
+    let vx = { x: 3, y: 1 }, vy = { x: 1, y: 2 };
+
+    function render() {
+      gVecs.textContent = '';
+      const X = [vx.x, vx.y], Y = [vy.x, vy.y];
+      const dot = VEC.dot(X, Y);
+      const cov = VEC.covariance(X, Y);
+      const corr = VEC.correlation(X, Y);
+      const cosine = VEC.cosineSimilarity(X, Y);
+
+      gVecs.appendChild(arrow(vx, ACCENT));
+      gVecs.appendChild(arrow(vy, NORMAL));
+      [{ v: vx, color: ACCENT, which: 'x' }, { v: vy, color: NORMAL, which: 'y' }].forEach(({ v, color, which }) => {
+        const p = toPx(v);
+        const handle = el('circle', { cx: p.x, cy: p.y, r: 9, fill: color, 'fill-opacity': 0.15, stroke: color, 'stroke-width': 2, style: 'cursor:grab' });
+        handle.dataset.which = which;
+        gVecs.appendChild(handle);
+      });
+
+      readout.innerHTML =
+        `<span style="color:${ACCENT}">x = (${fmt(vx.x, 1)}, ${fmt(vx.y, 1)})</span>, ` +
+        `<span style="color:${NORMAL}">y = (${fmt(vy.x, 1)}, ${fmt(vy.y, 1)})</span><br>` +
+        `x·y = <strong>${fmt(dot, 2)}</strong> (dot product) &nbsp;·&nbsp; ` +
+        `cov(x,y) = <strong>${fmt(cov, 2)}</strong> &nbsp;·&nbsp; ` +
+        `corr(x,y) = <strong>${fmt(corr, 2)}</strong> &nbsp;·&nbsp; ` +
+        `cos(x,y) = <strong>${fmt(cosine, 2)}</strong>`;
+    }
+
+    let dragging = null;
+    svg.addEventListener('pointerdown', e => {
+      const t = e.target;
+      if (t.dataset && t.dataset.which) { dragging = t.dataset.which; svg.setPointerCapture(e.pointerId); }
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const rect = svg.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (width / rect.width);
+      const py = (e.clientY - rect.top) * (height / rect.height);
+      let u = toUnit(px, py);
+      u.x = Math.max(-6, Math.min(6, Math.round(u.x * 4) / 4));
+      u.y = Math.max(-6, Math.min(6, Math.round(u.y * 4) / 4));
+      if (dragging === 'x') vx = u; else vy = u;
+      render();
+    });
+    svg.addEventListener('pointerup', () => { dragging = null; });
+    svg.addEventListener('pointerleave', () => { dragging = null; });
+
+    const presets = {
+      reset: () => { vx = { x: 3, y: 1 }; vy = { x: 1, y: 2 }; },
+      scale: () => { vx = { x: 3, y: 1 }; vy = { x: 6, y: 2 }; },
+      ortho: () => { vx = { x: 3, y: 1 }; vy = { x: -1, y: 3 }; },
+    };
+    host.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => { presets[btn.dataset.preset](); render(); });
+    });
+
+    render();
+  }
+  initFourNumbers();
+
+  // ============================================================
   // Widget 3 — covariance: raw vs. centered scatter
   // ============================================================
   function initCovariance(data) {
@@ -177,6 +289,8 @@
     const mna = VEC.mean(na), mcl = VEC.mean(cl);
     const cna = na.map(x => x - mna), ccl = cl.map(x => x - mcl);
     const cov = VEC.covariance(na, cl);
+    const corr = VEC.correlation(na, cl);
+    const cosine = VEC.cosineSimilarity(na, cl);
 
     const width = 640, height = 260, panelW = 300, gap = 40;
     const svg = svgBox(width, height);
@@ -210,7 +324,9 @@
 
     readout.innerHTML =
       `mean(Na) = ${fmt(mna, 1)}, mean(Cl) = ${fmt(mcl, 1)}. cov(Na, Cl) = c_Na · c_Cl / n = <strong>${fmt(cov, 2)}</strong> — ` +
-      (cov > 0 ? 'positive: patients above-average in one tend to be above-average in the other.' : 'negative or near zero.');
+      (cov > 0 ? 'positive: patients above-average in one tend to be above-average in the other.<br>' : 'negative or near zero.<br>') +
+      `corr(Na, Cl) = cov / (σ<sub>Na</sub> σ<sub>Cl</sub>) = <strong>${fmt(corr, 2)}</strong> — weak, once you rescale away the raw units. ` +
+      `cos(Na, Cl) = (Na·Cl) / (‖Na‖‖Cl‖) = <strong>${fmt(cosine, 3)}</strong> — nearly 1, but that is <em>not</em> the same finding: every patient's Na and Cl are both large positive numbers of similar size, so the raw vectors point in nearly the same direction regardless of how weakly they actually covary. Cosine similarity on un-centered, all-positive data mostly detects "both vectors are large and positive," not the correlation you probably meant to ask about.`;
   }
 
   // ---------- zero-covariance challenge (self-contained toy example) ----------
@@ -322,6 +438,14 @@
     orthogonal: {
       title: 'Orthogonal',
       body: '<p>Two vectors whose inner product is exactly zero. Geometrically, they point in directions that share no component. It is the formal statement behind independence of random variables and many optimality conditions in statistics.</p>',
+    },
+    correlation: {
+      title: 'Correlation',
+      body: '<p>Covariance, rescaled by each variable\'s own standard deviation so the result always lands between -1 and 1: corr(X,Y) = cov(X,Y) / (σ_X · σ_Y). With only two data points, correlation is always exactly +1 or -1 — you need more than two before it becomes a number in between.</p>',
+    },
+    'cosine-similarity': {
+      title: 'Cosine similarity',
+      body: '<p>The dot product normalized by length only, not centered: cos(X,Y) = (X·Y) / (‖X‖‖Y‖). It compares direction, ignoring scale — two vectors pointing the same way score 1 even if one is much longer than the other.</p>',
     },
     hadamard: {
       title: 'Hadamard product',

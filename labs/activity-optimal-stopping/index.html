@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-Class Activity · Jet Engines and Optimal Stopping — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=7">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">In-Class Activity</div>
+  <ul>
+    <li><a href="#raw">1 · The raw failure clock</a></li>
+    <li><a href="#survival-hazard">2 · Survival and hazard</a></li>
+    <li><a href="#fixed-age">3 · Fixed-age replacement</a></li>
+    <li><a href="#myopic">4 · Myopic stopping</a></li>
+    <li><a href="#dynamic">5 · Dynamic stopping on an age grid</a></li>
+    <li><a href="#statics">6 · Comparative statics</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · In-Class Activity · Sep 22</div>
+    <h1>Jet Engines and Optimal Stopping</h1>
+    <div class="subtitle">Replace too early and you waste useful life. Replace too late and you risk catastrophe.</div>
+    <div class="byline">Understanding Uncertainty · in-class group work</div>
+  </header>
+
+  <p class="lede">NASA's C-MAPSS turbofan degradation simulation gives 100 simulated jet engines, each run to failure. This activity builds up the full optimal-stopping toolkit on that real failure-time data: first the survival function and hazard rate (today's topic), then a fixed-age replacement baseline, a myopic one-cycle-ahead decision rule, and finally a full dynamic-programming stopping policy — the same backward-induction idea from the Dynamic Programming unit later in the course, previewed here on a concrete maintenance problem.</p>
+
+  <div class="cite">
+    Built from <code>labslop/08_optimal_stopping/lab_08_optimal_stopping.ipynb</code>. Data: NASA C-MAPSS FD001 turbofan degradation dataset, 100 engines, prepared via <code>prep_optimal_stopping.py</code>.
+  </div>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>three costs, one decision</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Replacing an engine costs $50. Every cycle of useful life thrown away by replacing early costs $1. A catastrophic in-service failure costs $500. Before seeing any data: roughly how much useful life would you be willing to waste to avoid a 10% chance of catastrophe?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare numbers — a 10% catastrophe chance costs $50 in expectation (10% × $500), so wasting more than roughly 50 cycles of life just to avoid it is already a net loss in pure dollar terms.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what this says about why the optimal replacement age is a genuine trade-off, not "replace as early as possible to be safe."</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="raw">1 · The raw failure clock</h2>
+
+  <p>Each of the 100 engines runs cycle by cycle until it fails. The observed failure cycles range widely:</p>
+
+  <table class="data-table">
+    <thead><tr><th>statistic</th><th>failure cycle</th></tr></thead>
+    <tbody>
+      <tr><td>mean</td><td class="num">206.3</td></tr>
+      <tr><td>std. dev.</td><td class="num">46.3</td></tr>
+      <tr><td>min</td><td class="num">128</td></tr>
+      <tr><td>25th pct.</td><td class="num">177</td></tr>
+      <tr><td>median</td><td class="num">199</td></tr>
+      <tr><td>75th pct.</td><td class="num">229</td></tr>
+      <tr><td>max</td><td class="num">362</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="survival-hazard">2 · Survival and hazard</h2>
+
+  <p>The empirical <strong>survival function</strong> answers "what fraction of engines are still alive after age \(t\)?" The empirical <strong>hazard</strong> answers a sharper question: "among engines alive at age \(t\), what fraction fail at exactly age \(t\)?" With only 100 engines, the raw hazard is jagged — a 15-cycle rolling average smooths it for decision-making:</p>
+
+  <table class="data-table">
+    <thead><tr><th>age</th><th>smoothed hazard</th></tr></thead>
+    <tbody>
+      <tr><td>100</td><td class="num">0.000</td></tr>
+      <tr><td>150</td><td class="num">0.0065</td></tr>
+      <tr><td>200</td><td class="num">0.0264</td></tr>
+      <tr><td>250</td><td class="num">0.0081</td></tr>
+      <tr><td>300</td><td class="num">0.0133</td></tr>
+      <tr><td>350</td><td class="num">0.000</td></tr>
+    </tbody>
+  </table>
+
+  <p class="keep-in-present">Notice the hazard is <em>not</em> monotonically increasing — it peaks around age 200, dips near 250, then rises again near 300. With only 100 engines, that dip may be real (a genuine "bathtub" pattern) or just sampling noise. Keep this in mind for Q5 — the dynamic program takes this exact hazard estimate at face value.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="fixed-age">3 · Fixed-age replacement</h2>
+
+  <p>The simplest policy: replace every engine at a fixed age \(K\), no matter what. If the true failure age \(T \ge K\), the cost is maintenance plus wasted remaining life; if \(T \lt K\), catastrophe:</p>
+
+  <pre class="equation">$$\text{cost}(K, T) = \begin{cases} \$50 + \$1\cdot(T-K), & K \lt T \\ \$500, & K \ge T \end{cases}$$</pre>
+
+  <p>Grid-searching \(K\) directly against all 100 engines' true failure ages finds the best fixed age:</p>
+
+  <table class="data-table">
+    <thead><tr><th>K</th><th>mean cost</th><th>failure rate</th><th>mean wasted life</th></tr></thead>
+    <tbody>
+      <tr class="highlight"><td>134</td><td class="num">$126.87</td><td class="num">1%</td><td class="num">72.4 cycles</td></tr>
+      <tr><td>133</td><td class="num">$127.86</td><td class="num">1%</td><td class="num">73.4 cycles</td></tr>
+      <tr><td>146</td><td class="num">$128.78</td><td class="num">4%</td><td class="num">60.8 cycles</td></tr>
+      <tr><td>132</td><td class="num">$128.85</td><td class="num">1%</td><td class="num">74.4 cycles</td></tr>
+    </tbody>
+  </table>
+
+  <p>\(K=134\) — well below the mean failure age of 206 — is the best <em>fixed</em> age, because $500 catastrophes are so much more expensive than wasted life that the policy would rather retire most engines quite early.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="myopic">4 · Myopic stopping</h2>
+
+  <p>A myopic operator only looks one cycle ahead: keep operating as long as the value of one more cycle (\(\$4\), say) exceeds the expected cost of a catastrophe in that one cycle, \(\text{hazard}(t)\times\$500\). Stop as soon as that inequality flips:</p>
+
+  <pre class="equation">$$\text{stop when } \; \text{hazard}(t)\times\$500 \ge \$4$$</pre>
+
+  <p>With the smoothed hazard from Q2, this rule first triggers at age <strong>151</strong> — evaluated against all 100 engines' true failures, that policy costs <strong>$137.57</strong> on average, with a 7% catastrophe rate.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="dynamic">5 · Dynamic stopping on an age grid</h2>
+
+  <p>A dynamic policy adds exactly one idea the myopic rule misses: continuing preserves the <em>option</em> to stop later. Working backward from the oldest observed age, compare stopping now against continuing — where continuing means paying the operating value, risking catastrophe this cycle, and otherwise facing tomorrow's already-computed value function:</p>
+
+  <pre class="equation">$$V(t) = \min\Bigl(\underbrace{\$50}_{\text{stop}},\ \underbrace{-\$4 + \text{hazard}(t)\cdot\$500 + (1-\text{hazard}(t))\cdot V(t+1)}_{\text{continue}}\Bigr)$$</pre>
+
+  <p>Solved on this data, the dynamic policy's first stop age is <strong>181</strong> — evaluated against the true failures, mean cost <strong>$216.69</strong>, a 30% catastrophe rate.</p>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>a genuinely surprising result</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>The dynamic policy (age 181, cost $216.69) costs <em>more</em> than both the myopic rule (age 151, cost $137.57) <em>and</em> the best fixed-age policy (age 134, cost $126.87) — even though dynamic programming is supposed to account for more information, not less. How could a "smarter" method end up worse?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Look back at the non-monotonic hazard from Q2. The dynamic program's backward induction is only as good as the hazard estimate it's fed — and this hazard, estimated from just 100 engines, dips and rises non-monotonically. The code reports the <em>first</em> age at which the policy says "stop," which can trigger too early if the policy's stop/continue regions aren't a single clean threshold.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what this implies about dynamic programming as a technique: it is exactly as good as the model (here, the hazard function) it is handed. "Optimal" is only optimal relative to the inputs.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="statics">6 · Comparative statics</h2>
+
+  <p>Vary the costs and the dynamic policy should move in intuitive directions. Raising the catastrophe cost should push replacement earlier; raising the value of continued operation should push it later:</p>
+
+  <table class="data-table">
+    <thead><tr><th>catastrophe cost</th><th>dynamic stop age</th><th>mean cost</th><th>failure rate</th></tr></thead>
+    <tbody>
+      <tr><td>$100</td><td class="num">358</td><td class="num">$495.54</td><td class="num">99%</td></tr>
+      <tr><td>$250</td><td class="num">191</td><td class="num">$245.98</td><td class="num">38%</td></tr>
+      <tr><td>$500</td><td class="num">181</td><td class="num">$216.69</td><td class="num">30%</td></tr>
+      <tr><td>$1,000</td><td class="num">147</td><td class="num">$136.82</td><td class="num">6%</td></tr>
+      <tr><td>$2,000</td><td class="num">130</td><td class="num">$130.83</td><td class="num">1%</td></tr>
+    </tbody>
+  </table>
+
+  <table class="data-table">
+    <thead><tr><th>operating value</th><th>dynamic stop age</th><th>mean cost</th></tr></thead>
+    <tbody>
+      <tr><td>$0</td><td class="num">1</td><td class="num">$255.31</td></tr>
+      <tr><td>$1</td><td class="num">130</td><td class="num">$130.83</td></tr>
+      <tr><td>$2</td><td class="num">148</td><td class="num">$135.88</td></tr>
+      <tr><td>$4</td><td class="num">181</td><td class="num">$216.69</td></tr>
+      <tr><td>$8</td><td class="num">188</td><td class="num">$238.88</td></tr>
+      <tr><td>$12</td><td class="num">334</td><td class="num">$486.87</td></tr>
+    </tbody>
+  </table>
+
+  <p class="keep-in-present">Both sweeps move exactly the intuitive direction — expensive catastrophes push the stop age down, valuable continued operation pushes it up — even though the <em>absolute</em> stop age at any one setting can be thrown off by the noisy hazard estimate (Q5). Comparative statics checks the shape of the response, not any single number in isolation.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Try it</div>
+    <p>Re-run the maintenance-cost sweep (hold catastrophe cost and operating value fixed, vary the $50 maintenance cost itself). Does raising maintenance cost push the stop age later, as the notebook predicts?</p>
+    <details>
+      <summary>Show why</summary>
+      <p>A more expensive planned replacement makes "stop now" less attractive relative to "continue," so the policy should tolerate more risk before stopping — pushing the stop age later, the same direction as raising the operating value.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why smooth the hazard with a rolling window instead of using the raw estimate?</h3>
+  <p>With only 100 engines, the raw hazard at any single age is estimated from a handful of failures (sometimes zero), so it swings wildly from one age to the next. A 15-cycle rolling average trades some resolution for a much less noisy input to the decision rules — at the cost of exactly the kind of non-monotonicity discussed in Q5.</p>
+
+  <h3>Why does the myopic rule stop earlier than the dynamic rule here?</h3>
+  <p>The myopic rule only weighs this cycle's catastrophe risk against this cycle's operating value — it never accounts for the option value of continuing to a potentially safer age. In a well-behaved (monotonically increasing) hazard, the dynamic rule would rationally stop later than the myopic rule for exactly that reason; here it does, but for the more complicated reason discussed above.</p>
+
+  <footer>
+    Understanding Uncertainty · In-Class Activity — Jet Engines and Optimal Stopping. Not magic — careful accounting over a grid, exactly as good as the hazard estimate it's handed.
+  </footer>
+</main>
+
+<script src="../shared/lab-base.js?v=7"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>

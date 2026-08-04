@@ -29,4 +29,4 @@
 .zc-readout strong { color: var(--ink); }
 .zc-readout.zc-pass strong.zc-status { color: #3a7a4f; }
 .zc-readout.zc-fail strong.zc-status { color: var(--ink-soft); }
-.controls-row { margin-top: 10px; }
+.controls-row { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }

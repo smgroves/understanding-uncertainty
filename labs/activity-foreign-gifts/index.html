@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-Class Activity · Foreign Gifts to US Universities — Understanding Uncertainty</title>
+
+<link rel="stylesheet" href="../shared/lab-base.css?v=7">
+<link rel="stylesheet" href="styles.css?v=1">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$']] },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'code'] }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+</head>
+<body>
+
+<button type="button" id="present-toggle" class="present-toggle" title="Toggle presentation mode (P)">
+  <span class="present-icon">◧</span>
+  <span class="present-label">Present</span>
+</button>
+
+<aside class="toc">
+  <div class="toc-title">In-Class Activity</div>
+  <ul>
+    <li><a href="#summaries">Country &amp; institution summaries</a></li>
+    <li><a href="#counts">Money vs. count of gifts</a></li>
+    <li><a href="#flows">Flows: giftor → institution</a></li>
+    <li><a href="#qatar-china">Inside Qatar and China</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <div class="toc-foot">Understanding Uncertainty · Fall 2026</div>
+</aside>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">Understanding Uncertainty · In-Class Activity · Aug 27</div>
+    <h1>Foreign Gifts to US Universities</h1>
+    <div class="subtitle">Grouping, sorting, and a flow diagram — the same three moves, on a real disclosure dataset</div>
+    <div class="byline">Understanding Uncertainty · in-class group work</div>
+  </header>
+
+  <p class="lede">US universities must disclose foreign gifts and contracts over $250,000 to the Department of Education. This activity uses the real disclosure records — 28,221 individual gifts — to practice exactly the summary tools from today's lecture: <code>groupby</code>, sorting, and value counts, then a genuinely different way to see a categorical relationship: the flow (alluvial/Sankey) diagram, which shows an association between two categorical variables — who gave, and who received — instead of just each variable alone.</p>
+
+  <div class="cite">
+    Built from <code>class_01/00_lab.ipynb</code>. Data: <code>ForeignGifts_edu.csv</code>, 28,221 gifts, 10 columns (institution, city, state, date, amount, gift type, country of giftor, giftor name).
+  </div>
+
+  <div class="activity-meta">
+    <span><strong>28,221</strong> gifts on record</span>
+    <span><strong>17,274</strong> contracts &middot; <strong>10,936</strong> monetary gifts &middot; <strong>11</strong> real estate</span>
+  </div>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>total vs. count</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>Before running anything: do you expect the country that gives the <em>most money in total</em> to also be the country that gives the <em>largest number of gifts</em>? What would it mean if those were two different countries?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>Compare predictions, then check both tables below.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what the gap between "most money" and "most gifts" tells you about the <em>shape</em> of a country's giving — many small gifts, or a few enormous ones?</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="summaries">Country &amp; institution summaries</h2>
+
+  <p>The first move is the one from today's lecture: group by a categorical variable, sum a numeric one.</p>
+
+  <pre><code class="language-python">summary = (
+    df.groupby('Country of Giftor')['Foreign Gift Amount']
+      .sum()
+      .nlargest(20)
+      .reset_index()
+)</code></pre>
+
+  <p>By total dollar amount, one country is not close to the rest:</p>
+
+  <table class="data-table">
+    <thead><tr><th>Country of Giftor</th><th>Total gift amount</th></tr></thead>
+    <tbody>
+      <tr><td>Qatar</td><td class="num">$2,706,240,869</td></tr>
+      <tr><td>England</td><td class="num">$1,464,906,771</td></tr>
+      <tr><td>China</td><td class="num">$1,237,952,112</td></tr>
+      <tr><td>Saudi Arabia</td><td class="num">$1,065,205,930</td></tr>
+      <tr><td>Bermuda</td><td class="num">$899,593,972</td></tr>
+      <tr><td>Canada</td><td class="num">$898,160,656</td></tr>
+      <tr><td>Hong Kong</td><td class="num">$887,402,529</td></tr>
+      <tr><td>Japan</td><td class="num">$655,954,776</td></tr>
+    </tbody>
+  </table>
+
+  <p>And by total dollars received, the recipients cluster around a familiar list of research universities:</p>
+
+  <table class="data-table">
+    <thead><tr><th>Institution</th><th>Total gift amount</th></tr></thead>
+    <tbody>
+      <tr><td>Carnegie Mellon University</td><td class="num">$1,477,922,504</td></tr>
+      <tr><td>Cornell University</td><td class="num">$1,289,937,761</td></tr>
+      <tr><td>Harvard University</td><td class="num">$954,803,610</td></tr>
+      <tr><td>Massachusetts Institute of Technology</td><td class="num">$859,071,692</td></tr>
+      <tr><td>Yale University</td><td class="num">$613,441,311</td></tr>
+      <tr><td>Texas A&amp;M University</td><td class="num">$521,455,050</td></tr>
+      <tr><td>Johns Hopkins University</td><td class="num">$502,409,595</td></tr>
+      <tr><td>Northwestern University</td><td class="num">$402,316,221</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="counts">Money vs. count of gifts</h2>
+
+  <p>Sum answers "who gives the most money." A separate question — "who gives the most <em>often</em>" — needs <code>value_counts()</code> instead of <code>sum()</code>, and gives a genuinely different ranking:</p>
+
+  <pre><code class="language-python">counts = (
+    df['Country of Giftor']
+      .value_counts()
+      .nlargest(20)
+)</code></pre>
+
+  <table class="data-table">
+    <thead><tr><th>Country of Giftor</th><th>Number of gifts</th></tr></thead>
+    <tbody>
+      <tr><td>England</td><td class="num">3,655</td></tr>
+      <tr><td>China</td><td class="num">2,461</td></tr>
+      <tr><td>Canada</td><td class="num">2,344</td></tr>
+      <tr><td>Japan</td><td class="num">1,896</td></tr>
+      <tr><td>Switzerland</td><td class="num">1,676</td></tr>
+      <tr><td>Saudi Arabia</td><td class="num">1,610</td></tr>
+    </tbody>
+  </table>
+
+  <p class="keep-in-present">Qatar doesn't even reach this table, despite topping the total-dollars ranking by a wide margin — its giving is concentrated in a small number of very large gifts, not a steady stream of small ones. England gives the most <em>often</em> but doesn't crack the total-dollars top 8. Same dataset, same groupby-and-sort recipe, two entirely different pictures depending on which aggregation (<code>sum</code> vs. <code>count</code>) you ask for.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Try it</div>
+    <p>Using the same pattern, compute the <strong>average</strong> gift size per country (<code>.mean()</code> instead of <code>.sum()</code>). Which country's average gift size surprises you most, given its rank on the two tables above?</p>
+    <details>
+      <summary>Show one way to check</summary>
+      <p><code>df.groupby('Country of Giftor')['Foreign Gift Amount'].mean().nlargest(10)</code> — a country can rank low on both total and count, yet high on average, if it gives rarely but enormously each time. That is exactly the "shape of giving" question the Think prompt above was pointing at.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="flows">Flows: giftor → institution</h2>
+
+  <div class="callout tps">
+    <span class="label">Think · Pair · Share · <em>a new kind of plot</em></span>
+    <ul class="tps-steps">
+      <li><span class="tps-phase">Think · 2 min</span>A bar chart shows one categorical variable's totals. What does a bar chart of "top countries" or "top institutions" alone <em>fail</em> to show you about how money actually moves through this system?</li>
+    </ul>
+    <details class="tps-reveal">
+      <summary>I've done the Think step — reveal Pair &amp; Share</summary>
+      <ul class="tps-steps">
+        <li><span class="tps-phase">Pair · 3 min</span>A bar chart can't show which giftor sent money to which institution — it only shows each categorical variable's own marginal total, never the pairing. That pairing is a joint distribution over two categoricals.</li>
+        <li><span class="tps-phase">Share · 2 min</span>Agree on what kind of plot could show a joint relationship between two categorical variables, then look at the Sankey diagram below.</li>
+      </ul>
+    </details>
+  </div>
+
+  <p>A bar chart of country totals and a bar chart of institution totals are both just the <strong>marginal</strong> distributions — each categorical variable summarized on its own, with the pairing between them thrown away. A <strong><span class="gloss" data-gloss="sankey">Sankey (alluvial) diagram</span></strong> plots the joint distribution instead: one node per giftor and per institution, one flow per (giftor, institution) pair, with flow width proportional to total dollars.</p>
+
+  <pre><code class="language-python">import plotly.graph_objects as go
+
+giftor, recipi, flow = 'Giftor Name', 'Institution Name', 'Foreign Gift Amount'
+flows = (
+    df.groupby([giftor, recipi])[flow]
+      .sum()
+      .nlargest(20)
+      .reset_index()
+)
+
+labels = list(dict.fromkeys(flows[giftor].tolist() + flows[recipi].tolist()))
+
+fig = go.Figure(go.Sankey(
+    node=dict(label=labels),
+    link=dict(
+        source=flows[giftor].map(labels.index),
+        target=flows[recipi].map(labels.index),
+        value=flows[flow],
+    ),
+))
+fig.show()</code></pre>
+
+  <p>The same recipe works at the country level instead of the individual-giftor level — swap <code>giftor = 'Country of Giftor'</code> — to see which countries' money concentrates in which universities.</p>
+
+  <!-- ============================================================ -->
+  <h2 id="qatar-china">Inside Qatar and China</h2>
+
+  <p>The two countries most discussed in the news coverage of this disclosure data behave completely differently once you look inside them.</p>
+
+  <table class="data-table">
+    <thead><tr><th>Top Qatar giftors</th><th>Total</th></tr></thead>
+    <tbody>
+      <tr><td>Qatar Foundation</td><td class="num">$1,165,905,872</td></tr>
+      <tr><td>Qatar Foundation / Qatar National Research</td><td class="num">$796,197,000</td></tr>
+      <tr><td>Qatar Foundation for Education</td><td class="num">$373,945,215</td></tr>
+      <tr><td>Qatar National Research Fund</td><td class="num">$79,021,705</td></tr>
+    </tbody>
+  </table>
+
+  <table class="data-table">
+    <thead><tr><th>Top China giftors</th><th>Total</th></tr></thead>
+    <tbody>
+      <tr><td>Anonymous</td><td class="num">$62,260,714</td></tr>
+      <tr><td>Wenzhou-Kean University</td><td class="num">$39,148,779</td></tr>
+      <tr><td>BEG Holdings, LP</td><td class="num">$35,300,000</td></tr>
+      <tr><td>Zhejiang University</td><td class="num">$28,540,419</td></tr>
+    </tbody>
+  </table>
+
+  <p class="keep-in-present">Qatar's $2.7B is overwhelmingly three giftors — a single national foundation and its two sub-programs. China's much smaller $1.2B splits across many more distinct, mostly institutional giftors (universities, holding companies), with no single giftor coming close to a majority share. Two countries can have wildly different total-dollar rankings for structurally different reasons: one concentrated funder versus many diffuse ones.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Discuss as a group</div>
+    <p>The <code>Gift Type</code> column has three values: <code>Contract</code> (17,274), <code>Monetary Gift</code> (10,936), and <code>Real Estate</code> (11). Does Qatar's giving lean toward contracts or monetary gifts? Does that change how you'd interpret its total?</p>
+    <details>
+      <summary>Show one way to check</summary>
+      <p><code>df[df['Country of Giftor']=='QATAR']['Gift Type'].value_counts()</code> — a "gift" that is actually a research contract is a different kind of relationship than an unrestricted monetary gift, even though both show up identically in the total-dollars column. The categorical breakdown behind a number often changes what that number means.</p>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="faq">FAQ</h2>
+
+  <h3>Why does a Sankey diagram need <code>dict.fromkeys</code> instead of just a list of unique labels?</h3>
+  <p><code>dict.fromkeys(a_list)</code> removes duplicates while preserving first-seen order — a plain <code>set()</code> would also deduplicate but scramble the order, which would silently break the <code>labels.index(...)</code> lookup that maps each giftor/institution name to its node position.</p>
+
+  <h3>Why filter to the top 20 flows instead of plotting all 28,221 gifts?</h3>
+  <p>A Sankey diagram becomes unreadable well before 28,221 flows — the visual point is to see the handful of dominant relationships, not to encode every row. This is the same "K largest" instinct as <code>nlargest(20)</code> in the summary tables above, just applied to a joint distribution instead of a single variable.</p>
+
+  <footer>
+    Understanding Uncertainty · In-Class Activity — Foreign Gifts to US Universities. Same groupby-and-sort recipe as the lecture, now applied to a joint relationship between two categoricals.
+  </footer>
+</main>
+
+<div class="glossary-panel" id="glossary-panel" hidden>
+  <button class="glossary-close" id="glossary-close" aria-label="Close">×</button>
+  <div id="glossary-content"></div>
+</div>
+
+<script>
+  window.GLOSSARY = {
+    'sankey': {
+      title: 'Sankey / alluvial diagram',
+      body: '<p>A flow diagram where node width or link thickness is proportional to a quantity — here, total dollars flowing from one giftor to one institution. Unlike a bar chart of either variable alone, it shows the joint (paired) relationship between two categorical variables.</p>',
+    },
+  };
+</script>
+
+<script src="../shared/lab-base.js?v=7"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</body>
+</html>
