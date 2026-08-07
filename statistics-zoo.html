@@ -143,6 +143,7 @@
       <a href="#lln">LLN</a>
       <a href="#covariate">Covariate</a>
       <a href="#markov">Markov Chain</a>
+      <a href="#frequentist">Frequentist</a>
     </nav>
     <a class="home-link" href="index.html">← Course home</a>
   </div>
@@ -452,6 +453,25 @@
       <span class="connects-label">connects to</span>
       <a class="tag" href="#sampling">Sampling</a>
       <a class="tag" href="#estimator">Estimator</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="frequentist">
+    <div class="card-head"><span class="card-num">18</span><h2>Frequentist</h2></div>
+    <p class="definition">Frequentist is a stance on what a probability statement <strong>means</strong>: not "how confident am I," but <strong>how often would this procedure be right if I repeated it many times</strong>. A 95% CI isn't "95% chance the true value is in this one interval" — it's "run this whole draw-a-sample-and-build-an-interval recipe over and over, and about 95% of the resulting intervals contain the truth." Draw more experiments and watch the long-run capture rate settle in.</p>
+    <div class="viz-well"><canvas id="freq-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="freq-1">+1 experiment</button>
+      <button class="btn" id="freq-40">+40 experiments</button>
+      <button class="btn ghost" id="freq-reset">Reset</button>
+    </div>
+    <p class="note" id="freq-readout"></p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#pvalue-ci">p-value / CI</a>
+      <a class="tag" href="#sampling">Sampling</a>
+      <a class="tag" href="#lln">LLN</a>
     </div>
   </section>
 
@@ -1905,6 +1925,97 @@
     btn1.addEventListener('click', () => { step(); render(); });
     btn100.addEventListener('click', () => { for (let i = 0; i < 100; i++) step(); render(); });
     resetBtn.addEventListener('click', () => { current = 0; visits = [1, 0, 0]; render(); });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 18 — Frequentist
+   * ============================================================ */
+  (function initFrequentist() {
+    const canvas = document.getElementById('freq-canvas');
+    const btn1 = document.getElementById('freq-1');
+    const btn40 = document.getElementById('freq-40');
+    const resetBtn = document.getElementById('freq-reset');
+    const readout = document.getElementById('freq-readout');
+    const margin = { left: 40, right: 20, top: 20, bottom: 34 };
+
+    const MU = 50, SIGMA = 10, N = 25;
+    const SE = SIGMA / Math.sqrt(N);
+    const HALF = 1.96 * SE;
+    const MAX_VISIBLE = 25;
+
+    let experiments = []; // { mean, contains }
+    let containCount = 0;
+
+    function runOne() {
+      let sum = 0;
+      for (let i = 0; i < N; i++) sum += MU + SIGMA * ZOO.normal();
+      const m = sum / N;
+      const contains = (m - HALF <= MU) && (MU <= m + HALF);
+      experiments.push({ mean: m, contains });
+      if (contains) containCount++;
+    }
+
+    function render() {
+      const { ctx, width, height } = ZOO.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const xmin = 35, xmax = 65;
+      const s = ZOO.scales(xmin, xmax, 0, 1, width, height, margin);
+      ZOO.drawAxis(ctx, width, height, margin);
+
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = INK_SOFT;
+      ctx.textAlign = 'center';
+      for (let xv = 40; xv <= 60; xv += 5) {
+        const px = s.xToPx(xv);
+        ctx.beginPath();
+        ctx.moveTo(px, height - margin.bottom);
+        ctx.lineTo(px, height - margin.bottom + 4);
+        ctx.strokeStyle = RULE;
+        ctx.stroke();
+        ctx.fillText(xv, px, height - margin.bottom + 16);
+      }
+
+      const muPx = s.xToPx(MU);
+      ctx.beginPath();
+      ctx.moveTo(muPx, margin.top - 4);
+      ctx.lineTo(muPx, height - margin.bottom);
+      ctx.strokeStyle = INK;
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillText('true μ', muPx, margin.top - 8);
+
+      const visible = experiments.slice(-MAX_VISIBLE);
+      const plotH = height - margin.top - margin.bottom;
+      const rowH = plotH / MAX_VISIBLE;
+      visible.forEach((e, i) => {
+        const y = margin.top + i * rowH + rowH / 2;
+        const x0 = s.xToPx(e.mean - HALF), x1 = s.xToPx(e.mean + HALF);
+        ctx.strokeStyle = e.contains ? TEAL : AMBER;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x0, y);
+        ctx.lineTo(x1, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(s.xToPx(e.mean), y, 2, 0, 2 * Math.PI);
+        ctx.fillStyle = INK;
+        ctx.fill();
+      });
+
+      const total = experiments.length;
+      const pct = total ? (100 * containCount / total).toFixed(1) : '0.0';
+      readout.innerHTML = total
+        ? `<strong>${containCount}</strong> of <strong>${total}</strong> intervals (${pct}%) contain the true μ = 50 &nbsp;·&nbsp; showing the most recent ${visible.length}`
+        : 'Click "+1 experiment" to draw a fresh sample and build its 95% CI.';
+    }
+
+    btn1.addEventListener('click', () => { runOne(); render(); });
+    btn40.addEventListener('click', () => { for (let i = 0; i < 40; i++) runOne(); render(); });
+    resetBtn.addEventListener('click', () => { experiments = []; containCount = 0; render(); });
     redrawFns.push(render);
     render();
   })();
