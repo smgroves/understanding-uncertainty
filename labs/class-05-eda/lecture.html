@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 05 Lecture · Categorical &amp; Numeric Variables — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=5">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -109,6 +109,16 @@
   <pre class="equation">$$\mathbb{V}[\hat{p}] = \frac{p(1-p)}{n}$$</pre>
 
   <p class="keep-in-present">Put together: the sample proportion \(\hat{p}\) is an unbiased estimator of \(p\), and its variance shrinks to zero at rate \(1/n\) as the sample grows. Watch for the shape "\(p(1-p)/n\)" — it recurs every time this course asks "what is the sampling variance of a proportion," in this class and later ones.</p>
+
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Squared distance from the 0/1 indicator column to a single number \(c\): \(\sum_i (\mathbb{1}\{x_i = k\} - c)^2\).</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">The sample proportion \(\hat p_k\). Because a proportion <em>is</em> the mean of an indicator, this is Class 01's <span class="gloss" data-gloss="argmin-lec">argmin</span> with 0/1 data substituted in.</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span> — count the ones and divide by \(n\).</span></li>
+    </ul>
+    <p class="keep-in-present">The point of this box is that nothing new is happening. Once you see \(\hat p\) as a mean of indicators, every result about means transfers to categorical data for free: unbiasedness, the \(\sigma^2/n\) variance, and later the weak law of large numbers and the CLT. That is why the indicator trick is worth the trouble — it stops proportions from needing their own separate theory.</p>
+  </div>
 
   <h3 id="multinomial">Multinomial trials and indicator variables</h3>
   <p>Real categorical variables usually have more than two labels. With \(L\) possible labels \(\ell_1, \dots, \ell_L\) — say four car brands, Honda, Subaru, Ford, Audi — each has its own probability \(p_1, \dots, p_L\), the long-run fraction of the time it occurs.</p>
@@ -229,6 +239,10 @@ def ecdf(x):
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'dgp': {
       title: 'Data generating process',
       body: '<p>The underlying, usually unobserved mechanism presumed to produce every observation in a sample. Assuming a stable data generating process is what makes it sensible to expect a pattern learned from one sample to hold for future data.</p>',

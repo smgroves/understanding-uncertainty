@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 07 Lecture · Kernel Density Estimation — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -139,6 +139,16 @@
   <p class="keep-in-present">Nudge the bandwidth and watch the classic <strong>bias-variance trade-off</strong>: large \(h\) averages over large neighborhoods, so the curve barely moves as the data changes (low variance, high bias); small \(h\) averages over tiny neighborhoods, so the curve swings wildly with every new sample (high variance, low bias). The <a href="kde.html#bandwidth">Class 07 lab</a>'s regime-preset widget makes this trade-off directly draggable — applied machine learning is, in large part, judgment about exactly this trade-off.</p>
 
   <!-- ============================================================ -->
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Mean integrated squared error, \(\int \mathbb{E}\big[(\hat f_h(x) - f(x))^2\big]\,dx\), as a function of the bandwidth \(h\).</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">The \(h\) that balances squared bias (grows as \(h\) grows) against variance (grows as \(h\) shrinks). Silverman's rule is a closed-form approximation to that <span class="gloss" data-gloss="argmin-lec">argmin</span>, exactly right only when the truth is normal.</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span><span class="optview-how how-grid">cross-validation</span> — take Silverman's number, or score a grid of \(h\) values on held-out data.</span></li>
+    </ul>
+    <p class="keep-in-present">This is the first box whose argmin is a <em>tuning knob</em> rather than an estimate, and the objective is the bias–variance split from Class 03 with an integral wrapped around it. It also explains why Silverman's rule is a default and not an answer: it optimizes the wrong objective (MISE against a normal reference) whenever your data is bimodal or heavy-tailed. Drag \(h\) through both failure modes in the <a href="kde.html#bandwidth">lab's bias–variance widget</a>.</p>
+  </div>
+
   <h2 id="part2">Part 2 · The Gaussian Kernel</h2>
 
   <h3 id="exp-function">Constructing the exponential function</h3>
@@ -222,6 +232,10 @@
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'kde-lec': {
       title: 'Kernel density estimator (KDE)',
       body: '<p>An estimate of a probability density built by averaging a small "bump" (a kernel) centered at every data point. The same formula falls out of a moving-window count, the slope of the ECDF, and a measurement-error argument.</p>',

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 06 Lecture · From the CDF to the PDF — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -110,6 +110,16 @@
 
   <pre class="equation">$$q = F^{-1}(u)$$</pre>
 
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Expected absolute error, but <em>tilted</em>: undershooting costs \(\tau\) per unit and overshooting costs \(1-\tau\) per unit.</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">The \(\tau\)-th quantile, \(F^{-1}(\tau)\). At \(\tau = 1/2\) the two penalties are equal and the <span class="gloss" data-gloss="argmin-lec">argmin</span> is the median — Class 01's absolute-distance box.</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span><span class="optview-how how-grid">grid search</span> — invert \(F\) when you can, or scan candidate values when \(F\) has no clean inverse.</span></li>
+    </ul>
+    <p class="keep-in-present">This reframes the quantile function as something more than cut points in sorted data: each quantile is the best single guess under one specific asymmetric cost. It is why a delivery service promises the 90th percentile of its delivery times rather than the mean — being an hour late costs the company far more than being an hour early, so \(\tau\) is set high and the optimal promise moves out into the tail.</p>
+  </div>
+
   <h3 id="named-dists">Three named distributions, worked</h3>
   <p>The source material poses these three as open questions — find each distribution's density, quantile function, expectation, and variance, starting only from \(F\).</p>
 
@@ -189,6 +199,10 @@
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'pdf-lec': {
       title: 'Probability density function (PDF)',
       body: '<p>The derivative of the CDF, f(x) = F\'(x). Describes probability per unit length rather than probability at a point — a single point on a continuum always has probability exactly zero.</p>',

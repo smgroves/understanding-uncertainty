@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 02 Lecture · Vectors, Matrices &amp; the Inner Product — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -209,6 +209,16 @@ print(np.sqrt((x.reshape(1, -1) - y.reshape(-1, 1)) ** 2))</code></pre>
   <h3 id="orthogonality-lec">Orthogonality</h3>
   <p>Two vectors are <strong><span class="gloss" data-gloss="orthogonal-lec">orthogonal</span></strong> exactly when \(X \cdot Y = 0\). This single equation recurs across the rest of this course and well beyond it — independence of random variables, the optimality conditions that pin down a regression's coefficients, unsupervised learning methods like PCA all reduce to some version of "these two things are orthogonal."</p>
 
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Squared distance from \(y\) to the nearest multiple of \(x\): \(\min_c \|y - cx\|^2\).</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">\(c^\star = (x\cdot y)/(x\cdot x)\), the projection coefficient. At that \(c^\star\), the leftover \(y - c^\star x\) is orthogonal to \(x\).</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span> and with no calculus at all — the shortest path from a point to a line is the perpendicular one.</span></li>
+    </ul>
+    <p class="keep-in-present">Class 01 found the sample mean as the <span class="gloss" data-gloss="argmin-lec">argmin</span> of a sum of squares; this is the same objective in vector form, and it answers it geometrically. Remember the shape of the answer: <strong>minimizing squared error makes the residual orthogonal.</strong> Linear regression and conditional expectation are both this same picture with more directions to project onto — which is why you can already see the answer to both, months before either has a formula.</p>
+  </div>
+
   <h3 id="ds-applications">DS applications of the inner product</h3>
   <p>Once you see the pattern, it is everywhere: covariance is a centered dot product, correlation a normalized one, and independence implies zero covariance. Computing an expectation is a dot product of probabilities against values, \(\mathbb{E}[X] = \sum_{x} p(x)\,x = p\cdot X\). Solving for a linear regression's coefficients is the orthogonality condition \(X^\top(y - X\beta) = 0\); its predictions are \(\hat y_i = x_i \cdot \beta\). Comparing how similar two documents or images are — cosine similarity of embeddings — is a normalized dot product; word2vec and attention are scaled dot products measuring token relevance; deep learning alternates stacked dot products with non-linear activations to build up complex learned functions. GPUs are worth what they're worth because they were built to compute dot products as fast as physically possible — a large part of why Nvidia is a trillion-dollar company traces back to this one operation. Translating an ML idea into fast code is, very often, exactly the problem of writing it as a dot product.</p>
 
@@ -244,6 +254,10 @@ print(np.sqrt((x.reshape(1, -1) - y.reshape(-1, 1)) ** 2))</code></pre>
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'transpose-lec': {
       title: 'Transpose',
       body: '<p>Flipping a vector (or matrix) from row to column or column to row. A bookkeeping operation — it does not change which numbers are which, only how they are laid out.</p>',

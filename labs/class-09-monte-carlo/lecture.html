@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 09 Lecture · The WLLN &amp; Monte Carlo — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=1">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -129,6 +129,16 @@
 
   <pre class="equation">$$\mathbb{V}[\hat E] \approx \frac{s^2_{\hat E}}{n}$$</pre>
 
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Compute spent, subject to hitting a target standard error \(\varepsilon\). The error of a Monte Carlo estimate falls like \(\sigma/\sqrt{n}\), so accuracy is bought with draws.</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">The smallest sufficient \(n\), namely \(n \ge (\sigma/\varepsilon)^2\). One more decimal digit of accuracy costs 100× the draws.</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span> — invert the \(1/\sqrt{n}\) rate.</span></li>
+    </ul>
+    <p class="keep-in-present">Here the <span class="gloss" data-gloss="argmin-lec">argmin</span> is a budget rather than a parameter, and the \(1/\sqrt{n}\) rate is the whole story of when Monte Carlo is the right tool. That rate does not depend on the dimension of the problem, which is why Monte Carlo cheerfully integrates in 50 dimensions where a grid would need more points than there are atoms available. It is also why Monte Carlo is hopeless for high precision: six digits would take \(10^{12}\) draws.</p>
+  </div>
+
   <h3 id="tempting-mistake">A tempting mistake</h3>
   <p>The right way to compute a Monte Carlo estimate is the plain average:</p>
 
@@ -161,6 +171,10 @@
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'stochastic-distance-lec': {
       title: 'Stochastic distance',
       body: '<p>A way of quantifying how far a random quantity is likely to be from a target value, since an ordinary distance like |x-y| does not by itself account for randomness.</p>',

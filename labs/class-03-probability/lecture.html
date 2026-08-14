@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 03 Lecture · Probability &amp; Random Variables — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -181,6 +181,16 @@
   <p class="keep-in-present">Adding a constant \(a\) never changes the spread; scaling by \(b\) scales the variance by \(b^2\), not by \(b\) — variance is <em>not</em> \(a + b\,\mathbb{V}[X]\). The <a href="binomial.html">Class 03 lab</a> specializes this whole machinery to one concrete random variable, the binomial, and builds its PMF from scratch.</p>
 
   <!-- ============================================================ -->
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Expected squared error of a single-number prediction \(c\) for a random \(X\): \(\mathbb{E}[(X-c)^2]\). Class 01's objective, with the process in place of the sample.</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">The <span class="gloss" data-gloss="argmin-lec">minimizing</span> guess is \(c^\star = \mathbb{E}[X]\), and the value at the minimum is exactly \(\mathbb{V}[X]\).</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span> via the identity \(\mathbb{E}[(X-c)^2] = \mathbb{V}[X] + (\mathbb{E}[X]-c)^2\).</span></li>
+    </ul>
+    <p class="keep-in-present">Read that identity as a decomposition and variance stops being merely "spread": it is the <em>best achievable</em> mean squared error when you have to predict \(X\) with one number. The leftover term \((\mathbb{E}[X]-c)^2\) is the price of guessing the wrong center, and it is a squared bias. That split — irreducible variance plus squared bias — is the same one that decides bandwidths in Class 07 and estimator quality in Class 04.</p>
+  </div>
+
   <h2 id="faq">FAQ</h2>
 
   <h3>Why does variance scale by \(b^2\) and not by \(b\)?</h3>
@@ -199,6 +209,10 @@
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'prob-space-lec': {
       title: 'Probability space',
       body: '<p>The triple (sample space, events, probability function) that formalizes an uncertain process: the set of possible outcomes, the collection of things you can ask about, and how likely each one is.</p>',

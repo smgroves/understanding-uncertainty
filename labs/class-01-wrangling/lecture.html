@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 01 Lecture · Wrangling &amp; EDA — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -159,6 +159,16 @@ def quantile(X, frac):
 
   <p class="keep-in-present">The median, IQR, and outliers all show up together in a <strong>boxplot</strong> — the standard single-picture summary of a numeric variable's robust center and spread. The <a href="wrangling.html#viz-toystat">Class 01 lab</a> builds exactly this median/quantile machinery interactively, using the pinned toy set \(\{12, 34, 41, 58, 1018\}\) — the same numbers this lecture's code would produce if you ran it.</p>
 
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Total squared distance from the data to a single summary number \(c\): \(\sum_i (x_i - c)^2\).</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">The sample mean \(\bar{x}\). Swap squared distance for absolute distance, \(\sum_i |x_i - c|\), and the argmin becomes the median instead.</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-formula">closed form</span><span class="optview-how how-grid">grid search</span> — you can also just scan \(c\) across a range and watch which value bottoms out.</span></li>
+    </ul>
+    <p class="keep-in-present">This box comes back every lecture. Almost everything this course estimates — the mean, a quantile, a density, a regression line — is the answer to a <span class="gloss" data-gloss="argmin-lec">minimization</span> problem, and the mean is the first one. It also explains the outlier sensitivity above: squaring makes one far-away point enormously expensive, so \(\bar{x}\) moves to appease it, while absolute distance charges that point the same rate as every other and the median stays put. Watch both argmins move in the <a href="../activity-min-sum-squares/index.html#widget">What the Sample Mean Minimizes</a> activity.</p>
+  </div>
+
   <h3 id="transforms">Taming long tails</h3>
   <p>Almost every real dataset has a handful of variables with long tails — the mean sits far from the median because a small number of very large values pull it away. The traditional fix is the <strong>natural logarithm</strong> (<code>df['var_ln'] = np.log(df[var])</code>), which compresses large values much more than small ones — but it is undefined at zero and for negative numbers. The better choice is the <strong><span class="gloss" data-gloss="arcsinh-eda">inverse hyperbolic sine</span></strong> (arcsinh), defined everywhere, including zero and negative inputs, where it evaluates to 0 and to negative outputs respectively:</p>
 
@@ -199,6 +209,10 @@ def quantile(X, frac):
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'schema-lec': {
       title: 'Schema',
       body: '<p>The organization of a dataset: what tables exist, what variables they contain, and what type each variable is. The first thing to check before trusting any statistic.</p>',

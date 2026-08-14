@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class 10 Lecture · Sampling Distributions &amp; the Bootstrap — Understanding Uncertainty</title>
 
-<link rel="stylesheet" href="../shared/lab-base.css?v=6">
+<link rel="stylesheet" href="../shared/lab-base.css?v=8">
 <link rel="stylesheet" href="lecture.css?v=2">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
@@ -148,6 +148,16 @@ $$</pre>
 
   <p>Three levels come up constantly: the 90% interval is the 0.05 and 0.95 quantiles of \([\hat S_1,\dots,\hat S_B]\); the 95% interval is the 0.025 and 0.975 quantiles; the 99% interval is the 0.005 and 0.995 quantiles. In general, for level parameter \(\alpha\) (typically 0.10, 0.05, or 0.01), the non-parametric \((1-\alpha)\)-confidence interval is built in two steps: find the \(\alpha/2\) and \(1-\alpha/2\) quantiles of the replicate collection, \(q_{\alpha/2}\) and \(q_{1-\alpha/2}\), and report \((q_{\alpha/2},\, q_{1-\alpha/2})\).</p>
 
+  <div class="callout optview">
+    <span class="label">The optimization view</span>
+    <ul class="optview-rows">
+      <li><span class="optview-key">Objective</span><span class="optview-val">Interval width, subject to covering 95% of the bootstrap replicates. A narrower interval is a more useful claim, so among all intervals with the right coverage you want the shortest.</span></li>
+      <li><span class="optview-key">Argmin</span><span class="optview-val">If the sampling distribution is symmetric and single-peaked, the equal-tailed 2.5/97.5 percentile interval. If it is skewed, that interval is <em>not</em> the shortest — the shortest one sits off-center, pulled toward the peak.</span></li>
+      <li><span class="optview-key">Solved by</span><span class="optview-val"><span class="optview-how how-grid">grid search</span> — slide the left endpoint along the sorted replicates and keep the narrowest window that still covers 95%.</span></li>
+    </ul>
+    <p class="keep-in-present">The percentile interval you just built is a convention, not a theorem: it is the <span class="gloss" data-gloss="argmin-lec">argmin</span> of the objective above only under symmetry. That is worth knowing before you report one on a skewed statistic, and it is exactly what the <a href="../activity-two-distributions-skewed/index.html">skewed two-distributions activity</a> is built to show. Class 11 explains why the equal-tailed convention is nevertheless defensible so much of the time.</p>
+  </div>
+
   <h3 id="hypothesis-testing-lec">Hypothesis testing</h3>
   <p>Suppose there is a <strong>hypothesized value</strong> you particularly care about — often zero, but it could be anything. Asking "is my hypothesized value inside the confidence interval?" is exactly a statistical test: the <strong>null hypothesis</strong> is that the hypothesized value describes reality (\(S=0\), say); the <strong>alternative hypothesis</strong> is that it doesn't (\(S \neq 0\)). The tricky part, psychologically, is that researchers usually <em>want</em> to reject the null and find evidence for the alternative — but the test itself doesn't care which outcome you're hoping for.</p>
 
@@ -175,6 +185,10 @@ $$</pre>
 
 <script>
   window.GLOSSARY = {
+    'argmin-lec': {
+      title: 'Argmin (and argmax)',
+      body: '<p>The <em>input</em> that makes a quantity as small as possible — not the small value itself. Read "argmin over c of f(c)" as: the value of c at which f is lowest. Argmax is the same idea for the largest value. Keep the two apart: the minimum of (c-3)² is 0, but its argmin is 3.</p>',
+    },
     'statistic-lec': {
       title: 'Statistic',
       body: '<p>Any number computed from a sample — a mean, a median, a correlation. Because the sample is random, a statistic computed from it is random too, with its own sampling distribution.</p>',

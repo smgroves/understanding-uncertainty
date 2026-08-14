@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Notation Dictionary — Understanding Uncertainty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F4F6;
+    --paper2: #E7EBEE;
+    --ink: #1B2430;
+    --ink-soft: #4A5568;
+    --teal: #2B7A78;
+    --teal-soft: #DCEBEA;
+    --amber: #C9852B;
+    --amber-soft: #F5E6D3;
+    --rule: #D3D9DE;
+    --serif: 'Source Serif 4', Georgia, 'Iowan Old Style', serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.6;
+  }
+  a { color: var(--teal); }
+
+  header.site {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(242,244,246,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 20px;
+  }
+  .site-inner { max-width: 980px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+  .site-title { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink); text-decoration: none; white-space: nowrap; }
+  .site-title .dot { color: var(--teal); }
+  nav.zoo-nav { display: flex; flex-wrap: wrap; gap: 4px 2px; font-family: var(--mono); font-size: 12px; }
+  nav.zoo-nav a { color: var(--ink-soft); text-decoration: none; padding: 4px 8px; border-radius: 5px; }
+  nav.zoo-nav a:hover { background: var(--paper2); color: var(--ink); }
+  .home-link { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-soft); text-decoration: none; }
+  .home-link:hover { color: var(--teal); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  .hero h1 { font-size: 40px; font-weight: 600; margin: 0 0 10px; line-height: 1.15; }
+  .hero .sub { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 18px; }
+  .hero p { font-size: 17px; color: var(--ink-soft); max-width: 62ch; }
+
+  .zoo-card {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 26px 26px 22px;
+    margin: 34px 0;
+    scroll-margin-top: 74px;
+  }
+  .card-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .card-num { font-family: var(--mono); font-size: 13px; color: var(--teal); font-weight: 600; }
+  .zoo-card h2 { font-size: 26px; font-weight: 600; margin: 0; }
+  .zoo-card h2 .sym { color: var(--teal); }
+  .definition { font-size: 17px; color: var(--ink); margin: 10px 0 18px; max-width: 66ch; }
+  .definition strong { color: var(--teal); font-weight: 600; }
+
+  .viz-well {
+    background: var(--paper2);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+  }
+  .viz-well canvas { width: 100%; max-width: 660px; height: 260px; display: block; cursor: pointer; }
+  .viz-well.text-well { display: block; padding: 18px 20px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin-top: 14px;
+    font-family: var(--mono); font-size: 13px;
+  }
+  .btn {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+    background: var(--teal); color: #fff; border: none;
+    padding: 7px 14px; border-radius: 7px; cursor: pointer;
+  }
+  .btn:hover { background: #236360; }
+  .btn.ghost { background: transparent; color: var(--teal); border: 1px solid var(--teal); }
+  .btn.ghost:hover { background: var(--teal-soft); }
+  .readout { color: var(--ink-soft); }
+  .readout strong { color: var(--ink); font-weight: 600; }
+  input[type="range"] { accent-color: var(--teal); vertical-align: middle; width: 160px; }
+  .note {
+    font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink-soft);
+    margin-top: 10px; min-height: 1.4em;
+  }
+
+  .connects {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--rule);
+  }
+  .connects-label {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--amber); margin-right: 2px;
+  }
+  .tag {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    background: var(--amber-soft); color: var(--amber);
+    padding: 4px 10px; border-radius: 999px; text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .tag:hover { border-color: var(--amber); }
+
+  footer.site {
+    max-width: 760px; margin: 40px auto 0; padding: 20px;
+    font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ---- notation-page-specific additions ---- */
+  .slot-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .slot {
+    width: 66px; height: 66px; border-radius: 10px; border: 1.5px dashed var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 15px; color: var(--ink-mute, var(--ink-soft));
+    background: #fff; transition: background .2s, border-color .2s, color .2s;
+  }
+  .slot.filled { border-style: solid; border-color: var(--teal); background: var(--teal-soft); color: var(--ink); font-weight: 600; }
+
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .compare-col {
+    border-radius: 10px; padding: 14px 16px; background: #fff; border: 1.5px solid var(--rule);
+    transition: border-color .2s, background .2s;
+  }
+  .compare-col.active { border-color: var(--teal); background: var(--teal-soft); }
+  .compare-col h4 { margin: 0 0 6px; font-family: var(--mono); font-size: 13px; color: var(--teal); }
+  .compare-col p { margin: 0; font-size: 14.5px; color: var(--ink); }
+  .compare-col code { font-family: var(--mono); background: var(--paper2); padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 520px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .space-diagram { display: flex; flex-direction: column; gap: 10px; font-family: var(--mono); font-size: 13.5px; }
+  .space-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .space-label { min-width: 34px; color: var(--teal); font-weight: 600; }
+  .space-chip { background: #fff; border: 1.5px solid var(--rule); border-radius: 7px; padding: 4px 10px; }
+  .space-chip.event { border-color: var(--amber); color: var(--amber); }
+  .space-arrow { color: var(--ink-soft); font-size: 16px; }
+
+  .sum-unroll { font-family: var(--mono); font-size: 14.5px; line-height: 1.9; color: var(--ink); }
+  .sum-term { opacity: 0; transition: opacity .3s; }
+  .sum-term.shown { opacity: 1; }
+  .sum-total { color: var(--teal); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="site-title" href="#top">the notation<span class="dot">·</span>dictionary</a>
+    <nav class="zoo-nav">
+      <a href="#x-notation">X vs. x</a>
+      <a href="#xi-notation">Xᵢ / xᵢ</a>
+      <a href="#xbar-notation">X̄ₙ / x̄ₙ</a>
+      <a href="#bar-hat">Bar vs. Hat</a>
+      <a href="#mu-sigma">μ / σ²</a>
+      <a href="#s2-sigma2">s² vs. σ²</a>
+      <a href="#ev-notation">E[X] / V[X]</a>
+      <a href="#pmf-cdf-pdf">pℓ / F(x) / f(x)</a>
+      <a href="#sigma-sum">Σ</a>
+      <a href="#prob-space">(𝒮, ℰ, p)</a>
+    </nav>
+    <a class="home-link" href="index.html">← Course home</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="sub">Understanding Uncertainty · extra resource</div>
+    <h1>The Notation Dictionary</h1>
+    <p>The math in this course reuses a small alphabet of tricks — capitalize it, put a bar over it, put a hat on it — and each trick means the same thing everywhere it appears. Once you can read the accent instead of just the letter, a page of unfamiliar symbols turns back into a page of familiar ideas. Each card below gives one notational device a plain-English rule and something to touch.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="x-notation">
+    <div class="card-head"><span class="card-num">01</span><h2><span class="sym">X</span> vs. <span class="sym">x</span> — random variable vs. value</h2></div>
+    <p class="definition">Capital <strong>X</strong> is the rule that turns an outcome into a number, before you know what happens. Lowercase <strong>x</strong> is the one number that rule actually produced, once the outcome is known. Here, <code>X(s) = +1</code> if the die shows odd, <code>−1</code> if even — roll it and watch X resolve into x.</p>
+    <div class="viz-well"><canvas id="x-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="x-roll">Roll the die</button>
+      <button class="btn ghost" id="x-reset">Reset</button>
+    </div>
+    <p class="note" id="x-readout">X = "+1 if odd, −1 if even" — a rule, not a number yet.</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#xi-notation">Xᵢ / xᵢ</a>
+      <a class="tag" href="#prob-space">Probability space</a>
+      <a class="tag" href="statistics-zoo.html#rv">Random Variable →</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="xi-notation">
+    <div class="card-head"><span class="card-num">02</span><h2>X<sub>i</sub> vs. x<sub>i</sub> — a sequence of draws</h2></div>
+    <p class="definition">The subscript <strong>i</strong> just names <em>which</em> draw in a sample you mean. Before you collect data, (X₁, X₂, …, X₅) are five not-yet-observed random variables. After you roll five dice, (x₁, x₂, …, x₅) are five fixed numbers — the capital letters become lowercase the moment you look.</p>
+    <div class="viz-well">
+      <div class="slot-row" id="xi-slots"></div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="xi-draw">Draw a sample (n = 5)</button>
+      <button class="btn ghost" id="xi-reset">Reset to unobserved</button>
+    </div>
+    <p class="note" id="xi-readout">Five slots, none observed yet — each one is still the random variable Xᵢ.</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#x-notation">X vs. x</a>
+      <a class="tag" href="#xbar-notation">X̄ₙ / x̄ₙ</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="xbar-notation">
+    <div class="card-head"><span class="card-num">03</span><h2>X̄<sub>n</sub> vs. x̄<sub>n</sub> — the sample mean, random vs. realized</h2></div>
+    <p class="definition">X̄ₙ is a <strong>formula</strong> — (X₁+⋯+Xₙ)/n — applied to data you haven't drawn yet, so it's random: draw a different sample and you get a different average. x̄ₙ is what that formula equals for the <em>one</em> sample you actually collected — a single fixed number. Every dot below is one hypothetical x̄ₙ; together they trace out X̄ₙ's own distribution, scattered around the true μ = 3.5.</p>
+    <div class="viz-well"><canvas id="xbar-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="xbar-draw">Draw a new sample (n = 10)</button>
+      <button class="btn ghost" id="xbar-reset">Reset</button>
+    </div>
+    <p class="note" id="xbar-readout">Click to draw ten die rolls and plot their average.</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#bar-hat">Bar vs. Hat</a>
+      <a class="tag" href="#mu-sigma">μ / σ²</a>
+      <a class="tag" href="labs/activity-standard-error/index.html">Standard Error →</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="bar-hat">
+    <div class="card-head"><span class="card-num">04</span><h2>Bar vs. Hat — X̄ vs. θ̂</h2></div>
+    <p class="definition">An overbar always means the same thing: <strong>the arithmetic average of the data underneath it</strong>. A hat means something broader: <strong>"our best guess at an unknown, fixed truth"</strong> — it doesn't have to be an average at all. Every bar is wearing a hat (an average is one way to estimate something) but not every hat is a bar.</p>
+    <div class="viz-well text-well">
+      <div class="compare-grid">
+        <div class="compare-col active" id="bar-col">
+          <h4>Bar — X̄ₙ</h4>
+          <p>The sample mean of wages, <code>X̄ₙ = (1/n)Σxᵢ</code>. Literally an average of the raw data.</p>
+        </div>
+        <div class="compare-col" id="hat-col">
+          <h4>Hat, not a bar — β̂</h4>
+          <p>A fitted regression slope, <code>β̂</code>. It estimates the true unknown slope β, but it comes from a least-squares formula — no single column of numbers is just being averaged.</p>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn ghost" id="barhat-toggle">Highlight the other one</button>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#xbar-notation">X̄ₙ / x̄ₙ</a>
+      <a class="tag" href="#s2-sigma2">s² vs. σ²</a>
+      <a class="tag" href="statistics-zoo.html#estimator">Estimator →</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="mu-sigma">
+    <div class="card-head"><span class="card-num">05</span><h2>μ and σ² — population parameters</h2></div>
+    <p class="definition">Greek letters mark <strong>the true, fixed numbers describing the whole process</strong> — not something computed from a sample. μ = E[X] is the population mean, σ² = V[X] is the population variance. They never wear a bar or a hat, because nothing is being estimated <em>yet</em> — they're the hidden target that X̄ₙ and s² are trying to hit.</p>
+    <div class="viz-well"><canvas id="mu-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="mu-peek">Peek at the truth</button>
+      <button class="btn ghost" id="mu-hide">Hide it again</button>
+    </div>
+    <p class="note" id="mu-readout">The six faces of a fair die are equally likely — but until you peek, treat μ and σ² as unknown.</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#xbar-notation">X̄ₙ / x̄ₙ</a>
+      <a class="tag" href="#s2-sigma2">s² vs. σ²</a>
+      <a class="tag" href="#ev-notation">E[X] / V[X]</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="s2-sigma2">
+    <div class="card-head"><span class="card-num">06</span><h2>s² vs. σ² — estimating the population variance</h2></div>
+    <p class="definition">σ² is the true variance you never observe directly. s² is your data-based guess at it — but since you don't know the true μ, s² has to plug in x̄ₙ instead, which quietly shrinks the answer. Toggle the divisor below on the sample {2, 4, 6} and watch which one lands on the truth.</p>
+    <div class="viz-well text-well">
+      <div class="sum-unroll" id="s2-display" style="text-align:center;">
+        sample = {2, 4, 6} &nbsp;·&nbsp; x̄₃ = 4 &nbsp;·&nbsp; Σ(xᵢ − x̄₃)² = 8<br>
+        <span id="s2-formula">s² = 8 / 3 = <span class="sum-total">2.667</span> (divide by n)</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn ghost" id="s2-toggle">Switch divisor</button>
+    </div>
+    <p class="note" id="s2-note">Dividing by n undershoots on average — this is exactly Bessel's correction.</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#mu-sigma">μ / σ²</a>
+      <a class="tag" href="#bar-hat">Bar vs. Hat</a>
+      <a class="tag" href="labs/activity-bessel-correction/index.html">Full derivation →</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="ev-notation">
+    <div class="card-head"><span class="card-num">07</span><h2>E[X] and V[X] — operators, not functions of one value</h2></div>
+    <p class="definition">The square brackets mean the operator acts on the <strong>whole random variable</strong> at once, weighting every outcome by its probability, and returns a single number. E[X] is the probability-weighted average outcome; V[X] is the probability-weighted average <em>squared distance</em> from that average. This game pays $0, $3, or −$2, each with probability ⅓.</p>
+    <div class="viz-well"><canvas id="ev-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn" id="ev-show-e">Reveal E[X]</button>
+      <button class="btn" id="ev-show-v">Reveal V[X]</button>
+      <button class="btn ghost" id="ev-reset">Reset</button>
+    </div>
+    <p class="note" id="ev-readout">Three equally likely payoffs — click to weight them by ⅓ and average.</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#sigma-sum">Σ</a>
+      <a class="tag" href="statistics-zoo.html#expectation">Expectation →</a>
+      <a class="tag" href="statistics-zoo.html#pmf-pdf">PMF / PDF →</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="pmf-cdf-pdf">
+    <div class="card-head"><span class="card-num">08</span><h2>p<sub>ℓ</sub>, F(x), f(x) — mass, cumulative, density</h2></div>
+    <p class="definition">Lowercase p<sub>ℓ</sub> (or p(x)) is a <strong>literal probability</strong> for one outcome. Capital <strong>F(x)</strong> is the cumulative probability P(X ≤ x) — capital here means "add everything up to here," not "the random variable." Lowercase <strong>f(x)</strong> is a density: never a probability by itself, only its area is. The capital/lowercase rule flips depending on which corner of the alphabet you're in — that's the trap.</p>
+    <div class="viz-well"><canvas id="pcf-canvas"></canvas></div>
+    <div class="controls">
+      <button class="btn ghost" id="pcf-toggle">Switch to the continuous case</button>
+    </div>
+    <p class="note" id="pcf-readout">Discrete die faces: bars are pℓ, the orange staircase is F(x).</p>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ev-notation">E[X] / V[X]</a>
+      <a class="tag" href="statistics-zoo.html#pmf-pdf">PMF / PDF →</a>
+      <a class="tag" href="statistics-zoo.html#cdf">CDF →</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="sigma-sum">
+    <div class="card-head"><span class="card-num">09</span><h2>Σ — read the summation, not just the symbol</h2></div>
+    <p class="definition">Σ means "add up one copy of what follows for every value the index takes." The label under and over it — ℓ = 1 to L, or i = 1 to n — just names which index and how far it runs; swapping ℓ for i or j changes nothing, since it's a dummy variable that disappears once the sum is done. Unroll E[X] = Σ<sub>ℓ=1</sub><sup>6</sup> p<sub>ℓ</sub>x<sub>ℓ</sub> for a fair die below.</p>
+    <div class="viz-well text-well">
+      <div class="sum-unroll" id="sum-display">
+        E[X] = Σ<sub>ℓ=1</sub><sup>6</sup> p<sub>ℓ</sub>x<sub>ℓ</sub> =
+        <span class="sum-term" data-i="0">p₁x₁</span><span class="sum-term" data-i="1"> + p₂x₂</span><span class="sum-term" data-i="2"> + p₃x₃</span><span class="sum-term" data-i="3"> + p₄x₄</span><span class="sum-term" data-i="4"> + p₅x₅</span><span class="sum-term" data-i="5"> + p₆x₆</span>
+        <span class="sum-term" data-i="6"><br>= (⅙·1) + (⅙·2) + (⅙·3) + (⅙·4) + (⅙·5) + (⅙·6)</span>
+        <span class="sum-term" data-i="7"> = <span class="sum-total">3.5</span></span>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="sum-step">Unroll one more term</button>
+      <button class="btn ghost" id="sum-reset">Reset</button>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#ev-notation">E[X] / V[X]</a>
+      <a class="tag" href="#pmf-cdf-pdf">pℓ / F(x) / f(x)</a>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section class="zoo-card" id="prob-space">
+    <div class="card-head"><span class="card-num">10</span><h2>(𝒮, ℰ, p) — the probability space underneath X</h2></div>
+    <p class="definition">Everything above is built on three ingredients. <strong>𝒮</strong>, the state space, is every possible outcome. <strong>ℰ</strong> is the collection of events — subsets of 𝒮 you're allowed to ask a probability of. <strong>p</strong> assigns each of those events a number in [0, 1]. A random variable X is just a function riding on top of this triple, turning an outcome in 𝒮 into a number.</p>
+    <div class="viz-well text-well">
+      <div class="space-diagram">
+        <div class="space-row"><span class="space-label">𝒮</span> <span class="space-chip">1</span><span class="space-chip">2</span><span class="space-chip">3</span><span class="space-chip">4</span><span class="space-chip">5</span><span class="space-chip">6</span></div>
+        <div class="space-row"><span class="space-label">ℰ</span> <span class="space-chip event">∅</span><span class="space-chip event">{1,3,5}</span><span class="space-chip event">{2,4,6}</span><span class="space-chip event">𝒮</span></div>
+        <div class="space-row"><span class="space-label">p</span> <span class="space-chip">0</span><span class="space-chip">½</span><span class="space-chip">½</span><span class="space-chip">1</span></div>
+        <div class="space-row"><span class="space-arrow">↓ X(s) = +1 if odd, −1 if even</span></div>
+        <div class="space-row"><span class="space-label">X</span> <span class="space-chip">−1</span><span class="space-chip">+1</span><span class="space-chip">−1</span><span class="space-chip">+1</span><span class="space-chip">−1</span><span class="space-chip">+1</span></div>
+      </div>
+    </div>
+    <div class="connects">
+      <span class="connects-label">connects to</span>
+      <a class="tag" href="#x-notation">X vs. x</a>
+      <a class="tag" href="statistics-zoo.html#rv">Random Variable →</a>
+    </div>
+  </section>
+
+  <footer class="site">
+    The Notation Dictionary · Understanding Uncertainty · read the accent, not just the letter. <a href="index.html">← back to the course</a>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const INK = '#1B2430', INK_SOFT = '#4A5568', TEAL = '#2B7A78', TEAL_SOFT = '#9FC6C4', AMBER = '#C9852B', AMBER_SOFT = '#F5E6D3', RULE = '#C7CDD3';
+
+  const N = {};
+  N.rng = Math.random;
+  N.mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+  N.normalPdf = (x, mu, sigma) => Math.exp(-((x - mu) * (x - mu)) / (2 * sigma * sigma)) / (sigma * Math.sqrt(2 * Math.PI));
+  N.normalCdf = function (x, mu, sigma) {
+    const z = (x - mu) / (sigma * Math.sqrt(2));
+    const t = 1 / (1 + 0.3275911 * Math.abs(z));
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z);
+    const erf = z >= 0 ? y : -y;
+    return 0.5 * (1 + erf);
+  };
+  N.rollDie = () => 1 + Math.floor(N.rng() * 6);
+
+  N.setupCanvas = function (canvas) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 660, height = rect.height || 260;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, width, height };
+  };
+
+  N.scales = function (xmin, xmax, ymin, ymax, width, height, margin) {
+    const pw = width - margin.left - margin.right;
+    const ph = height - margin.top - margin.bottom;
+    return {
+      xToPx: x => margin.left + (x - xmin) / (xmax - xmin) * pw,
+      yToPx: y => margin.top + (1 - (y - ymin) / (ymax - ymin)) * ph,
+      pxToX: px => xmin + (px - margin.left) / pw * (xmax - xmin),
+    };
+  };
+
+  N.drawAxis = function (ctx, width, height, margin) {
+    ctx.strokeStyle = RULE;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, height - margin.bottom);
+    ctx.lineTo(width - margin.right, height - margin.bottom);
+    ctx.stroke();
+  };
+
+  const PIPS = {
+    1: [[0.5, 0.5]],
+    2: [[0.25, 0.25], [0.75, 0.75]],
+    3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]],
+    4: [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]],
+    5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]],
+    6: [[0.25, 0.2], [0.75, 0.2], [0.25, 0.5], [0.75, 0.5], [0.25, 0.8], [0.75, 0.8]],
+  };
+  N.drawDie = function (ctx, cx, cy, size, face, color) {
+    const half = size / 2;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = color || INK_SOFT;
+    ctx.lineWidth = 2;
+    const r = 8;
+    ctx.beginPath();
+    ctx.moveTo(cx - half + r, cy - half);
+    ctx.arcTo(cx + half, cy - half, cx + half, cy + half, r);
+    ctx.arcTo(cx + half, cy + half, cx - half, cy + half, r);
+    ctx.arcTo(cx - half, cy + half, cx - half, cy - half, r);
+    ctx.arcTo(cx - half, cy - half, cx + half, cy - half, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    if (face) {
+      ctx.fillStyle = INK;
+      (PIPS[face] || []).forEach(([px, py]) => {
+        ctx.beginPath();
+        ctx.arc(cx - half + px * size, cy - half + py * size, size * 0.07, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+  };
+
+  const redrawFns = [];
+  window.addEventListener('resize', () => redrawFns.forEach(fn => fn()));
+
+  /* ============================================================
+   * Card 01 — X vs x
+   * ============================================================ */
+  (function initX() {
+    const canvas = document.getElementById('x-canvas');
+    const rollBtn = document.getElementById('x-roll');
+    const resetBtn = document.getElementById('x-reset');
+    const readout = document.getElementById('x-readout');
+    let face = null, rolls = 0;
+
+    function render() {
+      const { ctx, width, height } = N.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const dieX = width * 0.26, boxX = width * 0.72, cy = height / 2;
+
+      N.drawDie(ctx, dieX, cy, 70, face, TEAL);
+
+      ctx.strokeStyle = INK_SOFT;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(dieX + 42, cy);
+      ctx.lineTo(boxX - 46, cy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(boxX - 46, cy);
+      ctx.lineTo(boxX - 54, cy - 5);
+      ctx.moveTo(boxX - 46, cy);
+      ctx.lineTo(boxX - 54, cy + 5);
+      ctx.stroke();
+
+      ctx.font = '12px "IBM Plex Mono", monospace';
+      ctx.fillStyle = INK_SOFT;
+      ctx.textAlign = 'center';
+      ctx.fillText('X(s)', (dieX + boxX) / 2, cy - 14);
+
+      const value = face === null ? null : (face % 2 === 1 ? 1 : -1);
+      const color = value === null ? INK_SOFT : (value === 1 ? TEAL : AMBER);
+      const fillColor = value === null ? '#fff' : (value === 1 ? TEAL_SOFT : AMBER_SOFT);
+
+      ctx.fillStyle = fillColor;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(boxX - 40, cy - 32, 80, 64, 10) : ctx.rect(boxX - 40, cy - 32, 80, 64);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.font = 'bold 20px "IBM Plex Mono", monospace';
+      ctx.fillText(value === null ? 'X = ?' : (value > 0 ? 'x = +1' : 'x = −1'), boxX, cy + 7);
+    }
+
+    rollBtn.addEventListener('click', () => {
+      face = N.rollDie();
+      rolls++;
+      const parity = face % 2 === 1 ? 'odd' : 'even';
+      const value = face % 2 === 1 ? '+1' : '−1';
+      readout.innerHTML = `<strong>Roll ${rolls}:</strong> s = ${face} (${parity}) → x = ${value}`;
+      render();
+    });
+    resetBtn.addEventListener('click', () => {
+      face = null; rolls = 0;
+      readout.innerHTML = 'X = "+1 if odd, −1 if even" — a rule, not a number yet.';
+      render();
+    });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 02 — Xi vs xi
+   * ============================================================ */
+  (function initXi() {
+    const wrap = document.getElementById('xi-slots');
+    const drawBtn = document.getElementById('xi-draw');
+    const resetBtn = document.getElementById('xi-reset');
+    const readout = document.getElementById('xi-readout');
+    const n = 5;
+    const slots = [];
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement('div');
+      el.className = 'slot';
+      el.textContent = 'X' + subscript(i + 1);
+      wrap.appendChild(el);
+      slots.push(el);
+    }
+    function subscript(k) {
+      const map = { 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅' };
+      return map[k] || k;
+    }
+    drawBtn.addEventListener('click', () => {
+      const values = [];
+      slots.forEach((el, i) => {
+        const v = N.rollDie();
+        values.push(v);
+        el.textContent = 'x' + subscript(i + 1) + '=' + v;
+        el.classList.add('filled');
+      });
+      readout.innerHTML = `<strong>Realized:</strong> (x₁,…,x₅) = (${values.join(', ')}) — five fixed numbers now.`;
+    });
+    resetBtn.addEventListener('click', () => {
+      slots.forEach((el, i) => {
+        el.textContent = 'X' + subscript(i + 1);
+        el.classList.remove('filled');
+      });
+      readout.innerHTML = 'Five slots, none observed yet — each one is still the random variable Xᵢ.';
+    });
+  })();
+
+  /* ============================================================
+   * Card 03 — Xbar_n vs xbar_n
+   * ============================================================ */
+  (function initXbar() {
+    const canvas = document.getElementById('xbar-canvas');
+    const drawBtn = document.getElementById('xbar-draw');
+    const resetBtn = document.getElementById('xbar-reset');
+    const readout = document.getElementById('xbar-readout');
+    const MU = 3.5, SAMPLE_N = 10;
+    const xmin = 1, xmax = 6;
+    const margin = { left: 30, right: 30, top: 24, bottom: 40 };
+    let draws = [];
+
+    function render() {
+      const { ctx, width, height } = N.setupCanvas(canvas);
+      const s = N.scales(xmin, xmax, 0, 1, width, height, margin);
+      ctx.clearRect(0, 0, width, height);
+      const lineY = height - margin.bottom;
+
+      ctx.strokeStyle = RULE;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, lineY);
+      ctx.lineTo(width - margin.right, lineY);
+      ctx.stroke();
+
+      for (let v = 1; v <= 6; v++) {
+        const x = s.xToPx(v);
+        ctx.beginPath();
+        ctx.moveTo(x, lineY - 5);
+        ctx.lineTo(x, lineY + 5);
+        ctx.stroke();
+      }
+
+      const muX = s.xToPx(MU);
+      ctx.strokeStyle = INK;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(muX, margin.top);
+      ctx.lineTo(muX, lineY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = INK;
+      ctx.textAlign = 'center';
+      ctx.fillText('true μ = 3.5', muX, margin.top - 8);
+
+      const r = 6, gap = 3;
+      const stackCounts = {};
+      draws.forEach(v => {
+        const bucket = Math.round(v * 10) / 10;
+        stackCounts[bucket] = (stackCounts[bucket] || 0) + 1;
+        const x = s.xToPx(v);
+        const y = lineY - 10 - (stackCounts[bucket] - 1) * (2 * r + gap);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fillStyle = TEAL;
+        ctx.globalAlpha = 0.85;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    drawBtn.addEventListener('click', () => {
+      const rolls = Array.from({ length: SAMPLE_N }, N.rollDie);
+      const xbar = N.mean(rolls);
+      draws.push(xbar);
+      const spread = draws.length > 1
+        ? Math.sqrt(N.mean(draws.map(d => (d - N.mean(draws)) ** 2)))
+        : 0;
+      readout.innerHTML = `<strong>Draw ${draws.length}:</strong> x̄₁₀ = ${xbar.toFixed(2)} &nbsp;·&nbsp; observed spread of dots so far: ${spread.toFixed(3)} &nbsp;·&nbsp; theoretical σ/√n ≈ 0.539`;
+      render();
+    });
+    resetBtn.addEventListener('click', () => {
+      draws = [];
+      readout.innerHTML = 'Click to draw ten die rolls and plot their average.';
+      render();
+    });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 04 — Bar vs Hat toggle
+   * ============================================================ */
+  (function initBarHat() {
+    const barCol = document.getElementById('bar-col');
+    const hatCol = document.getElementById('hat-col');
+    const toggle = document.getElementById('barhat-toggle');
+    let showingBar = true;
+    toggle.addEventListener('click', () => {
+      showingBar = !showingBar;
+      barCol.classList.toggle('active', showingBar);
+      hatCol.classList.toggle('active', !showingBar);
+    });
+  })();
+
+  /* ============================================================
+   * Card 05 — mu / sigma^2
+   * ============================================================ */
+  (function initMu() {
+    const canvas = document.getElementById('mu-canvas');
+    const peekBtn = document.getElementById('mu-peek');
+    const hideBtn = document.getElementById('mu-hide');
+    const readout = document.getElementById('mu-readout');
+    let revealed = false;
+    const MU = 3.5, VAR = 35 / 12;
+    const margin = { left: 40, right: 20, top: 24, bottom: 34 };
+
+    function render() {
+      const { ctx, width, height } = N.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const s = N.scales(0.5, 6.5, 0, 0.22, width, height, margin);
+      N.drawAxis(ctx, width, height, margin);
+
+      const barW = (width - margin.left - margin.right) / 6 * 0.6;
+      for (let v = 1; v <= 6; v++) {
+        const x = s.xToPx(v);
+        const h = height - margin.bottom - s.yToPx(1 / 6);
+        ctx.fillStyle = revealed ? TEAL_SOFT : '#dfe3e6';
+        ctx.fillRect(x - barW / 2, s.yToPx(1 / 6), barW, h);
+        ctx.strokeStyle = revealed ? TEAL : RULE;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x - barW / 2, s.yToPx(1 / 6), barW, h);
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.fillStyle = INK_SOFT;
+        ctx.textAlign = 'center';
+        ctx.fillText(v, x, height - margin.bottom + 16);
+      }
+
+      if (revealed) {
+        const muX = s.xToPx(MU);
+        ctx.strokeStyle = AMBER;
+        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(muX, margin.top);
+        ctx.lineTo(muX, height - margin.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = AMBER;
+        ctx.font = 'bold 12px "IBM Plex Mono", monospace';
+        ctx.fillText('μ = 3.5', muX, margin.top - 8);
+      }
+    }
+
+    peekBtn.addEventListener('click', () => {
+      revealed = true;
+      readout.innerHTML = `<strong>Truth:</strong> μ = E[X] = 3.5 &nbsp;·&nbsp; σ² = V[X] = 35/12 ≈ ${VAR.toFixed(3)} — fixed numbers, now revealed.`;
+      render();
+    });
+    hideBtn.addEventListener('click', () => {
+      revealed = false;
+      readout.innerHTML = 'The six faces of a fair die are equally likely — but until you peek, treat μ and σ² as unknown.';
+      render();
+    });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 06 — s^2 vs sigma^2 (Bessel)
+   * ============================================================ */
+  (function initS2() {
+    const toggle = document.getElementById('s2-toggle');
+    const formula = document.getElementById('s2-formula');
+    const note = document.getElementById('s2-note');
+    let corrected = false;
+    toggle.addEventListener('click', () => {
+      corrected = !corrected;
+      if (corrected) {
+        formula.innerHTML = 's² = 8 / 2 = <span class="sum-total">4.000</span> (divide by n−1)';
+        note.textContent = 'Dividing by n−1 is the unbiased version — this is Bessel’s correction.';
+      } else {
+        formula.innerHTML = 's² = 8 / 3 = <span class="sum-total">2.667</span> (divide by n)';
+        note.textContent = 'Dividing by n undershoots on average — this is exactly the bias Bessel’s correction fixes.';
+      }
+    });
+  })();
+
+  /* ============================================================
+   * Card 07 — E[X] / V[X]
+   * ============================================================ */
+  (function initEV() {
+    const canvas = document.getElementById('ev-canvas');
+    const showE = document.getElementById('ev-show-e');
+    const showV = document.getElementById('ev-show-v');
+    const resetBtn = document.getElementById('ev-reset');
+    const readout = document.getElementById('ev-readout');
+    const outcomes = [0, 3, -2];
+    const p = 1 / 3;
+    const EX = outcomes.reduce((a, x) => a + p * x, 0);
+    const VX = outcomes.reduce((a, x) => a + p * (x - EX) * (x - EX), 0);
+    let stage = 0; // 0 none, 1 E shown, 2 V shown
+    const margin = { left: 40, right: 20, top: 24, bottom: 40 };
+
+    function render() {
+      const { ctx, width, height } = N.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      const s = N.scales(-3, 4, 0, 0.4, width, height, margin);
+      N.drawAxis(ctx, width, height, margin);
+
+      const barW = (width - margin.left - margin.right) / 7 * 0.5;
+      outcomes.forEach(x => {
+        const px = s.xToPx(x);
+        const h = height - margin.bottom - s.yToPx(p);
+        ctx.fillStyle = TEAL_SOFT;
+        ctx.fillRect(px - barW / 2, s.yToPx(p), barW, h);
+        ctx.strokeStyle = TEAL;
+        ctx.strokeRect(px - barW / 2, s.yToPx(p), barW, h);
+        ctx.font = '12px "IBM Plex Mono", monospace';
+        ctx.fillStyle = INK_SOFT;
+        ctx.textAlign = 'center';
+        ctx.fillText('$' + x, px, height - margin.bottom + 18);
+        ctx.fillText('p=⅓', px, s.yToPx(p) - 6);
+      });
+
+      if (stage >= 1) {
+        const ex = s.xToPx(EX);
+        ctx.strokeStyle = AMBER;
+        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ex, margin.top);
+        ctx.lineTo(ex, height - margin.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = AMBER;
+        ctx.font = 'bold 12px "IBM Plex Mono", monospace';
+        ctx.fillText('E[X] = ' + EX.toFixed(2), ex, margin.top - 8);
+      }
+    }
+
+    showE.addEventListener('click', () => {
+      stage = Math.max(stage, 1);
+      readout.innerHTML = `E[X] = ⅓(0) + ⅓(3) + ⅓(−2) = <strong>${EX.toFixed(3)}</strong>`;
+      render();
+    });
+    showV.addEventListener('click', () => {
+      stage = Math.max(stage, 1);
+      readout.innerHTML = `V[X] = ⅓(0−${EX.toFixed(2)})² + ⅓(3−${EX.toFixed(2)})² + ⅓(−2−${EX.toFixed(2)})² = <strong>${VX.toFixed(3)}</strong>`;
+      render();
+    });
+    resetBtn.addEventListener('click', () => {
+      stage = 0;
+      readout.textContent = 'Three equally likely payoffs — click to weight them by ⅓ and average.';
+      render();
+    });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 08 — pmf / cdf / pdf
+   * ============================================================ */
+  (function initPCF() {
+    const canvas = document.getElementById('pcf-canvas');
+    const toggle = document.getElementById('pcf-toggle');
+    const readout = document.getElementById('pcf-readout');
+    let continuous = false;
+    const margin = { left: 34, right: 34, top: 20, bottom: 32 };
+
+    function renderDiscrete(ctx, width, height) {
+      const s = N.scales(0.5, 6.5, 0, 1, width, height, margin);
+      N.drawAxis(ctx, width, height, margin);
+      const barW = (width - margin.left - margin.right) / 6 * 0.5;
+      for (let v = 1; v <= 6; v++) {
+        const x = s.xToPx(v);
+        const h = height - margin.bottom - s.yToPx(1 / 6);
+        ctx.fillStyle = TEAL_SOFT;
+        ctx.fillRect(x - barW / 2, s.yToPx(1 / 6), barW, h);
+        ctx.strokeStyle = TEAL;
+        ctx.strokeRect(x - barW / 2, s.yToPx(1 / 6), barW, h);
+      }
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let cum = 0;
+      for (let v = 0; v <= 6; v++) {
+        const xL = s.xToPx(v + 0.5 - (v === 0 ? 1 : 0));
+        const y = s.yToPx(cum);
+        if (v === 0) { ctx.moveTo(margin.left, y); } else { ctx.lineTo(s.xToPx(v + 0.5), y); }
+        if (v >= 1) cum += 1 / 6;
+        ctx.lineTo(s.xToPx(v + 0.5), s.yToPx(cum));
+      }
+      ctx.stroke();
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = TEAL; ctx.textAlign = 'left';
+      ctx.fillText('pℓ (bars)', margin.left, margin.top - 4);
+      ctx.fillStyle = AMBER; ctx.textAlign = 'right';
+      ctx.fillText('F(x) (steps)', width - margin.right, margin.top - 4);
+    }
+
+    function renderContinuous(ctx, width, height) {
+      const s = N.scales(-4, 4, 0, 0.45, width, height, margin);
+      N.drawAxis(ctx, width, height, margin);
+      ctx.beginPath();
+      for (let px = margin.left; px <= width - margin.right; px++) {
+        const x = s.pxToX(px);
+        const y = s.yToPx(N.normalPdf(x, 0, 1));
+        if (px === margin.left) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+      }
+      ctx.strokeStyle = TEAL; ctx.lineWidth = 2; ctx.stroke();
+
+      const s2 = N.scales(-4, 4, 0, 1, width, height, margin);
+      ctx.beginPath();
+      for (let px = margin.left; px <= width - margin.right; px++) {
+        const x = s2.pxToX(px);
+        const y = s2.yToPx(N.normalCdf(x, 0, 1));
+        if (px === margin.left) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+      }
+      ctx.strokeStyle = AMBER; ctx.lineWidth = 2; ctx.stroke();
+
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.fillStyle = TEAL; ctx.textAlign = 'left';
+      ctx.fillText('f(x) (curve, area = 1)', margin.left, margin.top - 4);
+      ctx.fillStyle = AMBER; ctx.textAlign = 'right';
+      ctx.fillText('F(x) (S-curve)', width - margin.right, margin.top - 4);
+    }
+
+    function render() {
+      const { ctx, width, height } = N.setupCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+      if (continuous) renderContinuous(ctx, width, height); else renderDiscrete(ctx, width, height);
+    }
+
+    toggle.addEventListener('click', () => {
+      continuous = !continuous;
+      toggle.textContent = continuous ? 'Switch to the discrete case' : 'Switch to the continuous case';
+      readout.textContent = continuous
+        ? 'Standard normal: the teal curve is f(x), a density — only its area is a probability. The amber S-curve is still F(x).'
+        : 'Discrete die faces: bars are pℓ, the orange staircase is F(x).';
+      render();
+    });
+    redrawFns.push(render);
+    render();
+  })();
+
+  /* ============================================================
+   * Card 09 — Sigma unroll
+   * ============================================================ */
+  (function initSum() {
+    const stepBtn = document.getElementById('sum-step');
+    const resetBtn = document.getElementById('sum-reset');
+    const terms = Array.from(document.querySelectorAll('#sum-display .sum-term'));
+    let shown = 0;
+    function apply() {
+      terms.forEach((t, i) => t.classList.toggle('shown', i < shown));
+    }
+    stepBtn.addEventListener('click', () => {
+      shown = Math.min(terms.length, shown + 1);
+      apply();
+    });
+    resetBtn.addEventListener('click', () => {
+      shown = 0;
+      apply();
+    });
+    apply();
+  })();
+
+})();
+</script>
+</body>
+</html>

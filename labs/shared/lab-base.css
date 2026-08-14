@@ -357,6 +357,58 @@ aside.toc li.toc-sub a { padding-left: 20px; font-size: 12px; }
 .tps-reveal[open] > summary::before { content: "✓ "; }
 .tps-reveal .tps-steps { margin-top: 10px; }
 
+/* The optimization view — the course-long spine box.                */
+/* One per lecture: names the objective, the argmin, and how it is   */
+/* actually solved, so "argmin" is a familiar verb long before the   */
+/* optimization unit formalizes it. Same three rows every time.      */
+.callout.optview {
+  background: #f5f2fa;
+  border-left: 3px solid #7a6aa8;
+}
+.callout.optview .label { color: #5d4f85; }
+.optview-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.optview-rows li {
+  display: grid;
+  grid-template-columns: 104px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 15px;
+}
+.optview-key {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #5d4f85;
+}
+/* How the argmin is actually found. Three kinds, all semester:      */
+/* a closed form, a search over a grid, or an iterative solver.      */
+.optview-how {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  padding: 1px 7px;
+  margin-right: 7px;
+  white-space: nowrap;
+}
+.optview-how.how-formula   { background: var(--pos); color: #8a4a26; }
+.optview-how.how-grid      { background: var(--zero); color: #6b6558; }
+.optview-how.how-iterative { background: var(--neg); color: #2f6b4c; }
+
+@media (max-width: 620px) {
+  .optview-rows li { grid-template-columns: 1fr; gap: 2px; }
+}
+
 /* Exercise blocks (collapsible answer pattern) */
 .exercise {
   margin: 18px 0;
