@@ -3,7 +3,15 @@
 
 This file governs how Claude operates in this course folder. It defines the directory layout, where the source content lives, the interactive-web-lab authoring style, and the pedagogy the labs follow. The single most important section is **Interactive Web Lab Style** — the labs are the deliverable, and they must stay visually and pedagogically coherent.
 
-Understanding Uncertainty is a first probability/statistics course for data-science students: wrangling and linear algebra, then probability and random variables, densities (CDF/PDF/KDE), expectation and the WLLN, Monte Carlo, the bootstrap, the CLT, then conditioning, Markov chains, likelihood/MLE, regression, optimization, and dynamic programming. Students come in fluent in Python, ML, and statistics; they are newer to measure-flavored probability theory and to lower-level numerical/systems detail.
+Understanding Uncertainty is a first probability/statistics course for data-science students: wrangling and linear algebra, then probability and random variables, densities (CDF/PDF/KDE), expectation and the WLLN, Monte Carlo, the bootstrap, the CLT, then conditioning, Markov chains, likelihood/MLE, regression, optimization, and dynamic programming.
+
+**The audience — read this before writing anything student-facing.** Students are in the **first semester of a one-year master's program**, and **machine learning is a *concurrent* course, not a prerequisite**. Some arrive from computer science, some from elsewhere. They are comfortable with Python. They are **not** fluent in ML, and they are **shaky on calculus** — derivatives, gradients, and "set the derivative to zero" all need scaffolding rather than assumption. The syllabus states the course exists to "complement and foreshadow" the ML courses; *foreshadow* is the operative word.
+
+Three consequences that govern every lab and lecture page:
+
+- **Do not assume ML vocabulary.** This course *introduces* loss functions, gradient descent, regularization, overfitting, and bias–variance, or at best meets them the same week the ML course does.
+- **Do not assume calculus fluency.** Lead with the numerical or geometric version — a grid search, a picture, a simulation — and derive the closed form second. A closed form presented as the obvious route loses this cohort.
+- **The concurrent overlap is a bonus, never a prerequisite.** By late October a student nine weeks into an ML course may have met gradient descent there. Exploit that if it helps; never rely on it, and assume nothing before then.
 
 ---
 
@@ -149,7 +157,7 @@ A lab a student *finishes* beats an exhaustive one they abandon. The default fai
 - **Break up walls.** No two dense paragraphs in a row without an artifact between them. Reserve `<ul>`/`<table>` for genuine reference material the reader will scan back to; if items have a natural order, write them as connected sentences.
 - **Signpost, don't surprise.** Give each section a one-sentence opener that says what it covers and how it follows from the previous one — a plain factual bridge, not a cliffhanger.
 - **Plain, direct, concrete.** Short concrete sentences; a worked example over a bare definition; active second person when it's clearer.
-- **Respect the reader's time and prior knowledge.** Don't re-explain what a DS reader already knows (see Jargon awareness); don't pad.
+- **Respect the reader's time and prior knowledge.** Don't re-explain Python (see Jargon awareness); don't pad. But note that "prior knowledge" here is narrower than it looks — ML and calculus are *not* prior knowledge for this cohort.
 
 Readability never means dropping a required widget, equation, worked example, callout, or the per-section Think · Pair · Share, and never means softening precision. **The test:** could a first-week student read the page top to bottom without re-reading a sentence or skipping a wall?
 
@@ -165,9 +173,11 @@ Every sentence should say exactly what it means, in the fewest exact words — a
 
 The self-check: reread each sentence and ask "is this the exact word, and can it be read only one way?" This applies to every artifact — lab prose, glossary entries, quiz questions, commit messages.
 
-### Jargon awareness — auto-gloss for DS readers
+### Jargon awareness — auto-gloss
 
-Students come from data science. They know the **ML / statistics** vocabulary cold — *gradient, softmax, train/test split, embedding, dropout, regularization, F1, AUC, precision, recall, overfitting, bias–variance* (the phrase), *hyperparameter*. They have **not** necessarily seen the **measure-flavored probability theory** or the **lower-level numerical/computing** vocabulary the labs lean on. Treat that gap as a first-class authoring concern: a term a reader doesn't recognize is a term they skip, and the skipped word is often *the* word.
+Students are first-semester master's students taking ML **concurrently** (see the audience note at the top). They have **not** seen the ML vocabulary, the measure-flavored probability theory, or the lower-level numerical/computing vocabulary the labs lean on. Treat that as a first-class authoring concern: a term a reader doesn't recognize is a term they skip, and the skipped word is often *the* word.
+
+The one thing you may assume is **Python fluency** — they can read a loop, a function, a dict, and a class without help.
 
 **The rule.** When body prose introduces a term from the categories below, wrap the **first canonical use** in `<span class="gloss" data-gloss="key">term</span>` and add a matching entry to the lab's `GLOSSARY`. Aim for **5–10 marked terms across the lede and opening sections** — enough that a first-week student reads front-to-back without a tab full of searches, not so many the dotted underlines crowd the prose. Each entry is 2–4 sentences of plain language; add a small inline SVG mini-diagram when it helps.
 
@@ -175,12 +185,13 @@ Students come from data science. They know the **ML / statistics** vocabulary co
 
 - **Probability-theory / statistics terms not in the DS intro curriculum** — ECDF, CDF vs. PDF as objects, indicator function, quantile/IQR as formal objects, kernel, bandwidth, Silverman's rule, consistent vs. unbiased estimator, bias of an estimator, sampling distribution, standard error of the mean (SEM), WLLN, CLT (as a theorem, not a vibe), Monte Carlo, bootstrap resampling, Glivenko–Cantelli, likelihood vs. probability, MLE, delta method, Markov chain / transition matrix, joint vs. conditional density, conditional expectation, order statistics.
 - **Numerical / computing detail** — broadcasting, vectorization, `np.linspace`/grid, floating-point vs. integer, RNG seeding, subprocess / stdin-stdout autograder protocol, `flush`, JSON structure, why `fetch` needs http.
+- **ML vocabulary** — loss function, objective, gradient, gradient descent, learning rate, train/test/validation split, cross-validation, regularization, overfitting, hyperparameter, embedding, softmax, precision/recall/F1/AUC. **This category used to be on the "don't mark" list and was wrong**: ML is concurrent, not prior. Gloss these on first use like any other unfamiliar term.
+- **Calculus vocabulary** — derivative, partial derivative, gradient, Hessian, stationary point, "set the derivative to zero", convexity, `∇`. The cohort is shaky here; a symbol used without a name is a symbol that gets skipped.
 - **Occasional systems/tooling terms** a lab touches (Docker, venv, ssh) — gloss on first use if the lab actually uses them.
 
 **Don't mark these (the reader already knows them):**
 
-- ML/DS vocabulary they came in with — loss, gradient, softmax, dropout, embedding, fine-tuning, train/test/validation split, AUC, F1, precision, recall, regularization, hyperparameter, overfit.
-- Basic programming primitives — function, variable, loop, list, dict, class, import, regex, exception.
+- Basic programming primitives — function, variable, loop, list, dict, class, import, regex, exception. Python fluency is the one safe assumption.
 - Anything already defined adequately inline (an equation, a `<pre class="equation">`, a labeled diagram). Don't double-explain — pick one channel.
 
 **One judgement call:** a term fully defined in the same sentence it appears in doesn't need a `.gloss` wrap. Mark it only if the reader would still need more context than that sentence provides.
