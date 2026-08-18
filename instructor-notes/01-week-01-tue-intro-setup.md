@@ -13,14 +13,14 @@
 
 ## 1. What students actually see
 
-| Artifact | File | Status |
-|---|---|---|
-| Slides | `Pre-course/01-Intro_to_course.pptx` | exists |
-| GitHub walkthrough | `Pre-course/Intro to GitHub.pptx`, `class_tools/github.ipynb`, `sp26/00_github.ipynb` | exists, two overlapping versions |
-| Environment setup | `class_tools/conda.ipynb`, `virtual_environments.ipynb`, `linux.ipynb`, `docker.ipynb` | exists; **more than one session's worth** |
-| Python/pandas refresher | `sp26/00_pandas_review.ipynb` | exists |
-| Quiz | — | **none.** First quiz is Sep 8 |
-| Lab | — | none |
+| Artifact                | File                                                                                           | Status                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Slides                  | `Pre-course/01-Intro_to_course.pptx`                                                         | exists                                         |
+| GitHub walkthrough      | `Pre-course/Intro to GitHub.pptx`, `class_tools/github.ipynb`, `sp26/00_github.ipynb`    | exists, two overlapping versions               |
+| Environment setup       | `class_tools/conda.ipynb`, `virtual_environments.ipynb`, `linux.ipynb`, `docker.ipynb` | exists;**more than one session's worth** |
+| Python/pandas refresher | `sp26/00_pandas_review.ipynb`                                                                | exists                                         |
+| Quiz                    | —                                                                                             | **none.** First quiz is Sep 8            |
+| Lab                     | —                                                                                             | none                                           |
 
 **There is more setup material than time.** `class_tools/` has five notebooks and Docker is almost certainly out of scope for a first-semester course that never containerizes anything. §8 proposes a cut.
 
@@ -91,12 +91,12 @@ None today — but **plant the sentence.** Say once, without proof, that almost 
 
 ## 4. Assumptions that make it work
 
-| Claim | Assumption |
-|---|---|
-| Students can read Python | The one safe assumption for this cohort — loops, functions, dicts, classes |
-| Students have used a terminal | **Not safe.** Backgrounds diverge most here |
-| Students have used git | **Not safe**, and the ones who haven't often won't say so |
-| One walkthrough is enough | **False.** See §5 |
+| Claim                               | Assumption                                                                       |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| Students can read Python            | The one safe assumption for this cohort — loops, functions, dicts, classes      |
+| Students have used a terminal       | **Not safe.** Backgrounds diverge most here                                |
+| Students have used git              | **Not safe**, and the ones who haven't often won't say so                  |
+| One walkthrough is enough           | **False.** See §5                                                         |
 | Everyone's machine behaves the same | Windows, macOS, and institutional laptops with restricted permissions all differ |
 
 ---
@@ -133,7 +133,7 @@ None today — but **plant the sentence.** Say once, without proof, that almost 
 
 There's no mathematical content to audit. What needs deciding:
 
-- [ ] **Pick one environment path** — conda or venv, not both. Two of the five `class_tools/` notebooks cover overlapping ground.
+- [X] **Pick one environment path** — conda or venv, not both. Two of the five `class_tools/` notebooks cover overlapping ground.
 - [ ] **Decide whether students push to GitHub**, or only clone and pull. The syllabus says labs are submitted to Canvas, which may make push unnecessary — and push is where most of the setup pain lives.
 - [ ] **Write a one-page setup checklist** students can work through and visibly complete: environment created, six packages importable, repo cloned, one notebook run end to end.
 - [ ] **Prepare a fallback** for machines that won't cooperate — Colab or a browser-based option, decided in advance rather than improvised.
@@ -145,16 +145,16 @@ There's no mathematical content to audit. What needs deciding:
 
 **Modes:** 🟦 notebook (student copy) · 🟩 instructor cells (pre-written, never live) · ⬛ board/slides · 🟨 HTML widget
 
-| # | Step | Mode | Time | Notes |
-|---|---|---|---|---|
-| 1 | Who's in the room | ⬛ talk | 5 min | Quick show of hands: prior Python, prior git, prior stats. **Calibrates everything else, and tells you who needs help at step 6** |
-| 2 | What the course is | ⬛ slides | 8 min | `01-Intro_to_course.pptx`. Land on *foreshadow* and *AI-proof your career* |
-| 3 | The shape of the semester | ⬛ slides | 5 min | §2's five-phase arc. **Then plant the optimization sentence** |
-| 4 | Logistics that matter | ⬛ slides | 7 min | Tue/Thu rhythm, pre-class videos, the collaboration policy read aloud |
-| 5 | **Environment setup, walked through** | 🟩 live | 20 min | One path only. Environment, packages, verify imports |
-| 6 | **GitHub: clone and pull** | 🟩 live | 15 min | Scope to what's actually needed (§7) |
-| 7 | **The checkpoint** | 🟦 notebook | 12 min | Everyone runs one notebook end to end and produces a plot. **Do not skip this; circulate.** The students who need help are the ones who won't ask |
-| 8 | What to do before Thursday | ⬛ talk | 3 min | Watch the wrangling video; finish setup if stuck; where to get help |
+| # | Step                                        | Mode        | Time   | Notes                                                                                                                                                  |
+| - | ------------------------------------------- | ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 | Who's in the room                           | ⬛ talk     | 5 min  | Quick show of hands: prior Python, prior git, prior stats.**Calibrates everything else, and tells you who needs help at step 6**                 |
+| 2 | What the course is                          | ⬛ slides   | 8 min  | `01-Intro_to_course.pptx`. Land on *foreshadow* and *AI-proof your career*                                                                       |
+| 3 | The shape of the semester                   | ⬛ slides   | 5 min  | §2's five-phase arc.**Then plant the optimization sentence**                                                                                    |
+| 4 | Logistics that matter                       | ⬛ slides   | 7 min  | Tue/Thu rhythm, pre-class videos, the collaboration policy read aloud                                                                                  |
+| 5 | **Environment setup, walked through** | 🟩 live     | 20 min | One path only. Environment, packages, verify imports                                                                                                   |
+| 6 | **GitHub: clone and pull**            | 🟩 live     | 15 min | Scope to what's actually needed (§7)                                                                                                                  |
+| 7 | **The checkpoint**                    | 🟦 notebook | 12 min | Everyone runs one notebook end to end and produces a plot.**Do not skip this; circulate.** The students who need help are the ones who won't ask |
+| 8 | What to do before Thursday                  | ⬛ talk     | 3 min  | Watch the wrangling video; finish setup if stuck; where to get help                                                                                    |
 
 **Build cost: the setup checklist (~30 min).** Everything else exists in some form.
 
