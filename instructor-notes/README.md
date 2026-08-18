@@ -10,6 +10,12 @@ These are **not** student-facing. Students see notebooks (`uu_fa26`), board math
 >
 > Most of these notebooks were written by the co-instructor. That reduces the **authoring** burden and not the **learning** burden — the two are separate problems, and the coverage map below only speaks to the first one. Every session file therefore carries a section called **The content, from scratch**: a self-contained statement of what the session actually teaches, written so it can be learned from the notes alone, without reverse-engineering someone else's cells. Read that section first and the notebook second.
 
+> ### Week 1–2 was reordered (Aug 2026)
+>
+> Aug 25 became a dedicated **intro + setup** session, pushing wrangling to Aug 27 and vectors to Sep 3. The old *Learning from Data* session dissolved: the vocabulary later weeks need (parameter/statistic/estimator, unbiasedness, `V[X̄ₙ] = σ²/n` as a **result**) folded into Sep 1 §2E, and the `V[X̄ₙ]` **derivation** plus the wages simulation deferred to **Sep 22**, where a sampling distribution is the actual topic.
+>
+> Two things improved for free: `E[X] = p · X` on Sep 3 is now a *callback* to Tuesday rather than a forward reference, and the wages simulation gives **Sep 24 the lab it was missing** (the clinical-trials lab that doesn't exist). One cost: there is no quiz on Sep 1, so the first quiz is **Sep 8** — a week later than the syllabus's "weekly Tuesday quizzes" implies.
+
 **File naming:** `NN-week-WW-{tue,thu}-slug.md`, where `NN` is the session number from the build-order table below. The numeric prefix exists so the files sort chronologically — without it "thu" sorts before "tue" and every week reads backwards.
 
 ## Who the students are
@@ -59,18 +65,18 @@ Then e.g. `http://localhost:8137/labs/class-05-eda/eda.html`, and you can deep-l
 
 | Session | Page | Widgets available |
 |---|---|---|
-| 01 · Tue 8/25 | `class-01-wrangling/wrangling.html` | `viz-toystat` (five cars, one slider), `viz-quantile`, `viz-transform` (raw/log/arcsinh), `viz-tail-transform`, `viz-groups` |
-| 02 · Thu 8/27 | `class-02-vectors/vectors.html` | `viz-dot-product` (drag two vectors), `viz-zero-cov` (**drag points, curve it, covariance stays flat**), `viz-covariance` (centering), `viz-scatter`, `viz-four-numbers` |
+| 02 · Thu 8/27 | `class-01-wrangling/wrangling.html` | `viz-toystat` (five cars, one slider), `viz-quantile`, `viz-transform` (raw/log/arcsinh), `viz-tail-transform`, `viz-groups` |
+| 04 · Thu 9/3 | `class-02-vectors/vectors.html` | `viz-dot-product` (drag two vectors), `viz-zero-cov` (**drag points, curve it, covariance stays flat**), `viz-covariance` (centering), `viz-scatter`, `viz-four-numbers` |
 | 03 · Tue 9/1 | `class-03-probability/lecture.html` | `viz-coin-flip` (flip the gamble, average settles), `viz-paths` (running proportion), `viz-hist` (empirical vs exact PMF), `viz-try-it` (binomial PMF) |
 | 05 · Tue 9/8 | `class-05-eda/eda.html` + `lecture.html` | `viz-ecdf-drag` (**drag the sample, watch the ECDF**), `viz-ecdf` (+ standard-error band), `viz-onehot` (one-hot encoding, 8 patients) |
 | 06 · Thu 9/10 | `class-06-cdf/cdf.html` + `lecture.html` | `viz-grid-limit` (the grid made finer), `viz-converge` (steps close in on the curve), `viz-inverse` (inverse-transform mapper), `viz-sample` |
 | 08 · Thu 9/17 | `activity-hazard-shapes/index.html` | `viz-hazard-shapes` (**built for session 08**: Weibull shape slider, hazard + survival panels, three regime presets) |
 | 07 · Tue 9/15 | `class-07-kde/kde.html` + `lecture.html` | `viz-window` (moving window: counting is estimating), `viz-stack` (five points, five bumps), `viz-biasvar` (under/well/over-smoothed), `viz-kernel-compare` |
-| 04 · Thu 9/3 | `activity-min-sum-squares`, `activity-unbiased-consistent`, `activity-standard-error`, `activity-bessel-correction` | one widget each, standalone pages — **all four belong to Learning from Data** |
+| 09 · Tue 9/22 | `activity-min-sum-squares`, `activity-unbiased-consistent`, `activity-standard-error`, `activity-bessel-correction` | one widget each — **the estimator-properties set; they follow the wages simulation to Sep 22** |
 | 10 · Thu 9/24 | `activity-two-distributions{,-skewed,-variance}` | one widget each |
 | unscheduled | `class-09-monte-carlo` | `viz-pi` (darts), `viz-rate` (error vs n, log–log), `viz-try-it` |
 | 04 · Thu 9/3 | `class-04-rng` | `viz-mse` (**minimize squared error, 40 patient ages — the argmin, session 04**); `viz-lcg-step`, `viz-seed`, `viz-urn`, `viz-speed` only if RNG is assigned |
-| 01 · Tue 8/25 | `activity-min-sum-squares` | `viz-min-ss` — the mean-as-argmin widget |
+| 02 · Thu 8/27 | `activity-min-sum-squares` | `viz-min-ss` — the mean-as-argmin widget |
 
 ## Bug checklist
 
@@ -128,10 +134,10 @@ From `F26_scheduling.xlsx` (`DS5030`). `sp26` = `uu_sp26/understanding_uncertain
 
 | # | Date | Focus | Video | In class | Lab | State |
 |---|---|---|---|---|---|---|
-| 01 | Tue 8/25 | Data wrangling + EDA | Intro to Python + wrangling (2 videos) | EDA, basic stats; foreign-gifts activity | cars dataset lab ✅ | ⚠ 3 code bugs |
-| 02 | Thu 8/27 | Vectors and inner product | vectors, matrices, inner product | inner-product applications, covariance | Taylor Swift similarity (Terry built) | ⚠ needs adapting |
-| 03 | Tue 9/1 | Probability axioms & random variables | probability | robust stats, covariance, crosstabs; RV activity | — | ⚠ LaTeX fragile |
-| 04 | Thu 9/3 | **Learning from Data** | learning from data | estimator results, then lab | 🔴 **wages lab — unbuilt** | spec written |
+| 01 | Tue 8/25 | **Intro + setup** | — | course framing, environment, GitHub, run-a-notebook checkpoint | — | **no quiz, no lab** |
+| 02 | Thu 8/27 | Data wrangling + EDA | Intro to Python + wrangling (2 videos) | EDA, basic stats; foreign-gifts activity | cars dataset lab ✅ | ⚠ 3 code bugs |
+| 03 | Tue 9/1 | Probability & RVs **+ estimator vocabulary** | probability | 4 derivations, §2E, census activity | — | **no quiz**; ⚠ LaTeX fragile |
+| 04 | Thu 9/3 | Vectors and inner product | vectors, matrices, inner product | inner-product applications, covariance | Taylor Swift similarity (Terry built) | ⚠ needs adapting |
 | 05 | Tue 9/8 | Categorical variables / indicator | Bernoulli, one-hot | **ECDF lecture + activity** | — | ⚠ 1 formula bug |
 | 06 | Thu 9/10 | CDF / PDF | CDF/PDF | generating-CDFs walkthrough | Outages lab (05 lab) | ⚠ 2 formulas wrong |
 | 07 | Tue 9/15 | KDE: windowing/bandwidth, uniform kernel | `05_1_kde` | KDE properties, over/under-fitting activity | *(opt.)* `05_2_gaussian_kernel` | 🔴 Gaussian code broken |
@@ -151,14 +157,14 @@ From `F26_scheduling.xlsx` (`DS5030`). `sp26` = `uu_sp26/understanding_uncertain
 | — | Tue 11/3 | **ELECTION DAY — no class** | | | | |
 | 20 | Thu 11/5 | Linear regression (inference, bootstrapping) | — | — | — | `sp26` 01_models §1 |
 | 21 | Tue 11/10 | Logistic regression | — | — | `sp26` assignment_6 | `sp26` 01_models §2 |
-| 22 | Thu 11/12 | Gradients | — | — | — | 🔴 **gap** |
-| 23 | Tue 11/17 | Unconstrained optimization, 1-D | — | — | — | 🔴 **gap** |
-| 24 | Thu 11/19 | …in many dimensions | — | — | — | 🔴 **gap** |
-| 25 | Tue 11/24 | Constrained optimization; regularization | — | — | — | 🔴 **gap** |
+| 22 | Thu 11/12 | Gradients | — | — | — | 🔴 **no source — notes written from scratch** |
+| 23 | Tue 11/17 | Unconstrained optimization, 1-D | — | — | — | 🔴 **no source — written from scratch** |
+| 24 | Thu 11/19 | …in many dimensions | — | — | — | 🔴 **no source — written from scratch** |
+| 25 | Tue 11/24 | Constrained optimization; regularization | — | — | — | 🔴 **no source — written from scratch** |
 | — | Thu 11/26 | **THANKSGIVING** | | | | |
-| 26 | Tue 12/1 | Dynamic programming; backwards induction | — | — | jet engines §5–6 | `class_08/06_02` + labslop §5–6 |
-| 27 | Thu 12/3 | *(blank in the syllabus)* | — | — | — | **`sp26` 00_bayes §2 is a complete Bayesian lecture** |
-| 28 | Tue 12/8 | Review / wrap-up | | | | |
+| 26 | Tue 12/1 | Dynamic programming; backwards induction | `class_08/06_02` (**4 of 10 cells broken**) | same | jet engines §5–6 (**written**) | 🔴 **C-MAPSS data still missing** |
+| 27 | Thu 12/3 | *(blank)* → **Bayesian inference** | — | — | — | **`sp26` 00_bayes §2 is a complete Bayesian lecture**; ⚠ needs `pymc` |
+| 28 | Tue 12/8 | Review / wrap-up | — | — | — | 🔴 no source; ⚠ **no Dec 8 row in the spreadsheet** — confirm it's a class day |
 | — | Thu 12/10 | **FINAL EXAM** 9–12 | | | | |
 
 ### What this schedule fixed
@@ -178,6 +184,7 @@ Two problems I'd flagged against the old docx **no longer exist**:
 3. ⚠ **Session 08 — survival & hazard** is 5 cells. The schedule's own note calls this a place to *"slow down and spend time with CDF, KDE etc"*, so thin is partly deliberate — but the jet-engine lab needs its C-MAPSS data sourced.
 4. ~~Session 12 — t-tests~~ **already in the material.** `10_2` cells 5–6 cover the t-distribution and a complete two-sample recipe, and they're the strongest cells in the notebook. Keep them.
 4b. 🔴 **The midterm (Oct 8) is not written.** `sp26` has `practice_exam_1`, `practice_exam_2`, and `exam_topics`; `quizzes/` in this repo is empty. `CLAUDE.md` has printable scantron conventions if that's the format.
+4c. 🔴 **The Dec 8 review session — a one-page formula sheet and a blank optimization-spine table.** ~2 hours, and the sheet is worth building early because it constrains how you write the final. Contents listed in session file `28`, §7.
 5. 🔴 **The optimization block — sessions 22–25 (Nov 12 – Nov 24).** Four consecutive sessions with no source material anywhere: gradients, unconstrained optimization in 1-D and in many dimensions, and constrained optimization/regularization. This is the only remaining desert in the whole semester, and it is the block you flagged as your own weakest. Everything else in the second half is substantially written in `uu_sp26` and needs porting, not authoring.
 
 ### Optimal stopping — resolved
@@ -190,10 +197,10 @@ Notes are written in the order you'll teach them. Each file carries a **Look ahe
 
 | # | Session | Date | Status |
 |---|---|---|---|
-| 01 | Data wrangling + EDA | Aug 25 | ✅ written |
-| 02 | Vectors and inner product | Aug 27 | ✅ written |
-| 03 | Probability axioms & random variables | Sep 1 | ✅ written |
-| 04 | **Learning from Data** | Sep 3 | ✅ written |
+| 01 | **Intro + setup** | Aug 25 | ✅ written |
+| 02 | Data wrangling + EDA | Aug 27 | ✅ written |
+| 03 | Probability & RVs + estimator vocabulary | Sep 1 | ✅ written |
+| 04 | Vectors and inner product | Sep 3 | ✅ written |
 | 05 | Categorical variables / indicator + ECDF | Sep 8 | ✅ written |
 | 06 | CDF / PDF | Sep 10 | ✅ written |
 | 07 | KDE: windowing/bandwidth, uniform kernel | Sep 15 | ✅ written |
@@ -211,8 +218,15 @@ Notes are written in the order you'll teach them. Each file carries a **Look ahe
 | 19 | MLE | Oct 29 | ✅ written |
 | 20 | Linear regression | Nov 5 | ✅ written |
 | 21 | Logistic regression | Nov 10 | ✅ written |
-| 22 | Gradients 🔴 | Nov 12 | next — **no source material** |
-| 23–28 | Optimization → wrap-up | Nov 17 – Dec 8 | queued 🔴 |
+| 22 | Gradients 🔴 | Nov 12 | ✅ written **from scratch** |
+| 23 | Unconstrained optimization, 1-D 🔴 | Nov 17 | ✅ written **from scratch** |
+| 24 | …in many dimensions 🔴 | Nov 19 | ✅ written **from scratch** |
+| 25 | Constrained optimization; regularization 🔴 | Nov 24 | ✅ written **from scratch** |
+| 26 | Dynamic programming; backward induction | Dec 1 | ✅ written |
+| 27 | *(blank slot)* — Bayesian inference | Dec 3 | ✅ written |
+| 28 | Review / wrap-up | Dec 8 | ✅ written |
+
+**All 27 teaching sessions now have notes.** The only unwritten item is the midterm (13), which is an assessment rather than a session — see *What still needs building*, item 4b.
 
 
 ## Notes file schema

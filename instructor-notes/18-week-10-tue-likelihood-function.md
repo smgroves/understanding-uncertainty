@@ -106,7 +106,7 @@ Substitute the normal density and expand:
        = −n log√(2π) − n log σ − Σᵢ (yᵢ−μ)²/(2σ²)
 ```
 
-**Look at the last term.** Everything that depends on `μ` sits in `−Σ(yᵢ−μ)²/(2σ²)` — a *negative* sum of squares. Maximizing the log-likelihood over `μ` therefore means **minimizing the sum of squared deviations**, which is Week 1 Tuesday's box.
+**Look at the last term.** Everything that depends on `μ` sits in `−Σ(yᵢ−μ)²/(2σ²)` — a *negative* sum of squares. Maximizing the log-likelihood over `μ` therefore means **minimizing the sum of squared deviations**, which is Aug 27's box.
 
 That connection deserves a moment. Least squares was introduced in August as a reasonable-looking thing to minimize. It turns out to be what maximum likelihood produces when you assume normal errors. **Sum-of-squares was never arbitrary; it was a normality assumption in disguise.**
 
@@ -256,7 +256,7 @@ Note the sign convention students will meet in their ML course: **maximizing a l
 
 - **Oct 13's independence** is what makes the product legitimate. This is its payoff.
 - **Sep 3's i.i.d.** finally does visible work: identical distribution gives one `f`, independence gives the product.
-- **Week 1 Tuesday's sum of squares** reappears inside the normal log-likelihood — step 8.
+- **Aug 27's sum of squares** reappears inside the normal log-likelihood — step 8.
 - **Sep 8's indicator trick** is the ancestor of the Bernoulli switching device: both encode a categorical outcome arithmetically so it can be summed or multiplied.
 - **Sep 10's named densities** are the raw material — the normal, exponential, and logistic all get likelihoods.
 - **Sep 15's KDE** is the nonparametric alternative the source's conclusion recommends comparing against.

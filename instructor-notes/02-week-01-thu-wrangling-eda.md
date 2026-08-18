@@ -1,11 +1,13 @@
-# Week 1, Tuesday (Aug 26) — Introduction to Class, Data Wrangling
+# Week 1, Thursday (Aug 27) — Data Wrangling and EDA
 
-- **Syllabus topic:** Introduction to class, data wrangling
-- **Day type:** Quiz / Math Day (no quiz — week 1)
+- **Schedule focus:** Data wrangling + EDA
+- **Day type:** Lab / Coding Day — **the cars lab starts in class**
 - **Sources:** `uu_fa26/Proposed schedule/Week 1/01_Tues_video_01_1_wrangling.ipynb` (12 cells), `02_Tues_guided_01_2_eda.ipynb` (17 cells), `03_Tues_activity_00_lab_filled.ipynb` (30 cells)
 - **Also:** `sp26/00_understanding_data/00_pandas_review.ipynb`; html `labs/class-01-wrangling/lecture.html`
 
 > **⚠ Read section 7 before you teach this.** There are three confirmed bugs in the source notebooks, and two of them are in code students will copy. They are present in both the ported Week 1 copies *and* the originals in `class_01/`, so both need fixing.
+>
+> **Note the day change.** This session moved from Tuesday to Thursday when intro/setup took Aug 25, so it is now a **lab day**: the foreign-gifts material becomes the in-class activity and the cars lab is what students carry home. There is no quiz — the first is Sep 8.
 
 ---
 
@@ -158,7 +160,7 @@ Fix all three in both the `Week 1/` copies and the `class_01/` originals, or the
 
 | # | Step | Mode | Notes |
 |---|---|---|---|
-| 1 | Course framing | ⬛ talk | The syllabus's "AI-proof your career" line is a good hook |
+| 1 | Recap Tuesday's setup; confirm everyone can import pandas | 🟩 instructor cell | Thirty seconds. Anyone who failed the Aug 25 checkpoint surfaces here |
 | 2 | The six-step wrangling workflow | 🟦 notebook | They watched the video. Skim it, don't re-teach it |
 | 3 | **The casting trap** | 🟩 instructor cells | Strip `$`, coerce, `isna().sum()` before and after. **Highest-value five minutes of the hour, and it exists in neither notebook** — so it has to be built |
 | 4 | Mean, variance, median, IQR | ⬛ board | First math of the semester. Write the formulas properly; it sets the tone |
@@ -168,7 +170,7 @@ Fix all three in both the `Week 1/` copies and the `class_01/` originals, or the
 
 Detail on the sequencing below. **Build cost for this session: the step-3 cells (~20 min).** Everything else exists.
 
-Tuesday is Quiz/Math day, but there's no quiz in week 1, so there's more time than usual.
+Thursday is a lab day, so board time is short and the lab has to start in class.
 
 1. **Course framing** (whatever you want here — the syllabus's "AI-proof your career" line is a good hook).
 2. **The wrangling workflow**, six steps, from the video. Fast — they watched it.
@@ -187,7 +189,7 @@ If short on time, cut the plotly/alluvial cells (21–24), not the mean-vs-media
 - **IQR reappears in Week 3.** The robust Silverman bandwidth is `0.9·min{sd, IQR/1.34}·n^(−1/5)`. Get the IQR bug fixed now or Week 3's bandwidths are wrong.
 - **The `1/n` vs `1/(n−1)` choice comes due in Week 4.** Sampling distributions introduce unbiasedness, and that's when `n−1` becomes necessary rather than pedantic. Say today that the divisor is a choice you'll revisit, so it lands as a promise kept rather than an inconsistency.
 - **Median → quantiles → Week 3's quantile function.** Today's quantile is a sorted-data index; Week 3 makes it `F⁻¹`. Same object, and Week 3 is easier if today's version was defined carefully.
-- **Covariance appears in the EDA notebook (cell 14) but is not developed.** Week 1 Thursday derives it as a centered dot product. Don't spend time on it today — hand it forward.
+- **Covariance appears in the EDA notebook (cell 14) but is not developed.** Sep 3 derives it as a centered dot product. Don't spend time on it today — hand it forward.
 - **MCAR/MAR/MNAR** never formally returns, but it's the honest foundation for Week 11's omitted-variable bias discussion. Worth naming once so the vocabulary exists.
 
 ## 10. Looking back

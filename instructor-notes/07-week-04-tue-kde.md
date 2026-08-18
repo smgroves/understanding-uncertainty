@@ -108,7 +108,7 @@ def kde(X, K=200):
     return grid, I.sum(axis=1) / (2 * n * h)          # 4. count and normalize
 ```
 
-Step 3 is Week 1 Thursday's broadcasting, doing exactly what it was introduced for. **This version works** — I ran it, and it integrates to 1.000.
+Step 3 is Sep 3's broadcasting, doing exactly what it was introduced for. **This version works** — I ran it, and it integrates to 1.000.
 
 ### From uniform to Gaussian
 
@@ -212,7 +212,7 @@ Row 3 is worth stating explicitly because it's the same pair of conditions that 
 
 **Silverman on bimodal data.** Two well-separated clusters have a large `sd`, so Silverman returns a large `h`, which smooths the two modes into one. **The rule fails hardest exactly when the interesting feature is the thing it erases.** `viz-kernel-compare` — "same bandwidth, two shapes" — is built for this.
 
-**Silverman with an outlier.** One extreme value inflates `sd(X)`, inflating `h`, over-smoothing everything. This is what the robust `0.9·min{sd, IQR/1.34}` form is for, and it's a concrete payoff for Week 1's IQR — **assuming the Week 1 IQR bug is fixed**, since the notebook computes `Q3 − median` instead of `Q3 − Q1`.
+**Silverman with an outlier.** One extreme value inflates `sd(X)`, inflating `h`, over-smoothing everything. This is what the robust `0.9·min{sd, IQR/1.34}` form is for, and it's a concrete payoff for Aug 27's IQR — **assuming the Week 1 IQR bug is fixed**, since the notebook computes `Q3 − median` instead of `Q3 − Q1`.
 
 **Negative values from a broken implementation.** Not a statistical failure but the one you'll actually hit: see §7. A density that goes negative is a bug, always, and it's a good diagnostic to teach — *integrate your estimate and check it's 1.*
 
@@ -293,7 +293,7 @@ Row 3 is worth stating explicitly because it's the same pair of conditions that 
 | 4 | Route 1 = Route 2 | ⬛ board | 1 min | Say it out loud. Two questions, one formula |
 | 5 | Why `h` can't go to zero | 🟩 instructor cell | 3 min | Run the KDE at `h = 0.01`. The comb has to be *seen* |
 | 6 | Silverman's rule, and the `n^(−1/5)` rate | ⬛ board | 3 min | 32× the data to halve the bandwidth. That number lands |
-| 7 | **The four-line algorithm** | 🟩 instructor cells | 8 min | Use the working version in §2. Point at its third line as Week 1 Thursday's broadcasting |
+| 7 | **The four-line algorithm** | 🟩 instructor cells | 8 min | Use the working version in §2. Point at its third line as Sep 3's broadcasting |
 | 8 | Route 3 — measurement error, and the Gaussian swap | ⬛ board + 🟩 cell | 6 min | Kernel as a slot: `kᵤ` → `φ`. Then run both and overlay them |
 | 9 | Biased but consistent | ⬛ board | 5 min | `E[f̂ₕ] = [F(x+h)−F(x−h)]/2h`, then the limit. **First biased estimator in the course** |
 | 10 | Bias–variance trade-off | 🟩 instructor cells | 5 min | Three bandwidths side by side. Treat as new material, not a callback |
@@ -318,15 +318,15 @@ Two options: assign the HTML lab as-is (it's self-contained and served over http
 - **The bias–variance trade-off returns constantly** — Week 4's estimator quality, Week 8's bandwidth, Week 14's regularization. This is its first appearance and, given ML is concurrent, probably its first appearance anywhere for these students.
 - **The Gaussian kernel is the normal density**, which is Week 6's CLT limit and Week 10's normal likelihood. Today is where `exp(−z²/2)/√(2π)` first appears; recognizing it later is worth the flag.
 - **`n^(−1/5)` vs `n^(−1/2)`.** Week 4's standard error shrinks like `1/√n`; the KDE bandwidth shrinks like `n^(−1/5)`. Nonparametric estimation converges more slowly than parametric, and that's the honest reason Week 11 fits lines instead of curves. Worth one sentence when the `1/√n` rate arrives.
-- **The IQR in the robust Silverman form** needs Week 1's IQR bug fixed. If it isn't, the robust bandwidth is wrong.
+- **The IQR in the robust Silverman form** needs Aug 27's IQR bug fixed. If it isn't, the robust bandwidth is wrong.
 
 ## 10. Looking back
 
 - **Tuesday is the direct prerequisite and today pays it off twice.** `f = F′` becomes Route 2; the ECDF becomes the thing you take a secant of. If Tuesday's difference-quotient picture landed, Route 2 is easy. If it didn't, today is the second chance.
 - **Tuesday's "density is a rate, not a probability"** is what the `2nh` denominator means. Point at it.
 - **Sep 8's proportion** is Route 1 — count the events, divide by `n`. Third session running that this identity does the work.
-- **Week 1 Thursday's broadcasting** is the third line of the KDE algorithm, and this is the payoff for that whole session: `np.abs(grid[:,None] - X[None,:])` is exactly the pairwise grid from the distance-matrix demo.
-- **Week 1 Tuesday's IQR and `sd`** are both inputs to Silverman's robust form.
+- **Sep 3's broadcasting** is the third line of the KDE algorithm, and this is the payoff for that whole session: `np.abs(grid[:,None] - X[None,:])` is exactly the pairwise grid from the distance-matrix demo.
+- **Aug 27's IQR and `sd`** are both inputs to Silverman's robust form.
 
 ---
 

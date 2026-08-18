@@ -1,10 +1,12 @@
-# Week 1, Thursday (Aug 28) — Vectors, Matrices, and the Inner Product
+# Week 2, Thursday (Sep 3) — Vectors, Matrices, and the Inner Product
 
-- **Syllabus topic:** Vectors, matrices, and inner product
+- **Schedule focus:** Vectors and inner product
 - **Day type:** Lab / Coding Day
 - **Sources:** `uu_fa26/Proposed schedule/Week 1/04_Thurs_video_02_1_vectors_and_matrices.ipynb` (29 cells), `06_Thurs_guided_02_2_ortho.ipynb` (6 cells), `Lab/lab_01_blank.ipynb` + `lab_01_filled.ipynb`
 - **Also:** `sp26/00_understanding_data/00_math_review.ipynb` §5 (Vector Spaces); html `labs/class-02-vectors/`
 
+> **This session moved from Aug 27 to Sep 3**, after probability rather than before it. That is a small win: `E[X] = p · X` used to be a forward reference students couldn't cash, and it is now a **callback to Tuesday**. See §2's applications list and §10.
+>
 > **The one thing to get right today:** the inner product is not five topics (length, distance, covariance, correlation, matrix multiplication) — it is one operation wearing five costumes. If students leave with that, the session worked. If they leave with five formulas, it didn't.
 
 ---
@@ -148,7 +150,7 @@ Given the cohort is calculus-shy, the geometric route matters: they can *see* th
 
 ### Verified
 
-- **`x.var()` is correct here, but the pandas twin is not.** Cell 17 states `s² = (1/n)Σ(xᵢ−x̄)²` and says *"to implement that in numpy, you `x.var()`"*. That's right — `numpy` defaults to `ddof=0`. Cell 18 prints the loop result and `x.var()` side by side and they'll match. **But `df[col].var()` in pandas defaults to `ddof=1`** and will not match. Since Tuesday used pandas throughout and today uses NumPy, students will cross the boundary. See Week 1 Tuesday §6 Q1.
+- **`x.var()` is correct here, but the pandas twin is not.** Cell 17 states `s² = (1/n)Σ(xᵢ−x̄)²` and says *"to implement that in numpy, you `x.var()`"*. That's right — `numpy` defaults to `ddof=0`. Cell 18 prints the loop result and `x.var()` side by side and they'll match. **But `df[col].var()` in pandas defaults to `ddof=1`** and will not match. Since Tuesday used pandas throughout and today uses NumPy, students will cross the boundary. See Aug 27 §6 Q1.
 - **Cell 26's row-vector example has a typo.** `a_{r,:}` is written as `[a_{21} a_{22} … a_{2m}]` — those are row-2 subscripts, presented as the general `r`-th row. Should be `a_{r1}, a_{r2}, …, a_{rm}`. Cosmetic, but it's the cell that *defines* the shorthand used in the next two cells.
 - **No cell 05 in the folder.** `04_Thurs_video` → `06_Thurs_guided`. Confirm nothing is missing.
 
@@ -196,13 +198,13 @@ If short: cut matrix-times-matrix (video cells 27–28). They can read it; it is
 - **Orthogonality is the single most important plant of the week.** It returns as independence (Week 8), as the regression optimality condition `Xᵀ(y − Xβ) = 0` (Week 11), and in PCA. Say explicitly: "we'll see this equation again three times."
 - **Projection ⟹ Week 8 and Week 11.** `E[Y|X]` is the projection of `Y` onto functions of `X`; OLS is the projection onto linear functions. Today's picture is literally those results in two dimensions. This is the strongest single reason to spend the two minutes on §3.
 - **Broadcasting ⟹ Week 3 (KDE) and Week 8 (LCLS).** Both estimators are `(data − grid)` broadcasts with a kernel applied. Students who don't get broadcasting today will be lost in the Week 3 lab for reasons that look like they're about kernels.
-- **`E[X] = p · X` (guided cell 5) is a forward reference to Week 2.** It's listed as an application before expectation has been defined. Either flag it as a preview or skip it — don't let it read as an assumed prerequisite.
+- **`E[X] = p · X` (guided cell 5) is now a *callback*, not a forward reference.** Expectation was defined on Tuesday, so this line can be cashed rather than promised: *"remember `E[X] = Σ pₗ xₗ`? That is a dot product of the probability vector with the value vector."* Under the old ordering this was a dangling preview; the reordering fixed it for free.
 - **Zero covariance ≠ independence sets up Week 8's bivariate normal**, where the implication *does* run both ways. That's the payoff for today's counterexample; mention that an exception is coming.
 - **Covariance's `1/N` vs `1/(N−1)`** joins Tuesday's variance question and both come due in Week 4.
 
 ## 10. Looking back
 
-- **Tuesday (Aug 26)** defined the mean and variance for a data column; today re-derives both as vector operations and adds covariance. If Tuesday's `1/n` convention wasn't flagged as a choice, flag it today.
+- **Aug 27** defined the mean and variance for a data column; today re-derives both as vector operations and adds covariance. If Aug 27's `1/n` convention wasn't flagged as a choice, flag it today.
 - Tuesday's EDA notebook (cell 14) introduced `cov(X,Y)` with the summation formula and `df.cov()`. Today gives it the geometric meaning. Explicitly connect the two so it doesn't read as a second definition.
 - Pre-course: `sp26/00_math_review.ipynb` §5 covers vector spaces, inner product, matrices, matrix inverse, and even a quick linear-regression example — useful background reading for you, more advanced than today.
 

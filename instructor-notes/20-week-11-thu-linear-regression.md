@@ -98,7 +98,7 @@ But write the score before you solve it:
 Xᵀ(y − Xβ̂) = 0
 ```
 
-**That is Week 1 Thursday's equation.** It appeared in the inner-product session's list of applications — *"solving for the optimal coefficients in a linear regression model is the orthogonality condition"* — eleven weeks before regression. It says the residual vector is orthogonal to every column of `X`: whatever is left over is uncorrelated with everything you used to explain it.
+**That is Sep 3's equation.** It appeared in the inner-product session's list of applications — *"solving for the optimal coefficients in a linear regression model is the orthogonality condition"* — eleven weeks before regression. It says the residual vector is orthogonal to every column of `X`: whatever is left over is uncorrelated with everything you used to explain it.
 
 I checked it on the Ames fit — `Xᵀ(y − Xβ̂)` comes out `[0, −1.2e-07, −2.0e-09]`, zero to numerical precision.
 
@@ -106,8 +106,8 @@ So the three routes converge, and it's worth drawing:
 
 | Route | Session | Answer |
 |---|---|---|
-| Minimize squared error | Week 1 Tue | `β̂` |
-| Make the residual orthogonal | Week 1 Thu | `β̂` |
+| Minimize squared error | Aug 27 | `β̂` |
+| Make the residual orthogonal | Sep 3 | `β̂` |
 | Maximize the normal likelihood | today | `β̂` |
 
 **Verified on the real data:** the normal equations give `[11.5658, 0.000468, −0.006402]` and numerically maximizing the log-likelihood gives the same to `1.25e-04`. Worth running live — it's a two-minute cell and it makes "these are the same thing" a demonstration rather than a claim.
@@ -143,7 +143,7 @@ The source's five reasons are good and worth keeping, with one correction (§7):
 2. **Interpretable coefficients** — but see §7; the stated interpretation is the log-log one.
 3. **Flexible despite being "linear"** — linear in `β`, not in `x`. Add `x²`, `log x`, or interactions and you fit curves. "Linear regression" constrains how parameters enter, not the shape of the fit.
 4. **Regularizable** — ridge and lasso handle overparameterized models.
-5. **Fast** — it's inner products, and hardware is built for those. Week 1 Thursday's closing point.
+5. **Fast** — it's inner products, and hardware is built for those. Sep 3's closing point.
 
 ---
 
@@ -165,7 +165,7 @@ The source's five reasons are good and worth keeping, with one correction (§7):
 - **Argmin:** `β̂ = (XᵀX)⁻¹Xᵀy`, characterized by `Xᵀ(y − Xβ̂) = 0` — the residual orthogonal to every column of `X`
 - **Solved by:** closed form, and it's the **last one in the course**
 
-This is the spine's payoff session. Week 1 Tuesday minimized squared distance to a single number and got the mean. Week 1 Thursday minimized squared distance to a line and got a projection. Today minimizes squared distance to a *plane spanned by your features* and gets regression. **Same objective, three sessions, increasing dimension** — and the orthogonality condition is identical in all three.
+This is the spine's payoff session. Aug 27 minimized squared distance to a single number and got the mean. Sep 3 minimized squared distance to a line and got a projection. Today minimizes squared distance to a *plane spanned by your features* and gets regression. **Same objective, three sessions, increasing dimension** — and the orthogonality condition is identical in all three.
 
 It is also the last closed form. Tuesday's logistic regression has none, and from there on the argmax is found numerically. Worth saying so explicitly: **the era of solving for the answer ends here.**
 
@@ -215,7 +215,7 @@ It is also the last closed form. Tuesday's logistic regression has none, and fro
 
 **Q4. "Does `β_k` tell me the effect of `x_k`?"** No — it tells you how `y` differs, on average, between observations that differ in `x_k` while the other included variables are held fixed. Whether that difference is *caused* by `x_k` depends on whether anything omitted is correlated with both, and no amount of fitting can check that. It's the fireplace problem from October: houses with more fireplaces are also bigger and newer, and controlling for size and age narrows the comparison without making it an intervention. The regression is a description of a conditional association, and the causal reading is an additional claim you have to defend separately.
 
-**Q5. "What happens if my errors aren't normal?"** Less than you'd fear for the estimates, more than you'd like for the inference. `β̂` remains unbiased and — because it's a weighted average of the `y`'s — the CLT means its own sampling distribution tends toward normal regardless, so large-sample intervals are often fine. What degrades is small-sample inference and anything sensitive to the tails: with heavy-tailed errors, least squares chases outliers badly, since squaring makes one extreme residual enormously expensive. That's Week 1's mean-versus-median lesson at the level of a whole model, and the fixes are the same in spirit — a different loss, which is a different error distribution.
+**Q5. "What happens if my errors aren't normal?"** Less than you'd fear for the estimates, more than you'd like for the inference. `β̂` remains unbiased and — because it's a weighted average of the `y`'s — the CLT means its own sampling distribution tends toward normal regardless, so large-sample intervals are often fine. What degrades is small-sample inference and anything sensitive to the tails: with heavy-tailed errors, least squares chases outliers badly, since squaring makes one extreme residual enormously expensive. That's Aug 27's mean-versus-median lesson at the level of a whole model, and the fixes are the same in spirit — a different loss, which is a different error distribution.
 
 ---
 
@@ -234,7 +234,7 @@ I ran the model on `ames_prices.csv` (2,930 rows, log price on area and age): th
 ### Simplifications
 
 - **No second-order condition**, same as Oct 29 — setting the score to zero is presented as *the* method.
-- **The orthogonality condition is never written.** Cell 6 gives `β̂ = (XᵀX)⁻¹Xᵀy` directly, skipping `Xᵀ(y − Xβ̂) = 0` — which is the form that connects to Week 1 Thursday and the one worth remembering. §2 supplies it.
+- **The orthogonality condition is never written.** Cell 6 gives `β̂ = (XᵀX)⁻¹Xᵀy` directly, skipping `Xᵀ(y − Xβ̂) = 0` — which is the form that connects to Sep 3 and the one worth remembering. §2 supplies it.
 - **`σ̂²`'s bias isn't mentioned**, and with `p` parameters the correct divisor is `n − p` rather than `n − 1`. Third appearance of this thread.
 - **Row vs. residual bootstrap isn't distinguished**, though the schedule asks for bootstrapping specifically. §2 names the choice.
 - **Homoskedasticity is never stated as an assumption**, so "why bootstrap at all" has no answer in the material. It's the whole reason the schedule pairs them.
@@ -252,7 +252,7 @@ I ran the model on `ames_prices.csv` (2,930 rows, log price on area and age): th
 | 2 | The four-step recipe | 🟦 notebook | 3 min | Cell 3. Say that steps 2–4 never change — Tuesday only changes step 1 |
 | 3 | The likelihood, by substitution | ⬛ board | 4 min | Don't re-derive; point at Oct 27 and swap `μ` |
 | 4 | **The SSE identity** | ⬛ board | 5 min | Pull out `1/(2σ²)`. **Then read the source's line aloud**: minimizing SSE *is* assuming normal errors |
-| 5 | **Three routes, one answer** | ⬛ board | 4 min | Week 1 Tue (squares), Week 1 Thu (orthogonality), today (likelihood). Write `Xᵀ(y − Xβ̂) = 0` |
+| 5 | **Three routes, one answer** | ⬛ board | 4 min | Aug 27 (squares), Sep 3 (orthogonality), today (likelihood). Write `Xᵀ(y − Xβ̂) = 0` |
 | 6 | **Verify it numerically** | 🟩 instructor cells | 5 min | Normal equations vs. numerical argmax on Ames: agree to `1.25e-04`. Print `Xᵀ(y − Xβ̂)` and watch it be zero |
 | 7 | Fit it with `statsmodels` | 🟩 instructor cells | 4 min | The workflow they'll actually use |
 | 8 | **Prediction vs. simulation** | 🟩 instructor cells | 6 min | Cell 11's exercise: 1,000 shocks per house, plot the density. **The point estimate is the centre of a distribution** |
@@ -279,8 +279,8 @@ I ran the model on `ames_prices.csv` (2,930 rows, log price on area and age): th
 ## 10. Looking back
 
 - **Oct 29 is the direct parent.** Today is that session with `μ = xᵢ·β`. If the MLE recipe landed, today is a substitution.
-- **Week 1 Thursday predicted this exact equation.** The inner-product session listed `Xᵀ(y − Xβ) = 0` among the applications of orthogonality, eleven weeks early. Closing that loop is the most satisfying callback available in the course.
-- **Week 1 Tuesday's sum of squares** is the objective, now in `p` dimensions.
+- **Sep 3 predicted this exact equation.** The inner-product session listed `Xᵀ(y − Xβ) = 0` among the applications of orthogonality, eleven weeks early. Closing that loop is the most satisfying callback available in the course.
+- **Aug 27's sum of squares** is the objective, now in `p` dimensions.
 - **Oct 15's conditional expectation** is what `xᵢ·β̂` estimates — and Oct 13 showed that under joint normality the CEF *is* linear, which is why this model is the right shape rather than a convenient one.
 - **Sep 22–29's bootstrap** applies unchanged to `β̂`.
 - **Sep 8's `drop_first`** is §5's rank condition.

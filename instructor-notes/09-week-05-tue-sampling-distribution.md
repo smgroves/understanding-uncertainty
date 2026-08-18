@@ -43,6 +43,34 @@ The distinction is the hardest idea in the first half of the course and it is wo
 
 Sep 3 already established the first two facts about that second distribution — `E[X̄ₙ] = μ` and `V[X̄ₙ] = σ²/n`. Today asks the remaining question: **what shape is it?**
 
+### The derivation deferred from Sep 1
+
+Sep 1 stated `V[X̄ₙ] = V[X]/n` and promised the proof. **This is where it gets earned**, and the reason to do it here rather than in week 2 is that it's now answering a question students can see the point of.
+
+Start from the variance shortcut (Sep 1):
+
+```
+V[X̄ₙ] = E[X̄ₙ²] − (E[X̄ₙ])² = E[X̄ₙ²] − μ²
+```
+
+The work is `E[X̄ₙ²]`. Expanding the square gives `n` terms where `i = j` and `n² − n` terms where `i ≠ j`. **Independence is what makes the cross terms factor** — `E[XᵢXⱼ] = E[Xᵢ]E[Xⱼ] = μ²`:
+
+```
+E[X̄ₙ²] = (1/n²)( n·E[X²] + (n² − n)·μ² )
+        = (1/n)( E[X²] − μ² ) + μ²
+        = V[X]/n + μ²
+```
+
+Subtract `μ²`:
+
+```
+V[X̄ₙ] = V[X]/n = σ²/n
+```
+
+**Point at the exact step where independence enters.** Sep 1 established that unbiasedness needs only *identically distributed*; this needs *independent* as well. That split is the first time the two halves of "i.i.d." do visibly different work, and it's worth the sentence.
+
+The source notebook already treats this as a recap — `08_01` cell 4 says *"we already know that `E[X̄ₙ] = E[X]`, `V[X̄ₙ] = V[X]/N`."* Under the current schedule that cell becomes the place the result is **derived** rather than cited, which is a small edit and a better home.
+
 ### The simulation matrix
 
 The video's central device, and it's a good one. Draw `N` values, `T` times:
@@ -249,6 +277,39 @@ The `nⁿ` argument in `09_2` cell 5 checks out: `100¹⁰⁰ = 10²⁰⁰`, aga
 **The single best thing you can build** is step 10 overlaid on step 5: simulate the sampling distribution by drawing fresh exponentials, then bootstrap it from *one* sample, and plot both on the same axes. When they land on top of each other, the bootstrap stops looking like a trick.
 
 **Cut first:** step 11, then step 6. **Do not cut** step 4 or step 13.
+
+
+### The activity — the wages simulation (moved from Sep 3)
+
+Extends Tuesday's DC PUMS wage activity. Ship as `lab_04_blank.ipynb` / `lab_04_filled.ipynb`, matching the Week 1 convention.
+
+**Hook.** On Tuesday you computed the average wage in DC from a sample. If the survey had reached different households, would you have gotten a different number — and how different?
+
+**§0 — Setup.** Reload Tuesday's extract; restrict to actual earners (`ESR ∈ {1,2}`, `WAGP > 0`). Reuses Tuesday's conditioning discovery rather than re-explaining it. Set a seed and say why.
+
+**§1 — Manufacture a world where you know the truth.** Treat the full extract as *the population*. Compute `μ = WAGP.mean()` and `σ² = WAGP.var()` over every row; label them **parameters**. This is the move the lab rests on: normally `μ` is invisible, so you can never check an estimator. Here you build a world where you can.
+
+**§2 — One sample.** Draw `n = 100` rows, compute `X̄`. It misses `μ`. Change the seed, draw again — different answer. *The statistic has a distribution.*
+
+**§3 — Two thousand samples.** Loop, collect 2000 values of `X̄`, histogram them. Then check both board results against the picture, printing each side of each equation next to the other:
+- centre of the histogram ≈ `μ` → **unbiasedness, verified**
+- variance of the 2000 values ≈ `σ²/n` → **the grueling derivation, verified**
+
+This comparison is the point of the lab. It is also, though nobody says so yet, a **sampling distribution** — built three weeks before the session named after one.
+
+**§4 — The `1/√n` law.** Repeat §3 at `n = 10, 25, 100, 400, 1600`. Plot `sd(X̄)` against `n`, then against `1/√n` — a straight line. Quadruple the sample, halve the spread.
+
+**§5 — Why the mean at all?** Grid-search the argmin: scan candidate `c`, plot `(1/n)Σ(xᵢ−c)²`, watch it bottom out at `X̄`. Then swap in `Σ|xᵢ−c|` and watch it land on the **median** instead. On wage data the two are far apart — long right tail — so Aug 27's lesson pays off visibly, with no calculus anywhere.
+
+**§6 — An estimator that fails.** Run the sample *median* through §3's machinery as an estimator of the population *mean*. On skewed wage data it is badly biased — and has **lower variance**. Compute `MSE = bias² + variance` for both and let them discover that unbiased ≠ better.
+
+**§7 — Unbiased for the wrong thing (optional).** `PWGTP`. The unweighted `X̄` is unbiased for the unweighted population mean, which is not DC's average wage. An estimator can be flawless and answer the wrong question.
+
+**Why this lab.** It walks the video's own four steps on one dataset students already know, and it front-loads four later sessions: Sep 22's sampling distribution is a callback, Sep 24's bootstrap is "do §3 when you *can't* resample the population," Sep 29's standard error is §4's slope, and Oct 1's CLT is a claim about §3's histogram shape.
+
+**Why it lands here rather than in week 2.** §3 of this activity *is* a sampling distribution, and doing it in the session named after one means students build the object and name it in the same hour instead of three weeks apart. §4's `1/√n` plot is what Sep 29's standard error means, and §3's visibly-skewed histogram at small `n` is what Oct 1's CLT explains.
+
+**Scope note:** as a Tuesday activity this is tighter than the full lab spec. §§0–4 fit; §§5–7 (the argmin grid search, the failing estimator, the `PWGTP` subtlety) are the natural overflow into **Thursday's lab** — see §9.
 
 ---
 

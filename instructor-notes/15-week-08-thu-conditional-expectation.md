@@ -42,19 +42,100 @@ Then the estimator, which is the whole coding half:
 
 ---
 
-## 2. The optimization view
+## 2. The content, from scratch
 
-- **Objective:** kernel-weighted mean squared error at the point `z`: `MSE(ŷ(z)) = (1/N) Σ {yᵢ − ŷ(z)}² · (1/h)k((z−xᵢ)/h)`
-- **Argmin:** the LCLS / Nadaraya–Watson estimator — the ratio above.
-- **Solved by:** closed form (it's a weighted mean).
+Everything today follows from one definition and one distinction. The definition is a renormalization you already know; the distinction is between a number and a random variable, and it's where students get lost.
 
-This is cell 56's exercise, and it is worth noticing that **the notebook already frames the whole course this way**: *"We showed that the mean and median could be discovered by minimizing various kinds of loss functions; this is what machine learning is."* Same objective as Week 1 (sum of squares → the mean), with kernel weights attached. The population version is the sharper statement:
+### The conditional density
 
-> Among **all** functions `g(X)`, the one minimizing `E[(Y − g(X))²]` is `g(X) = E[Y|X]`.
+Oct 13 built the joint density `f(x,y)` and the marginal `f_X(x)`. Divide one by the other:
 
-That single sentence is why regression exists. Week 11's linear regression is the same argmin restricted to straight lines — an approximation to the CEF, not a different idea.
+```
+f(y | x) = f(x,y) / f_X(x)
+```
 
----
+That is Sep 1's `p[A|B] = p[A∩B]/p[B]`, with densities in place of probabilities. **Conditioning is renormalizing**: you restrict attention to the slice where `X = x`, and divide by how much probability lives in that slice so the result integrates to 1 again.
+
+It needs `f_X(x) > 0`. No data near `x`, no conditional density at `x` — which is the whole reason the estimator later fails in the tails.
+
+### The conditional expectation: a number, and a random variable
+
+Average over that conditional density:
+
+```
+E[Y | X = x] = ∫ y · f(y|x) dy
+```
+
+**With a specific `x` plugged in, this is a number.** The average price of a house of 2,000 square feet.
+
+Now write it without fixing `x`:
+
+```
+E[Y | X]
+```
+
+**This is a random variable.** It's the function `x ↦ E[Y|X=x]` evaluated at the random `X`, so it has its own distribution, its own mean, its own variance. Before you know which house you drew, its conditional mean is itself uncertain.
+
+This is the single most common confusion in the topic and it is worth two full minutes at the board, because every later result depends on which one is meant. The notation hides the distinction; you have to say it.
+
+### The tower property
+
+Because `E[Y|X]` is a random variable, you can take *its* expectation:
+
+```
+E[ E[Y|X] ] = E[Y]
+```
+
+Average the conditional averages and you recover the overall average. It needs only `E|Y| < ∞` — no independence, no model, no distributional assumption. Genuinely free.
+
+The reading: **conditioning on something and then averaging over it gets you back where you started.** Splitting the country into states, averaging income within each, then averaging those with the right weights gives national average income.
+
+### The law of total variance
+
+Not in the source, and worth adding — it's two lines and it explains a term students meet everywhere:
+
+```
+V[Y] = E[ V[Y|X] ] + V[ E[Y|X] ]
+       └─ unexplained ─┘   └─ explained ─┘
+```
+
+Total variation in `Y` splits into variation *left over within* each value of `X`, plus variation *between* the conditional means. That ratio is what R² reports, and it's the same decomposition as bias–variance from Sep 3.
+
+### Why the CEF is the thing worth estimating
+
+The result that makes this session the hinge of the whole course:
+
+> Among **all** functions `g(X)` — any shape at all, not just lines — the one minimizing `E[(Y − g(X))²]` is `g(X) = E[Y|X]`.
+
+**The conditional expectation is the best possible prediction of `Y` from `X` under squared error.** That's why regression exists, and Nov 5's linear regression is this same argmin restricted to straight lines — an approximation to the CEF, not a different idea.
+
+### Estimating it, three ways of increasing generality
+
+**Discrete conditioning.** If `X` takes few values, just take group means: `df.groupby('Fireplaces')['price'].mean()`. No smoothing, no machinery — a table of averages *is* an estimate of the CEF. This is the right on-ramp, and it's where the fireplace trap lives (§5).
+
+**A sliding window.** If `X` is continuous, no two observations share a value, so group means don't exist. Instead average the `y` values whose `x` falls within `±h` of the query point:
+
+```
+              (1/N) Σᵢ yᵢ · (1/2h)·𝟙{|xᵢ − z| ≤ h}
+ŷ(z)  =  ─────────────────────────────────────────
+              (1/N) Σᵢ      (1/2h)·𝟙{|xᵢ − z| ≤ h}
+```
+
+**Look at the denominator.** It's a uniform-kernel KDE of `f_X` — Sep 15's estimator exactly. And the numerator is the same thing weighted by `y`. So the ratio is `f(x,y)`-weighted-average over `f_X(x)`, which is the definition of a conditional expectation, estimated.
+
+**A smooth kernel.** Replace the box with any kernel and you get **Nadaraya–Watson**, or *local constant least squares*:
+
+```
+              Σᵢ yᵢ · k((z − xᵢ)/h)
+ŷ(z)  =  ───────────────────────────
+              Σᵢ      k((z − xᵢ)/h)
+```
+
+A weighted average of the `y`'s, with weights that fall off with distance from `z`. The bandwidth `h` is Sep 15's knob doing the same job — and the source's `lcls` function uses `0.9·min{sd, IQR/1.34}·n^(−1/5)`, the robust Silverman rule from the KDE session, unchanged.
+
+### Association is not intervention
+
+The session's last third, and the reason the fireplace example is in it. `E[Y|X=x]` compares *different groups of houses*. It does not tell you what happens if you *change* `x` on one house. That second thing is written `E[Y | do(X=x)]`, and no amount of data turns the first into the second without an argument. See §5 and §6 Q4.
 
 ### Reading
 
@@ -68,7 +149,24 @@ That single sentence is why regression exists. Week 11's linear regression is th
 
 ---
 
-## 3. Assumptions that make it work
+## 3. The optimization view
+
+- **Objective:** kernel-weighted mean squared error at the point `z`: `MSE(ŷ(z)) = (1/N) Σ {yᵢ − ŷ(z)}² · (1/h)k((z−xᵢ)/h)`
+- **Argmin:** the LCLS / Nadaraya–Watson estimator — the ratio above.
+- **Solved by:** closed form (it's a weighted mean).
+
+This is cell 56's exercise, and it is worth noticing that **the notebook already frames the whole course this way**: *"We showed that the mean and median could be discovered by minimizing various kinds of loss functions; this is what machine learning is."* Same objective as Week 1 (sum of squares → the mean), with kernel weights attached. The population version is the sharper statement:
+
+> Among **all** functions `g(X)`, the one minimizing `E[(Y − g(X))²]` is `g(X) = E[Y|X]`.
+
+That single sentence is why regression exists. Week 11's linear regression is the same argmin restricted to straight lines — an approximation to the CEF, not a different idea.
+
+---
+
+
+---
+
+## 4. Assumptions that make it work
 
 | Result | Assumption it needs |
 |---|---|
@@ -83,7 +181,7 @@ The last row is the one that matters pedagogically, and §3 of the notebook is e
 
 ---
 
-## 4. Concrete failure cases
+## 5. Concrete failure cases
 
 **Boundary bias — the one they'll see on screen.** Cells 48 and 53 ask "where is our estimator reliable? Unreliable?" The answer is: at the **edges of the x-range**. At the left edge, the window `(z−h, z+h]` only has data on one side, so the estimate is pulled toward the interior. On `price ~ age`, the oldest houses show it plainly. This isn't noise you can average away — it's bias, and it doesn't shrink with `N` at the same rate as the interior.
 
@@ -97,7 +195,7 @@ The last row is the one that matters pedagogically, and §3 of the notebook is e
 
 ---
 
-## 5. Five questions students will ask
+## 6. Five questions students will ask
 
 **Q1. "Is `E[Y|X]` a number or a function?"** Both, and the notation hides which. `E[Y|X=x]` with a specific `x` is a **number**. `E[Y|X]` without a specific value is a **random variable** — it's the function `x ↦ E[Y|X=x]` evaluated at the random `X`, so it has its own distribution, its own mean, and its own variance. This is the single most common confusion in the topic, it is worth two full minutes at the board, and every later use depends on getting it right: the tower property is a statement about the random-variable version.
 
@@ -113,7 +211,7 @@ The last row is the one that matters pedagogically, and §3 of the notebook is e
 
 ---
 
-## 6. Simplification audit
+## 7. Simplification audit
 
 - **"LCLS is regression."** True but early — the notebook calls it *Local Constant Least Squares regression* before Week 11 defines regression. Fine to use the word; say explicitly that it's regression in the sense of *estimating a CEF*, which is the general meaning, and that Week 11 narrows it to lines.
 - **`grid = np.sort(x.unique())`** (cells 47, 52). The estimator is evaluated at the *observed* `x` values, not on a regular grid. Harmless, but it means the plotted curve is denser where data is denser, which slightly flatters the picture. Worth one sentence if anyone asks why the curve looks smooth in the middle.
@@ -122,7 +220,7 @@ The last row is the one that matters pedagogically, and §3 of the notebook is e
 
 ---
 
-## 7. Notebook run order
+## 8. Delivery plan
 
 1. Cells 38–40: load Ames, log-price, scatter `price ~ area` and `price ~ age`. Establishes "the eye seeks `Y|X=x`."
 2. Cells 42–43: `groupby('Fireplaces').mean()` and `.diff()`. **Discrete conditioning first** — the CEF as a plain table of group means, no smoothing anywhere. This is the right on-ramp.
@@ -137,7 +235,7 @@ If you run out of time, cut §3's cancer-treatment examples, not the fireplace r
 
 ---
 
-## 8. Forward dependencies
+## 9. Look ahead
 
 | Later session | What it inherits |
 |---|---|
@@ -148,7 +246,7 @@ If you run out of time, cut §3's cancer-treatment examples, not the fireplace r
 
 ---
 
-## 9. Source map
+## 10. Source map
 
 - `sp26/00_understanding_data/02_using_information.ipynb`
 - §2 cells **36–57** — the entire coding spine of this session
@@ -162,7 +260,7 @@ If you run out of time, cut §3's cancer-treatment examples, not the fireplace r
 
 ---
 
-## 10. Open questions
+## 11. Open questions
 
 - **Which notebook owns the definitions?** `00_bayes.ipynb` and `02_using_information.ipynb` both introduce conditional distributions. Pick one for Week 8 (probably `00_bayes` §1 as the Tuesday/video material) and have the other reference it, or students will see the definition twice with different notation.
 - **Does §3 (causality, the do-operator) fit in this session?** It's marked *(Optional)* in the source. It's also the answer to the fireplace question you'll have already raised, so cutting it entirely leaves a loose end. Suggest keeping the fireplace resolution and OVB, cutting the three therapy examples.

@@ -8,7 +8,7 @@
 
 > **Today is where the machine pays out**, and the payout is surprising: maximum likelihood keeps handing back estimators students already use. The normal gives the sample mean and the sample variance. The Bernoulli gives the sample proportion. Last week's transition matrix was one too. **"Count and divide" and "average it" turn out to be what maximizing a likelihood produces**, not folk recipes that happened to work.
 >
-> It's also where a thread opened in **Week 1** finally closes. The MLE for `σ²` divides by `n`, not `n−1` — and it is **biased**. I checked: `E[σ̂²_MLE] = (n−1)σ²/n`, which at `n = 12` is 0.916 times the truth. The `n−1` correction is a deliberate *departure* from maximum likelihood, not a refinement of it.
+> It's also where a thread opened on **Aug 27** finally closes. The MLE for `σ²` divides by `n`, not `n−1` — and it is **biased**. I checked: `E[σ̂²_MLE] = (n−1)σ²/n`, which at `n = 12` is 0.916 times the truth. The `n−1` correction is a deliberate *departure* from maximum likelihood, not a refinement of it.
 
 ---
 
@@ -32,7 +32,7 @@ Tuesday built `ℓ(θ)`. Today finds its peak.
 
 For a smooth log-likelihood the recipe is the one from calculus: differentiate with respect to each parameter, set each derivative to zero, solve. The derivative of the log-likelihood has a name — the **score** — and "setting the score to zero" is the standard phrasing.
 
-**Given this cohort, lead with the picture, not the calculus.** Plot `ℓ(μ)` against a grid of candidate `μ` values with `σ` held fixed, and let them see a curve with one peak. *The MLE is the top of that hill.* Then say that finding the top of a smooth hill means finding where the slope is zero, and only then write the derivative. Grid first, calculus second — the same move as Week 1's sum-of-squares parabola.
+**Given this cohort, lead with the picture, not the calculus.** Plot `ℓ(μ)` against a grid of candidate `μ` values with `σ` held fixed, and let them see a curve with one peak. *The MLE is the top of that hill.* Then say that finding the top of a smooth hill means finding where the slope is zero, and only then write the derivative. Grid first, calculus second — the same move as Aug 27's sum-of-squares parabola.
 
 ### Example 1 — the normal
 
@@ -50,13 +50,13 @@ Solve:
 σ̂² = (1/n) Σᵢ (yᵢ − μ̂)²            the sample variance, with 1/n
 ```
 
-**The first equation is worth reading before solving it.** `Σ(yᵢ − μ̂) = 0` says: *choose `μ̂` so the residuals sum to zero.* That's the same orthogonality condition as Week 1 Thursday's projection, and it's the same equation Week 1 Tuesday's sum-of-squares minimization produced. Three routes, one answer.
+**The first equation is worth reading before solving it.** `Σ(yᵢ − μ̂) = 0` says: *choose `μ̂` so the residuals sum to zero.* That's the same orthogonality condition as Sep 3's projection, and it's the same equation Aug 27's sum-of-squares minimization produced. Three routes, one answer.
 
 ### The `1/n` that closes an old thread
 
 Look hard at `σ̂²`. It divides by **`n`**, not `n − 1`.
 
-Week 1 Tuesday raised the divisor question and deferred it. Sep 29 said it would matter for the standard error. Here is the resolution, and it's sharper than students expect:
+Aug 27 raised the divisor question and deferred it. Sep 29 said it would matter for the standard error. Here is the resolution, and it's sharper than students expect:
 
 - **The MLE for `σ²` is `(1/n)Σ(yᵢ − μ̂)²`, and it is biased.** `E[σ̂²_MLE] = ((n−1)/n)·σ²`. I checked numerically at `n = 12`: the MLE averages `3.663` against a true `σ² = 4.0`, a ratio of `0.9158` versus the predicted `0.9167`.
 - **The familiar `s² = (1/(n−1))Σ(...)` is *not* the MLE.** It's the MLE multiplied by `n/(n−1)` specifically to remove that bias. Same numerical check: `3.996`.
@@ -222,7 +222,7 @@ Say that explicitly, because it's the motivation for everything after Nov 10: **
 |---|---|---|---|---|
 | 1 | **The likelihood as a hill** | 🟩 instructor cells | 5 min | Plot `ℓ(μ)` over a grid, `σ` fixed. **Grid before calculus** — they should see the peak before differentiating it |
 | 2 | Set the score to zero | ⬛ board | 3 min | Now the calculus, as the way to find the top of the hill |
-| 3 | **Normal: `μ̂ = ȳ`** | ⬛ board | 5 min | Read `Σ(yᵢ − μ̂) = 0` aloud before solving — residuals sum to zero, i.e. Week 1's orthogonality |
+| 3 | **Normal: `μ̂ = ȳ`** | ⬛ board | 5 min | Read `Σ(yᵢ − μ̂) = 0` aloud before solving — residuals sum to zero, i.e. Sep 3's orthogonality |
 | 4 | **Normal: `σ̂²`, and the `1/n`** | ⬛ board | 6 min | **The Week 1 loop closes here.** MLE is biased; `n−1` is a deliberate departure |
 | 5 | Verify the bias numerically | 🟩 instructor cell | 3 min | Simulate at `n = 12`: MLE averages `3.663` vs true `4.0`; corrected gives `3.996` |
 | 6 | Bernoulli: `p̂ = ȳ` | ⬛ board | 4 min | Five lines of algebra, or state it and point at the notebook |
@@ -253,8 +253,8 @@ Say that explicitly, because it's the motivation for everything after Nov 10: **
 ## 10. Looking back
 
 - **Tuesday built the objective.** Today maximizes it. If Tuesday's flip landed, today is mechanical.
-- **Week 1 Tuesday's `1/n` variance** is finally explained — it's the MLE, and it's biased. That question has been open since August.
-- **Week 1 Tuesday's sum-of-squares argmin** and **Week 1 Thursday's orthogonality** both reappear inside `Σ(yᵢ − μ̂) = 0`.
+- **Aug 27's `1/n` variance** is finally explained — it's the MLE, and it's biased. That question has been open since August.
+- **Aug 27's sum-of-squares argmin** and **Sep 3's orthogonality** both reappear inside `Σ(yᵢ − μ̂) = 0`.
 - **Sep 8's sample proportion** is the Bernoulli MLE.
 - **Sep 22–29's bootstrap** becomes the general-purpose inference tool for parameters, which is what step 9 demonstrates.
 - **Oct 20's transition matrix** was an MLE all along — step 7.

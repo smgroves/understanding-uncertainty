@@ -8,7 +8,7 @@
 - **Widgets:** `labs/class-05-eda/eda.html` — `viz-onehot`; `lecture.html` — `viz-ecdf-drag`, `viz-ecdf`
 - **Also:** html `labs/class-05-eda/lecture.html` covers both halves
 
-> **This session is the payoff of Sep 3.** `class_05` uses *unbiased estimator* five times without ever defining it, and cell 7 says "we have already suffered a lot to derive the formula" about `V[X̄ₙ] = V[X]/n`. Both come from Learning from Data two days earlier — the term, and the result. Nothing here re-derives them; today spends them.
+> **This session is the payoff of Sep 1's §2E.** `class_05` uses *unbiased estimator* five times without ever defining it, and cell 7 says "we have already suffered a lot to derive the formula" about `V[X̄ₙ] = V[X]/n`. Both come from Sep 1's §2E, one week earlier — the term, and the result. Nothing here re-derives them; today spends them.
 >
 > **The two halves split naturally across the day:** the Bernoulli/one-hot material is the pre-class video, and class time goes to the ECDF. The schedule's own margin note is the right framing question — *why are we starting with ECDF/CDF?* — and §2 Part C answers it.
 
@@ -120,7 +120,7 @@ Average that indicator over the sample and you get the **empirical CDF**:
 F̂ₙ(x) = (1/n) Σᵢ 𝟙{xᵢ ≤ x}
 ```
 
-In words: *what proportion of the sample is at or below `x`?* Note what just happened — this is Sep 3 (Learning from Data)'s sample proportion, with the event "≤ x" in place of "= ℓ". Same machinery, new question.
+In words: *what proportion of the sample is at or below `x`?* Note what just happened — this is Sep 1's sample proportion, with the event "≤ x" in place of "= ℓ". Same machinery, new question.
 
 Two properties, both forced by the definition: `F̂ₙ` is **non-decreasing** (moving `x` right can only capture more points) and it runs **from 0 to 1**. It's a step function that jumps by `1/n` at each observation.
 
@@ -130,7 +130,7 @@ Two properties, both forced by the definition: `F̂ₙ` is **non-decreasing** (m
 F(x) = p[X ≤ x]
 ```
 
-And the bridge between them is the identity from Sep 3 (Learning from Data) — the expectation of an indicator is the probability of its event:
+And the bridge between them is the identity from Sep 1 — the expectation of an indicator is the probability of its event:
 
 ```
 E[𝟙{X ≤ x}] = F(x)
@@ -143,7 +143,7 @@ E[F̂ₙ(x)] = F(x)                        (unbiased, by linearity)
 V[F̂ₙ(x)] = F(x)(1 − F(x))/n            (it's a Bernoulli, per x)
 ```
 
-**This is the payoff of Sep 3 (Learning from Data)**, and it's worth saying explicitly: you are not learning a new estimator today. You are applying the proportion results to a new event, and both properties come out for free.
+**This is the payoff of Sep 1**, and it's worth saying explicitly: you are not learning a new estimator today. You are applying the proportion results to a new event, and both properties come out for free.
 
 
 ### Why start with the ECDF? (the schedule's own question)
@@ -177,7 +177,7 @@ Three more reasons worth having ready:
 - **Argmin:** the sample proportion `p̂_ℓ`
 - **Solved by:** closed form — count the ones, divide by `n`
 
-This is Week 1 Tuesday's box with 0/1 data substituted in, and the point of restating it is that **nothing new is happening.** Once students see `p̂` as a mean of indicators, every mean result transfers: unbiasedness today, the weak law in Week 9, the CLT in Week 6. That's why the indicator trick earns its keep — it stops proportions from needing a separate theory.
+This is Aug 27's box with 0/1 data substituted in, and the point of restating it is that **nothing new is happening.** Once students see `p̂` as a mean of indicators, every mean result transfers: unbiasedness today, the weak law in Week 9, the CLT in Week 6. That's why the indicator trick earns its keep — it stops proportions from needing a separate theory.
 
 The video makes the same argmin point for the sample mean in cell 4, so the two land together: **the sample mean is the argmin of MSE, and a proportion is a sample mean.**
 
@@ -209,7 +209,7 @@ The video makes the same argmin point for the sample mean in cell 4, so the two 
 
 **One-hot and the dummy trap.** Encoding all `L` labels *and* including an intercept makes the columns linearly dependent — they sum to a column of ones. That's what `drop_first=True` is for. The notebook gives the flag without the reason; the reason won't fully land until Week 11, but naming it now ("the columns would add up to the intercept") plants it.
 
-**`pd.get_dummies` silently drops `NaN`.** By default missing values get no column, so a row with a missing label becomes all-zeros — indistinguishable from the dropped reference category if you also used `drop_first`. Connects straight back to Week 1's missing-value dummies; `dummy_na=True` is the fix.
+**`pd.get_dummies` silently drops `NaN`.** By default missing values get no column, so a row with a missing label becomes all-zeros — indistinguishable from the dropped reference category if you also used `drop_first`. Connects straight back to Aug 27's missing-value dummies; `dummy_na=True` is the fix.
 
 ---
 
@@ -294,14 +294,14 @@ Nothing exists. The natural lab is step 7 extended: give them the simulation for
 - **`p̂ ± z√(p̂(1−p̂)/n)` is Weeks 5–6.** Today supplies both ingredients; the `z` arrives with the CLT. Mention that today's formula is half of a confidence interval.
 - **One-hot encoding returns in Weeks 11–12** as the design matrix, where `drop_first` stops being a convention and becomes a rank condition.
 - **The i.i.d. split in §4** is the seed of Week 4's whole framework.
-- **The video's argmin derivation (cell 4)** is the same optimization spine as Week 1 Tuesday, now applied to prediction rather than description. Two instances of one idea, a week apart — connect them.
+- **The video's argmin derivation (cell 4)** is the same optimization spine as Aug 27, now applied to prediction rather than description. Two instances of one idea, a week apart — connect them.
 
 ## 10. Looking back
 
 - **Sep 1 supplied the probability tools and Sep 3 supplied the estimator vocabulary**: `E[X] = Σ pₗ xₗ` gives `E[I] = p`, linearity gives `E[p̂] = p`, and `V[X] = E[X²] − E[X]²` gives the clean `V[I] = p(1−p)`. Framing today as *Tuesday's machinery applied to the simplest possible random variable* makes it feel like consolidation rather than new load — which is what a Thursday after a dense Tuesday should feel like.
 - **Today's video is the bridge**, and it's doing more than a warm-up: parameter/statistic/estimate, unbiasedness, the sample mean as an argmin, and `V[X̄ₙ] = V[X]/n`. Everything in §2 after the Bernoulli basics leans on it.
-- **Week 1 Tuesday already computed proportions** with `value_counts(normalize=True)` and `sns.countplot(stat='proportion')`. Today explains what that number *is*. Connect them — they computed it before they knew what it was.
-- **Week 1 Tuesday's missing-value dummies are indicator functions.** Same object, name arriving two weeks late. One sentence closes it.
+- **Aug 27 already computed proportions** with `value_counts(normalize=True)` and `sns.countplot(stat='proportion')`. Today explains what that number *is*. Connect them — they computed it before they knew what it was.
+- **Aug 27's missing-value dummies are indicator functions.** Same object, name arriving two weeks late. One sentence closes it.
 - **Tuesday's `groupby('ESR')`** was a multinomial with six labels, and those group proportions are today's `p̂_ℓ`.
 
 ---

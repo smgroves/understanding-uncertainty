@@ -131,7 +131,7 @@ t = (X̄_A − X̄_B) / SE
 
 The recipe: compute the difference, compute the standard error, divide, compare to the normal or t, and/or report `(X̄_A − X̄_B) ± q × SE`.
 
-**Notice the standard errors add in squares, not linearly.** Two independent sources of noise combine as `√(a² + b²)`, which is the same Pythagorean structure as Week 1's vector length — variances add, standard deviations don't.
+**Notice the standard errors add in squares, not linearly.** Two independent sources of noise combine as `√(a² + b²)`, which is the same Pythagorean structure as Sep 3's vector length — variances add, standard deviations don't.
 
 **And keep the notebook's caution**, which is the most practically important sentence in the session: *if the same units are measured twice, this is not a two-independent-samples problem; it is a paired difference problem.* Before-and-after on the same patients, the same students on two tests, the same cities in two years — treating those as independent is the most common misuse of this test in practice. The fix is to take differences first and run a one-sample test on them.
 
@@ -204,7 +204,7 @@ Row 6 is the one that keeps the bootstrap alive: the CLT is about averages, so i
 
 **Q4. "When do I use t instead of z?"** When `n` is small, roughly under 30–40. The reason: the CLT is stated with the true `σ`, but you're using `s`, which is itself noisy — and dividing by a noisy number makes extreme values more likely than the normal predicts. The t-distribution widens the critical values to compensate: 2.571 at `df = 5` versus 1.96, so about 31% wider. By `df = 32` the gap is 4% and by `df = 100` it's 1%, which is why nobody bothers with t for large samples. One caution: t assumes the underlying data are roughly normal, which is a *stronger* requirement than the CLT's. It is a small-sample correction, not a robustness fix.
 
-**Q5. "Why do the standard errors add in squares?"** Because *variances* add for independent quantities, and standard errors are square roots of variances. `V[A − B] = V[A] + V[B]` when `A` and `B` are independent — note the plus sign even though you're subtracting, since subtracting a noisy thing adds noise. Take the square root and you get `√(s²_A/n_A + s²_B/n_B)`. It's the same structure as vector length from Week 1 Thursday: independent components combine by Pythagoras, not by addition. And it's why combining two equally noisy estimates gives `√2 ≈ 1.41` times the noise rather than double.
+**Q5. "Why do the standard errors add in squares?"** Because *variances* add for independent quantities, and standard errors are square roots of variances. `V[A − B] = V[A] + V[B]` when `A` and `B` are independent — note the plus sign even though you're subtracting, since subtracting a noisy thing adds noise. Take the square root and you get `√(s²_A/n_A + s²_B/n_B)`. It's the same structure as vector length from Sep 3: independent components combine by Pythagoras, not by addition. And it's why combining two equally noisy estimates gives `√2 ≈ 1.41` times the noise rather than double.
 
 ---
 
@@ -283,7 +283,7 @@ Step 3 is the one that matters: it's the concrete demonstration that the two too
 - **Sep 24's percentile interval was flagged as a convention needing symmetry.** The CLT is the defence, and §3 closes that thread.
 - **Sep 3's `V[X̄ₙ] = σ²/n`** is the `σ/√n` in the CLT's denominator. It's been the same quantity for a month.
 - **Sep 10's Cauchy** is why "finite variance" appears in the statement.
-- **Week 1 Thursday's Pythagoras** is why standard errors add in squares (§6 Q5).
+- **Sep 3's Pythagoras** is why standard errors add in squares (§6 Q5).
 
 ---
 

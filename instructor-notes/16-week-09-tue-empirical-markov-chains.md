@@ -70,7 +70,7 @@ p̂[Xₜ = z′ | Xₜ₋₁ = z] = ──────────────�
                    (1/T) Σₛ 𝟙{Xₛ₋₁ = z}
 ```
 
-**Look at the shape of that.** It is a joint proportion over a marginal proportion — `p̂(A ∩ B)/p̂(B)`. That is Sep 1's definition of conditional probability with sample proportions substituted for probabilities, and it is Oct 15's conditional density in the discrete case. The source says it plainly: *"this is just a contingency table"* — Week 1's `pd.crosstab`, normalized by row.
+**Look at the shape of that.** It is a joint proportion over a marginal proportion — `p̂(A ∩ B)/p̂(B)`. That is Sep 1's definition of conditional probability with sample proportions substituted for probabilities, and it is Oct 15's conditional density in the discrete case. The source says it plainly: *"this is just a contingency table"* — Aug 27's `pd.crosstab`, normalized by row.
 
 Tabulate over all pairs and you get an `S × S` matrix: rows are the current state, columns the next.
 
@@ -255,7 +255,7 @@ The core pipeline works. I loaded `tuna.csv` (802,282 tokens), built the order-1
 ## 10. Looking back
 
 - **Sep 1's conditional probability** is the transition matrix's definition — `p(A∩B)/p(B)`, estimated by counting.
-- **Week 1's contingency table** is the transition matrix's structure. The source says so directly; make sure students hear it, because it defuses the topic's apparent novelty.
+- **Aug 27's contingency table** is the transition matrix's structure. The source says so directly; make sure students hear it, because it defuses the topic's apparent novelty.
 - **Sep 8's sample proportion** is every entry in the matrix.
 - **Oct 13's independence** is the null case: identical rows means memoryless. The tuna matrix is the rejection of that null, visible by eye.
 - **Oct 15's conditional distribution** is what a row *is* — today is the discrete, empirical version of Thursday-before-last's continuous object.

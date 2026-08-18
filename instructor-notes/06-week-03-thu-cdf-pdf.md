@@ -16,15 +16,15 @@
 
 ## 1. What students actually see
 
-| Artifact | File | Status |
-|---|---|---|
-| Quiz | — | On Week 2: probability spaces, random variables, expectation, variance, Bernoulli, proportions |
-| Pre-class video | `class_05/02_numeric_variables` (13 cells) — the ECDF | needs porting into `Week 3/`. **Its one code cell is broken — see §7** |
-| In-class lecture | `class_06/04_1_cdf` (11 cells, all markdown) — CDF/PDF | needs porting; opens by recapping the video |
-| PDF material | `class_06/07_1_pdf` (**4 cells**) | normal, Poisson, log-normal as bare formulas. **Two of the three have errors** |
-| Instructor cells | — | to build |
-| Lab | `class_06/04_lab.ipynb` — **not a lab** | It's a one-cell design memo. See §7 |
-| Board | — | The grid limit, `f = F′`, and the sum-becomes-integral derivation |
+| Artifact         | File                                                      | Status                                                                                         |
+| ---------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Quiz             | —                                                        | On Week 2: probability spaces, random variables, expectation, variance, Bernoulli, proportions |
+| Pre-class video  | `class_05/02_numeric_variables` (13 cells) — the ECDF  | needs porting into`Week 3/`. **Its one code cell is broken — see §7**                |
+| In-class lecture | `class_06/04_1_cdf` (11 cells, all markdown) — CDF/PDF | needs porting; opens by recapping the video                                                    |
+| PDF material     | `class_06/07_1_pdf` (**4 cells**)                 | normal, Poisson, log-normal as bare formulas.**Two of the three have errors**            |
+| Instructor cells | —                                                        | to build                                                                                       |
+| Lab              | `class_06/04_lab.ipynb` — **not a lab**          | It's a one-cell design memo. See §7                                                           |
+| Board            | —                                                        | The grid limit,`f = F′`, and the sum-becomes-integral derivation                            |
 
 **`class_06/04_lab.ipynb` is a single markdown cell containing a design conversation, not a lab.** It reads *"Yes. That is much better…"* and sketches a class called **"Where distributions come from"** — simulate a mechanism, plot a small sample, plot the ECDF, increase `n`, compare with the theoretical CDF, explain why that shape arose. **That design is genuinely good** and it belongs to Thursday's lab slot. It just hasn't been built, and the file name makes it look like it has.
 
@@ -97,17 +97,17 @@ Run the CDF backwards. Pick a height `u` between 0 and 1, find the `x` where `F(
 q = F⁻¹(u)
 ```
 
-This is Week 1's quantile — the value with proportion `u` below it — now as a *function* rather than a sorted-array index. It is also the engine of simulation: feeding uniform random numbers into `F⁻¹` produces draws from `F`. That's inverse-transform sampling, and it's what `viz-sample` demonstrates.
+This is Aug 27's quantile — the value with proportion `u` below it — now as a *function* rather than a sorted-array index. It is also the engine of simulation: feeding uniform random numbers into `F⁻¹` produces draws from `F`. That's inverse-transform sampling, and it's what `viz-sample` demonstrates.
 
 ### Part E — Three distributions, worked
 
 The notebook poses each as an exercise: *what are its density, quantile function, expectation, and variance?*
 
-| | CDF `F(x)` | Density `f(x)` | Quantile `F⁻¹(u)` | `E[X]` |
-|---|---|---|---|---|
-| **Uniform(0,1)** | `x` on `[0,1]` | `1` on `[0,1]` | `u` | `1/2` |
-| **Exponential(λ)** | `1 − e^(−λt)`, `t ≥ 0` | `λe^(−λt)` | `−ln(1−u)/λ` | `1/λ` |
-| **Logistic(μ,σ)** | `1/(1 + e^(−(x−μ)/σ))` | `e^(−z)/(σ(1+e^(−z))²)`, `z=(x−μ)/σ` | `μ + σ·ln(u/(1−u))` | `μ` |
+|                           | CDF`F(x)`                    | Density`f(x)`                                 | Quantile`F⁻¹(u)`      | `E[X]` |
+| ------------------------- | ------------------------------ | ----------------------------------------------- | ------------------------- | -------- |
+| **Uniform(0,1)**    | `x` on `[0,1]`             | `1` on `[0,1]`                              | `u`                     | `1/2`  |
+| **Exponential(λ)** | `1 − e^(−λt)`, `t ≥ 0` | `λe^(−λt)`                                 | `−ln(1−u)/λ`         | `1/λ` |
+| **Logistic(μ,σ)** | `1/(1 + e^(−(x−μ)/σ))`   | `e^(−z)/(σ(1+e^(−z))²)`, `z=(x−μ)/σ` | `μ + σ·ln(u/(1−u))` | `μ`   |
 
 The uniform is the one to do live — its density is the constant `1`, which makes "the density is a rate, not a probability" concrete: the rate is flat, so probability accumulates linearly. The exponential is the one to assign. The logistic is worth doing only because its quantile function is the **log-odds**, which returns in Week 12 as logistic regression.
 
@@ -139,26 +139,26 @@ f_Y(y) = f_X((y − a)/b) · 1/|b|
 ## 3. The optimization view
 
 - **Objective:** expected absolute error, *tilted* — undershooting costs `τ` per unit, overshooting costs `1 − τ`
-- **Argmin:** the `τ`-th quantile, `F⁻¹(τ)`. At `τ = ½` the penalties are equal and the argmin is the median — Week 1's absolute-distance box
+- **Argmin:** the `τ`-th quantile, `F⁻¹(τ)`. At `τ = ½` the penalties are equal and the argmin is the median — Aug 27's absolute-distance box
 - **Solved by:** closed form (invert `F`) or grid search (scan candidates) when `F` has no clean inverse
 
 This reframes the quantile as more than a cut point in sorted data: **each quantile is the best single guess under one specific asymmetric cost.** It's why a delivery service promises the 90th percentile of its delivery times rather than the mean — being an hour late costs far more than being an hour early, so `τ` is set high and the optimal promise moves into the tail.
 
-Neither notebook has this. It's three lines, and it connects Week 1's median to today's `F⁻¹` as two instances of one thing.
+Neither notebook has this. It's three lines, and it connects Aug 27's median to today's `F⁻¹` as two instances of one thing.
 
 ---
 
 ## 4. Assumptions that make it work
 
-| Claim | Assumption |
-|---|---|
-| `F̂ₙ(x)` is unbiased for `F(x)` | Identically distributed. Independence not needed |
-| `V[F̂ₙ(x)] = F(x)(1−F(x))/n` | **i.i.d.** — same split as Sep 8 |
-| `f(x) = F′(x)` exists | `F` is **differentiable** at `x`. Fails at any jump — a discrete or mixed variable has no density there |
-| `E[X] = ∫ x f(x) dx` | The integral **converges**. It does not always (see §5) |
-| `F⁻¹` is well defined | `F` is **strictly increasing**. Flat stretches make the inverse ambiguous; jumps make it undefined |
-| `f_Y(y) = f_X((y−a)/b)/\|b\|` | `b ≠ 0`, and the map is monotone. Non-monotone transforms need a sum over branches |
-| A density is a probability | **It is not.** `f(x)` can exceed 1 — see §5 |
+| Claim                                 | Assumption                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `F̂ₙ(x)` is unbiased for `F(x)` | Identically distributed. Independence not needed                                                                   |
+| `V[F̂ₙ(x)] = F(x)(1−F(x))/n`     | **i.i.d.** — same split as Sep 8                                                                            |
+| `f(x) = F′(x)` exists              | `F` is **differentiable** at `x`. Fails at any jump — a discrete or mixed variable has no density there |
+| `E[X] = ∫ x f(x) dx`               | The integral**converges**. It does not always (see §5)                                                      |
+| `F⁻¹` is well defined             | `F` is **strictly increasing**. Flat stretches make the inverse ambiguous; jumps make it undefined         |
+| `f_Y(y) = f_X((y−a)/b)/\|b\|`        | `b ≠ 0`, and the map is monotone. Non-monotone transforms need a sum over branches                              |
+| A density is a probability            | **It is not.** `f(x)` can exceed 1 — see §5                                                              |
 
 The third row is the one to state out loud: **every result today assumes the CDF is smooth**, and Week 2's variables (coin flips, labels) had CDFs that are pure staircase. Continuous and discrete are genuinely different objects sharing one notation.
 
@@ -199,6 +199,7 @@ The third row is the one to state out loud: **every result today assumes the CDF
 ### Verified — two of these are wrong numerically, and I checked
 
 - **The ECDF code does not work and returns wrong values** — `class_05/02_numeric_variables` cell 7:
+
   ```python
   def ecdf( x )                                  # ← missing colon: SyntaxError
       grid = sorted( x.unique() )                # ← sorted() returns a list; lists have no .reshape
@@ -207,6 +208,7 @@ The third row is the one to state out loud: **every result today assumes the CDF
       F_hat = I.sum(axis=0)/n                    # ← sums over the wrong axis
   return F_hat, grid                             # ← dedented: return outside function
   ```
+
   Five separate problems. Beyond the syntax, the logic is wrong: it computes `𝟙{gridⱼ ≤ xᵢ}` and sums over the grid, when the ECDF needs `𝟙{xᵢ ≤ gridⱼ}` summed over the data. On the sample `{2,4,5,5,9}` the notebook version returns `[0.2, 0.4, 0.6, 0.6, 0.8]` — length 5 instead of 4, and **it never reaches 1**, contradicting the property stated two cells later. The correct answer is `[0.2, 0.4, 0.8, 1.0]`. Working version:
   ```python
   def ecdf(x):
@@ -235,20 +237,20 @@ The third row is the one to state out loud: **every result today assumes the CDF
 
 **Modes:** 🟦 notebook (student copy) · 🟩 instructor cells (pre-written, never live) · ⬛ board · 🟨 HTML widget
 
-| # | Step | Mode | Time | Notes |
-|---|---|---|---|---|
-| 1 | **Quiz** | — | 10 min | On Week 2 |
-| 2 | **ECDF recap from the video** | 🟨 widget | 4 min | `class-05-eda/lecture.html#viz-ecdf-drag` — *drag the sample, watch the ECDF move*. Fastest possible re-anchor of something they watched, and it beats re-deriving |
-| 3 | `E[F̂ₙ] = F`, `V[F̂ₙ] = F(1−F)/n` | ⬛ board | 4 min | Three lines each, both inherited from Week 2 Thu. Do these live even though the video states them — they're the payoff of the Bernoulli work |
-| 4 | `F̂ₙ → F`: the empirical thing estimates the population thing | 🟨 widget *or* ⬛ board | 3 min | `class-06-cdf/cdf.html#viz-converge` — more data, the steps close in on the curve. **The hinge of the whole day.** Use one widget here or at step 6, not both |
-| 5 | **The grid puzzle** | 🟨 widget | 4 min | `class-06-cdf/cdf.html#viz-grid-limit` — "the grid, made finer." Let them watch each point's probability vanish while the mean holds. **The session's one widget** |
-| 6 | **Sum → integral, `f = F′`** | ⬛ board | 8 min | The centre of the day. Multiply and divide by `h`; name the three limits separately. Draw the chord tilting to a tangent |
-| 7 | `E[X] = ∫ x f dx`, `V[X] = ∫ (x−E)² f dx` | ⬛ board | 3 min | Third definition of the same two things. Say so |
-| 8 | Density is a rate, not a probability | ⬛ board | 3 min | Uniform on `[0, 0.1]` has `f = 10`. Kill the misconception here |
-| 9 | Quantile function `F⁻¹`, + the optimization view | ⬛ board | 4 min | §3. Connects Week 1's median to today's `F⁻¹` |
-| 10 | Uniform worked; exponential assigned | 🟦 notebook | 5 min | Do the uniform live — flat density makes "rate" concrete |
-| 11 | Transformations and `1/\|b\|` | ⬛ board | 4 min | Check it on `Y = 2X` uniform. Don't just state the formula |
-| 12 | Normal / Poisson / log-normal | 🟦 notebook | — | **Fix the formulas first** (§7). Thin material; consider pushing to Thursday |
+| #  | Step                                                               | Mode                     | Time   | Notes                                                                                                                                                                       |
+| -- | ------------------------------------------------------------------ | ------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1  | **Quiz**                                                     | —                       | 10 min | On Week 2                                                                                                                                                                   |
+| 2  | **ECDF recap from the video**                                | 🟨 widget                | 4 min  | `class-05-eda/lecture.html#viz-ecdf-drag` — *drag the sample, watch the ECDF move*. Fastest possible re-anchor of something they watched, and it beats re-deriving     |
+| 3  | `E[F̂ₙ] = F`, `V[F̂ₙ] = F(1−F)/n`                         | ⬛ board                 | 4 min  | Three lines each, both inherited from Week 2 Thu. Do these live even though the video states them — they're the payoff of the Bernoulli work                               |
+| 4  | `F̂ₙ → F`: the empirical thing estimates the population thing | 🟨 widget*or* ⬛ board | 3 min  | `class-06-cdf/cdf.html#viz-converge` — more data, the steps close in on the curve. **The hinge of the whole day.** Use one widget here or at step 6, not both      |
+| 5  | **The grid puzzle**                                          | 🟨 widget                | 4 min  | `class-06-cdf/cdf.html#viz-grid-limit` — "the grid, made finer." Let them watch each point's probability vanish while the mean holds. **The session's one widget** |
+| 6  | **Sum → integral, `f = F′`**                             | ⬛ board                 | 8 min  | The centre of the day. Multiply and divide by`h`; name the three limits separately. Draw the chord tilting to a tangent                                                   |
+| 7  | `E[X] = ∫ x f dx`, `V[X] = ∫ (x−E)² f dx`                  | ⬛ board                 | 3 min  | Third definition of the same two things. Say so                                                                                                                             |
+| 8  | Density is a rate, not a probability                               | ⬛ board                 | 3 min  | Uniform on`[0, 0.1]` has `f = 10`. Kill the misconception here                                                                                                          |
+| 9  | Quantile function`F⁻¹`, + the optimization view                | ⬛ board                 | 4 min  | §3. Connects Aug 27's median to today's`F⁻¹`                                                                                                                           |
+| 10 | Uniform worked; exponential assigned                               | 🟦 notebook              | 5 min  | Do the uniform live — flat density makes "rate" concrete                                                                                                                   |
+| 11 | Transformations and`1/\|b\|`                                       | ⬛ board                 | 4 min  | Check it on`Y = 2X` uniform. Don't just state the formula                                                                                                                 |
+| 12 | Normal / Poisson / log-normal                                      | 🟦 notebook              | —     | **Fix the formulas first** (§7). Thin material; consider pushing to Thursday                                                                                         |
 
 **Build cost: near zero for the lecture** — the ECDF construction moved into the video, and steps 2 and 4 use existing widgets. **But the video itself needs the broken ECDF cell fixed before it's recorded** (§7); that's the real build task for this session, and it belongs to the video, not the lecture.
 
@@ -271,8 +273,8 @@ The third row is the one to state out loud: **every result today assumes the CDF
 
 - **Sep 8 is doing all the work today.** `F̂ₙ` is a sample proportion, `E[𝟙{A}] = p(A)` is the bridge from ECDF to CDF, and both the unbiasedness and the variance are the Bernoulli results with a new event. **Frame the whole first half of today as "Thursday's results, applied to `≤ x`"** and the ECDF costs almost nothing to teach.
 - **Week 2 Tuesday's `E[X] = Σ pₗ xₗ`** becomes `∫ x f(x) dx` today by the same discretization argument. Same definition, finer grid.
-- **Week 1 Tuesday's quantiles and IQR** become `F⁻¹` today — the sorted-array index becomes a function. Also: the ~9 quantile conventions that made the hand-rolled function disagree with NumPy are explained today by `F̂⁻¹` being ambiguous at jumps.
-- **Week 1's `1/n` variance convention** is now fully consistent: the population objects have no `n−1` anywhere.
+- **Aug 27's quantiles and IQR** become `F⁻¹` today — the sorted-array index becomes a function. Also: the ~9 quantile conventions that made the hand-rolled function disagree with NumPy are explained today by `F̂⁻¹` being ambiguous at jumps.
+- **Aug 27's `1/n` variance convention** is now fully consistent: the population objects have no `n−1` anywhere.
 
 ---
 

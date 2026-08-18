@@ -273,7 +273,7 @@ Part 2 is a two-state chain iterated to a tolerance, landing on `[0.4, 0.6]` fro
 ## 10. Looking back
 
 - **Tuesday built the matrix.** Today uses it. The connectivity check from Tuesday is the condition for today's steady state to exist and be unique.
-- **Week 1 Thursday's matrix multiplication** is what `T π` and `T^k π` are, and `assignment_5` part 1 is an explicit callback — basis vectors selecting columns is the same "row times column" fact from August.
+- **Sep 3's matrix multiplication** is what `T π` and `T^k π` are, and `assignment_5` part 1 is an explicit callback — basis vectors selecting columns is the same "row times column" fact from August.
 - **Sep 22's Monte Carlo** is the relationship between simulation and forecast: run the sample many times and you recover the distribution.
 - **Oct 15's `E[Y|X]`** is what the forecast computes, `k` steps out.
 - **Oct 13's independence** is the limiting case: once the forecast has converged, the future is independent of the present.

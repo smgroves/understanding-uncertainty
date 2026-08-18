@@ -232,11 +232,12 @@ Row 2 is the one students get wrong. Raising `B` from 1,000 to 100,000 makes the
 
 The schedule says *"clinical trials lab"* and **no such lab exists** — not in `uu_fa26`, not in `uu_sp26`, and there's no clinical-trials data in either repo. Three options, in the order I'd consider them:
 
+0. **Bootstrap the census wage data**, continuing Tuesday's activity. Tuesday builds the sampling distribution of the mean wage by *resampling the population* (which you can only do because you manufactured a world where the population is visible); Thursday does it by **resampling the sample**, which is what you can actually do in life. Same data, same statistic, and the two histograms land on top of each other. This closes the arc the reordering opened up, needs no new dataset, and the material from §§5–7 of Tuesday's activity spec slots straight in. **This is now my first recommendation.**
 1. **Use `labs/class-10-bootstrap/` as-is.** It's complete: a live demo, a `#hypothesis-testing` section, an assignment where students implement `resample` and `bootstrap_ci`, a working autograder (`test_bootstrap.py`), reference samplers in both languages, and instructor solutions in `NOTES.md`. It runs on 92 Charlottesville used-car prices. **Zero build cost**, and the price data is genuinely right-skewed, which makes the mean-vs-median contrast real. Its own `NOTES.md` already says it maps to `09_2` and was scheduled for this week.
 2. **Swap the dataset into the same lab.** The lab reads `data.json` — `{variable, unit, source, statistic, observed_mean, observed_median, values}`. Point it at a clinical outcome and the widgets, samplers, template, and autograder all keep working. This is a data-sourcing job, not a lab-building job: perhaps an hour, most of it finding a clean two-arm trial extract.
 3. **Build a clinical-trials lab from scratch.** Most faithful to the schedule and by far the most work. The treatment-vs-control ATE framing is a genuinely better vehicle for hypothesis testing than car prices — "is the effect zero?" is the natural question there, and it's artificial for used cars.
 
-**My recommendation: option 2 if you have a dataset in mind, option 1 otherwise.** Do not build from scratch for this week; the existing lab is one of the two most finished artifacts in the repo.
+**My recommendation is now option 0** — it continues Tuesday, uses data students met on Sep 1, and gives the missing clinical-trials slot a coherent replacement. Option 1 (the built car-price lab, autograder included) remains the zero-effort fallback. Do not build from scratch.
 
 **Cut first:** step 8, then step 6's second form. **Do not cut** steps 3 or 5.
 

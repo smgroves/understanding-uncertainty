@@ -9,7 +9,7 @@
 
 > **The whole second half of the course lives on this session.** Every remaining topic — conditional expectation Thursday, Markov chains next week, likelihood the week after, regression, and the Bellman equation in December — is about more than one random variable at a time. Today is where "more than one" gets defined.
 >
-> It is also the session where a half-remembered fact gets corrected. Week 1 Thursday showed that zero covariance does **not** imply independence. Today supplies the exception everyone half-remembers — for *jointly normal* variables it does — and being precise about which is which is most of the value here.
+> It is also the session where a half-remembered fact gets corrected. Sep 3 showed that zero covariance does **not** imply independence. Today supplies the exception everyone half-remembers — for *jointly normal* variables it does — and being precise about which is which is most of the value here.
 
 ---
 
@@ -92,11 +92,11 @@ Three things to draw out:
 cov(X,Y) = E[(X − μ_X)(Y − μ_Y)] = ∫∫ (x − μ_X)(y − μ_Y) f(x,y) dx dy
 ```
 
-Week 1 Thursday computed this on data as a centered dot product. Today is the population version, and the sample one is its estimate.
+Sep 3 computed this on data as a centered dot product. Today is the population version, and the sample one is its estimate.
 
 **If `X` and `Y` are independent, `cov(X,Y) = 0`.** The proof is one line once the density factorizes — the double integral separates into a product of two integrals, each of which is a centered mean, hence zero.
 
-**The converse is false**, and Week 1 Thursday already showed why. Take `X` symmetric about 0 and `Y = X²`: I checked on 400,000 draws and the covariance is `+0.0013` — zero to sampling error — while `Y` is a *deterministic function* of `X`. Total dependence, no correlation. The source poses this as an exercise; have the answer ready.
+**The converse is false**, and Sep 3 already showed why. Take `X` symmetric about 0 and `Y = X²`: I checked on 400,000 draws and the covariance is `+0.0013` — zero to sampling error — while `Y` is a *deterministic function* of `X`. Total dependence, no correlation. The source poses this as an exercise; have the answer ready.
 
 The reason: **covariance detects only linear co-movement.** A U-shaped relationship has as much positive as negative co-movement and they cancel exactly.
 
@@ -111,14 +111,14 @@ f(z) = 1/√((2π)² det Σ) · exp{ −½ (z−μ)ᵀ Σ⁻¹ (z−μ) }
                                         ⎣ ρσ_Xσ_Y     σ_Y²    ⎦
 ```
 
-**The "if you squint" observation in the source is the key to the whole thing**, and it's a direct callback to Week 1 Thursday. Compare with the one-dimensional normal:
+**The "if you squint" observation in the source is the key to the whole thing**, and it's a direct callback to Sep 3. Compare with the one-dimensional normal:
 
 ```
 one dimension:   exp{ −½ ((x−μ)/σ)² }
 n dimensions:    exp{ −½ (z−μ)ᵀ Σ⁻¹ (z−μ) }
 ```
 
-The multivariate exponent is the one-dimensional squared standardized distance, generalized. `(z−μ)ᵀΣ⁻¹(z−μ)` is a **squared distance measured in units of the covariance** — its square root is the **Mahalanobis distance**. That is Week 1 Thursday's inner product with a weighting matrix in the middle, and it is why the level sets are ellipses rather than circles: directions with more variance are "closer" in these units.
+The multivariate exponent is the one-dimensional squared standardized distance, generalized. `(z−μ)ᵀΣ⁻¹(z−μ)` is a **squared distance measured in units of the covariance** — its square root is the **Mahalanobis distance**. That is Sep 3's inner product with a weighting matrix in the middle, and it is why the level sets are ellipses rather than circles: directions with more variance are "closer" in these units.
 
 **And now the exception.** For jointly normal variables:
 
@@ -148,7 +148,7 @@ Worth saying, because it explains a pattern students will otherwise find suspici
 
 - **Primary** — **AoS Ch. 14** (Multivariate Models), the direct match for the bivariate and multivariate normal and for correlation estimation.
 - **Supporting** — **AoS Ch. 15** (Inference About Independence), which covers contingency-table independence testing — the discrete counterpart of §2's factorization criterion, and the bridge to next week's transition matrix.
-- **Worth knowing** — [Map] flags that the *"conditioning as projection"* framing — that under bivariate normality the conditional expectation is literally a linear projection — is **a beautiful and under-taught result that neither G&S nor AoS spells out geometrically.** That is exactly §3 of this file, and it means the board derivation is doing something the textbooks don't. It is also the direct bridge back to Week 1 Thursday's inner product.
+- **Worth knowing** — [Map] flags that the *"conditioning as projection"* framing — that under bivariate normality the conditional expectation is literally a linear projection — is **a beautiful and under-taught result that neither G&S nor AoS spells out geometrically.** That is exactly §3 of this file, and it means the board derivation is doing something the textbooks don't. It is also the direct bridge back to Sep 3's inner product.
 
 ---
 
@@ -277,7 +277,7 @@ Also note `V[Y | X = x] = σ_Y²(1 − ρ²)`: the conditional variance **doesn'
 
 ## 10. Looking back
 
-- **Week 1 Thursday is the direct ancestor.** Covariance as a centered dot product, the `y = x²` zero-covariance counterexample, and the inner product that `(z−μ)ᵀΣ⁻¹(z−μ)` generalizes. Today is that session's population version.
+- **Sep 3 is the direct ancestor.** Covariance as a centered dot product, the `y = x²` zero-covariance counterexample, and the inner product that `(z−μ)ᵀΣ⁻¹(z−μ)` generalizes. Today is that session's population version.
 - **Sep 1 defined independence for events.** Today does random variables. Say it's the same idea at a higher level.
 - **Sep 3's i.i.d.** finally gets a formal definition (step 9).
 - **Sep 10's `f = F′`** becomes the mixed partial.

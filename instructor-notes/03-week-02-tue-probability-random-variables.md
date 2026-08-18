@@ -1,11 +1,13 @@
-# Week 2, Tuesday (Sep 1) — Probability & Random Variables
+# Week 2, Tuesday (Sep 1) — Probability, Random Variables, and the Estimator Vocabulary
 
-- **Syllabus topic:** Random Variables
-- **Day type:** Quiz / Math Day — **first quiz of the semester**, on Week 1 material
+- **Schedule focus:** Probability axioms & random variables, plus the estimator vocabulary later sessions depend on
+- **Day type:** Quiz / Math Day — **but no quiz.** The first quiz is Sep 8
 - **Sources:** `uu_fa26/Proposed schedule/Week 2/01_Tues_video_03_1_probability.ipynb` (13 cells), `03_Tues_guided_03_2_random_variables.ipynb` (11 cells), `04_Tues_activity_census_blank.ipynb` (25 cells)
 - **Also:** `sp26/01_probability/00_probability.ipynb` (66 cells, much deeper); html `labs/class-03-probability/lecture.html`
 
-> **This is the densest math day in the first half of the course**, and the guided notebook contains four full multi-line derivations (linearity of expectation, the variance shortcut, variance of a linear transform, and Bayes' rule). It is also the day the first quiz eats ten minutes. Plan the time deliberately — see §8.
+> **This is the densest math day in the first half of the course**, and the guided notebook contains four full multi-line derivations (linearity of expectation, the variance shortcut, variance of a linear transform, and Bayes' rule). **No quiz this week**, which is what makes the added §2E fit.
+>
+> **This session now carries a small piece of what used to be a whole session.** Under the earlier schedule, Sep 3 was *Learning from Data* — parameter/statistic/estimator, unbiasedness, and the `V[X̄ₙ] = V[X]/n` derivation. That session is gone; **the vocabulary later weeks actually need is folded in here (§2E, ~13 minutes), and the derivations defer to Sep 22**, where the Sampling Distribution session is their natural home. §9 tracks what moved where.
 
 ---
 
@@ -122,6 +124,38 @@ Derivation: expand `(X − E[X])²`, apply linearity, simplify. Four lines. Wort
 
 ---
 
+### Part E — The estimator vocabulary (folded in from the old Sep 3 session)
+
+Three words that later sessions use constantly and that nothing else defines. This is roughly thirteen minutes and it is the minimum needed to keep Sep 8 onward honest.
+
+**Parameter, statistic, estimate.**
+
+- A **parameter** is a fixed, unknown property of the *process*. `E[X] = Σ pₗ xₗ` is a number that exists in the world whether or not anyone collects data. Conventionally Greek: `μ`, `σ²`, `p`.
+- A **statistic** is any function of the *data*. `X̄ₙ = (1/n)Σxᵢ` is computable from your sample and would come out differently with a different sample.
+- An **estimate** is a statistic aimed at a parameter. The hat — `μ̂` — means "this statistic is targeting that parameter."
+
+The line that makes it stick: **a parameter is a constant you can't see; a statistic is a random variable you can.** Every question in the rest of the course is about the relationship between the two.
+
+**Unbiasedness.** By linearity of expectation, which you derived twenty minutes ago:
+
+```
+E[X̄ₙ] = E[(1/n) Σ Xᵢ] = (1/n) Σ E[Xᵢ] = (1/n) · n · μ = μ
+```
+
+Three lines, needs no independence, and it's just linearity applied. Say what it means: **across repeated samples, the sample mean lands on the truth on average.** It says nothing about how close *your* sample mean is.
+
+**The variance of the sample mean — stated, not derived.**
+
+```
+V[X̄ₙ] = V[X]/n = σ²/n
+```
+
+**State this as a result and promise the derivation.** It is the most-used fact in the first half of the course, and its proof — expanding `E[X̄ₙ²]` into `n` matched and `n² − n` unmatched terms — is a genuinely grueling twenty minutes that belongs on **Sep 22**, where the Sampling Distribution session gives it a reason to exist.
+
+What to say in the meantime, because it is the practically useful part: the spread of the sample mean shrinks like `1/n`, so its standard deviation shrinks like `1/√n`. **Quadruple the sample, halve the error.**
+
+Sep 8 needs exactly these three things — the term *unbiased*, the result `V[X̄ₙ] = V[X]/n`, and the parameter/statistic vocabulary — and needs no proofs. That is why thirteen minutes is enough.
+
 ### Reading
 
 *Key in `README.md`. From `Reading-Roadmap.md` unless marked [Map] (= `prep/ds5030_syllabus_reading_map.pdf`).*
@@ -140,7 +174,7 @@ Derivation: expand `(X − E[X])²`, apply linearity, simplify. Four lines. Wort
 - **Argmin:** `c* = E[X]`, and the value at the minimum is exactly `V[X]`
 - **Solved by:** closed form, via `E[(X − c)²] = V[X] + (E[X] − c)²`
 
-This is Week 1 Tuesday's objective with the *process* in place of the *sample*, and it is worth two minutes at the board because of what the identity says: **variance is not merely "spread" — it is the best achievable mean squared error when you must predict `X` with one number.** The leftover `(E[X] − c)²` is the price of guessing the wrong center, and it is a squared bias.
+This is Aug 27's objective with the *process* in place of the *sample*, and it is worth two minutes at the board because of what the identity says: **variance is not merely "spread" — it is the best achievable mean squared error when you must predict `X` with one number.** The leftover `(E[X] − c)²` is the price of guessing the wrong center, and it is a squared bias.
 
 That split — irreducible variance plus squared bias — is the bias–variance decomposition, arriving in Week 2 rather than Week 7, and it's the same decomposition that governs Week 3's bandwidth choice and Week 4's estimator quality. Neither notebook has it; it's three lines and it pays off four times.
 
@@ -167,7 +201,7 @@ The pattern worth naming: **almost nothing today requires assumptions.** Lineari
 
 **Expected value is not what you should expect.** Roll a fair die: `E[X] = 3.5`, a value the die cannot produce. Students accept this in the abstract and then reason as if `E[X]` were a typical outcome. The ±1000 gamble question makes the same point from the other direction: `E[X] = 0` for all four gambles, and yet nobody is indifferent between them.
 
-**Variance's units are uninterpretable.** `V[wage]` on the census data is in dollars-squared. This is why `sd` exists, and it's the same problem covariance has (Week 1 Thursday). Worth connecting.
+**Variance's units are uninterpretable.** `V[wage]` on the census data is in dollars-squared. This is why `sd` exists, and it's the same problem covariance has (Sep 3). Worth connecting.
 
 **The census activity's real trap: the unweighted mean is wrong.** Cell 5 explains `PWGTP`, and it means the naive `df['WAGP'].mean()` is not an estimate of the average DC wage — PUMS oversamples some groups by design. The correct estimate is `(df.WAGP * df.PWGTP).sum() / df.PWGTP.sum()`. This is a **weighted expectation**, i.e. `Σ pℓ xℓ` with unequal `pℓ` — the day's formula applied to real data. Do this one live; it is the single best illustration in the activity of what `E[X] = Σ pℓ xℓ` actually means.
 
@@ -183,7 +217,7 @@ The pattern worth naming: **almost nothing today requires assumptions.** Lineari
 
 **Q1. "Why do we need sample spaces and events? Can't we just assign probabilities to numbers?"** You can, and after today you mostly will — that's precisely what the random variable does for you. The reason to build the space first is that the *interesting* objects are events, not outcomes: "the sum is even" is a set of eleven outcomes, and you can't assign it a probability unless sets are the things probabilities attach to. The payoff is the "Key Idea" cell: once you have `X`, you can forget the space and work with the PMF. The scaffolding gets removed, but you need it once to see why the PMF is legitimate.
 
-**Q2. "Why is variance squared instead of using absolute deviations?"** Both are real measures of spread, and mean absolute deviation is a perfectly respectable statistic. Squaring wins for three reasons: it's differentiable at zero (absolute value isn't, which matters the moment you optimize — Week 13), it makes the algebra work out so that `V[X] = E[X²] − E[X]²` and variances of independent variables add, and it corresponds to the squared-error loss that already gave you the mean. The honest summary: absolute deviation is more robust, squared deviation is more tractable, and the field standardized on tractable. Week 1's median/IQR pair is the robust alternative.
+**Q2. "Why is variance squared instead of using absolute deviations?"** Both are real measures of spread, and mean absolute deviation is a perfectly respectable statistic. Squaring wins for three reasons: it's differentiable at zero (absolute value isn't, which matters the moment you optimize — Week 13), it makes the algebra work out so that `V[X] = E[X²] − E[X]²` and variances of independent variables add, and it corresponds to the squared-error loss that already gave you the mean. The honest summary: absolute deviation is more robust, squared deviation is more tractable, and the field standardized on tractable. Aug 27's median/IQR pair is the robust alternative.
 
 **Q3. "Why does `a` disappear from the variance but not the expectation?"** Because expectation is about *location* and variance is about *spread*, and shifting everything by `a` moves the location without changing any distance between points. Draw it: slide the whole distribution right by 5, and every deviation from the mean is unchanged. The `b²` has the same explanation from the other side — stretching by `b` multiplies every deviation by `b`, and variance measures *squared* deviations.
 
@@ -219,7 +253,7 @@ The pattern worth naming: **almost nothing today requires assumptions.** Lineari
 
 | # | Step | Mode | Time | Notes |
 |---|---|---|---|---|
-| 1 | **Quiz** | — | 10 min | First quiz, on Week 1 |
+| 1 | *(no quiz — first is Sep 8)* | — | — | The ten minutes this frees is what makes step 10 fit |
 | 2 | Probability space, events | 🟦 notebook | 5 min | Video covered it. One line for `(𝒮, ℰ, p)`, one for why events matter, move on |
 | 3 | `X : 𝒮 → ℝ`, die even/odd | ⬛ board | 4 min | 64 events collapse to 4. The day's conceptual payoff, and it's cheap |
 | 4 | **The ±1 / ±1000 gamble** | 🟨 widget | 3 min | `class-03-probability/lecture.html#viz-coin-flip` — flip it, watch the average settle to 0. Then ask whether they'd play at ±1000. The session's one widget |
@@ -228,13 +262,14 @@ The pattern worth naming: **almost nothing today requires assumptions.** Lineari
 | 7 | `V[a+bX] = b²V[X]` | ⬛ board | 3 min | State it, show the `a` cancelling. Don't do all five lines |
 | 8 | The optimization view (§3) | ⬛ board | 3 min | `argmin E[(X−c)²] = E[X]`, minimum `= V[X]`. Three lines, four future payoffs |
 | 9 | **Census activity — the `PWGTP` weighting** | 🟩 instructor cells | 35 min | The weighted mean must be pre-written; it's the step that must happen. Students fill the empty cells (9, 22, 24) |
-| 10 | Wrap: the disease-test number (§6 Q4) | ⬛ board | 5 min | If it fits |
+| 10 | **Parameter / statistic / estimate; unbiasedness; `V[X̄ₙ] = σ²/n` stated** | ⬛ board | 13 min | §2E. **The piece Sep 8 onward depends on.** State the variance result; promise the derivation for Sep 22 |
+| 11 | Wrap: the disease-test number (§6 Q4) | ⬛ board | 4 min | If it fits |
 
 **Build cost: the `PWGTP` weighted-mean cells (~15 min), plus testing the census fetch.**
 
 **Cut first:** step 7's full derivation, then the activity's male/female comparison — but cut that *cleanly* rather than raising it and running out of time. **Do not cut:** linearity, the variance shortcut, or the weighting.
 
-**Time is tight: the quiz takes ten minutes off a 75-minute class, and there are four derivations plus an activity.** Recommended split: 10 quiz / 25 board / 35 activity / 5 wrap.
+**Time is tight: four derivations, the estimator vocabulary, and an activity in 75 minutes.** Recommended split: 25 board / 13 estimator vocabulary / 30 activity / 5 wrap. **No quiz**, and the census work is a Tuesday *activity* rather than a full lab — those two facts are what make the added material fit.
 
 1. **Quiz** (10 min). Week 1 material.
 2. **Board: probability space, then straight to random variables** (5 min). Do *not* re-teach the video. One line for `(𝒮, ℰ, p)`, one for why events matter, then move.
@@ -248,7 +283,7 @@ The pattern worth naming: **almost nothing today requires assumptions.** Lineari
 
 **Cut first:** the full `V[a+bX]` derivation (step 6), then the male/female comparison (activity cells 21–23) — but if you cut that, cut it *cleanly* rather than raising it and running out of time.
 
-**Do not cut:** the linearity derivation, the variance shortcut, or the `PWGTP` weighting.
+**Do not cut:** the linearity derivation, the variance shortcut, the `PWGTP` weighting, or step 10. Step 10 is short and four later sessions break without it.
 
 ---
 
@@ -265,10 +300,10 @@ The pattern worth naming: **almost nothing today requires assumptions.** Lineari
 
 ## 10. Looking back
 
-- **Week 1 Tuesday** gave the *sample* mean and variance, `M(X)` and `V(X)`, as descriptions of data. Today gives the *population* `E[X]` and `V[X]` as properties of a process. **This is the single most important connection to draw**, and neither notebook draws it: same formulas, different objects — one computed from `n` observations with weights `1/n`, one defined over outcomes with weights `pₗ`. The `1/n` in the sample mean *is* the "each observation equally likely" probability. Say this explicitly and Week 4's estimator language has somewhere to attach.
-- **Week 1 Tuesday's `1/n` variance convention** now looks deliberate: the population `V[X]` has no `n−1` anywhere, so the sample analogue with `1/n` is the natural match. The `n−1` correction arrives in Week 4 for a reason that doesn't exist yet.
-- **Week 1 Thursday's inner product** is what `E[X] = Σ pₗ xₗ` is. See §9.
-- **Week 1 Thursday's `cov = 0` ≠ independence** connects to today's definition of independence for events. Today's is the event version; the covariance version is Week 4 onward.
+- **Aug 27** gave the *sample* mean and variance, `M(X)` and `V(X)`, as descriptions of data. Today gives the *population* `E[X]` and `V[X]` as properties of a process. **This is the single most important connection to draw**, and neither notebook draws it: same formulas, different objects — one computed from `n` observations with weights `1/n`, one defined over outcomes with weights `pₗ`. The `1/n` in the sample mean *is* the "each observation equally likely" probability. Say this explicitly and Week 4's estimator language has somewhere to attach.
+- **Aug 27's `1/n` variance convention** now looks deliberate: the population `V[X]` has no `n−1` anywhere, so the sample analogue with `1/n` is the natural match. The `n−1` correction arrives in Week 4 for a reason that doesn't exist yet.
+- **Sep 3's inner product** is what `E[X] = Σ pₗ xₗ` is. See §9.
+- **Sep 3's `cov = 0` ≠ independence** connects to today's definition of independence for events. Today's is the event version; the covariance version is Week 4 onward.
 
 ---
 
