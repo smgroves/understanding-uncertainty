@@ -133,11 +133,16 @@ None today — but **plant the sentence.** Say once, without proof, that almost 
 
 There's no mathematical content to audit. What needs deciding:
 
-- [X] **Pick one environment path** — conda or venv, not both. Two of the five `class_tools/` notebooks cover overlapping ground.
-- [ ] **Decide whether students push to GitHub**, or only clone and pull. The syllabus says labs are submitted to Canvas, which may make push unnecessary — and push is where most of the setup pain lives.
-- [ ] **Write a one-page setup checklist** students can work through and visibly complete: environment created, six packages importable, repo cloned, one notebook run end to end.
-- [ ] **Prepare a fallback** for machines that won't cooperate — Colab or a browser-based option, decided in advance rather than improvised.
-- [ ] **Cut Docker and Linux** from the session unless there's a reason to keep them.
+- [X] **Pick one environment path** — **decided: conda**, and the students work in **VS Code**, not bare JupyterLab. Use `class_tools/conda.ipynb` and leave `virtual_environments.ipynb` out of the session; two overlapping walkthroughs is what confuses people.
+- [X] **Decide whether students push to GitHub** — **decided: pull only.** Labs are submitted on Canvas, so nobody needs push, and push is where most of the setup pain lives. The checklist says so explicitly ("you only ever pull here, never push"), which also heads off the students who try to commit their lab into the course repo.
+- [X] **Write the setup checklist** — **built, front and back of one sheet: [`setup/setup-checklist.docx`](../setup/setup-checklist.docx) (Word), [`.pdf`](../setup/setup-checklist.pdf) (printing), [`.html`](../setup/setup-checklist.html) (screen).** `setup/build_docx.py` regenerates the Word and PDF versions, so edit the source and re-run rather than hand-patching the `.docx`.
+  - **Page 1 — steps 1 to 5:** make the class folder (with a `data/` subfolder), open it in VS Code and add the Python + Jupyter extensions, create the conda env, **select the interpreter**, then **fork the repo, clone the fork, and add `smgroves` as `upstream`**. Steps 5 and 7 each give two paths, **GitHub Desktop** (marked recommended) and command line.
+  - **Page 2 — steps 6 to 7 and the fixes:** run `Day_1_python_test.ipynb` and check the kernel says `uu`, then **commit and push to their own fork**. Then symptom-by-symptom troubleshooting, the Colab fallback, and how to pull your updates all term.
+  - **19 tick-boxes**, and **two** finish lines rather than one: the setup code `UU-92-5650` on screen, *and* their commit visible on their own fork. Both are things you can check at a glance while circulating.
+  - Verified: both pages fit with 25 to 56 px of headroom across four font substitutions, the `.docx` passes OOXML schema validation, and the `conda create` line dry-run-solves onto pandas 2.3.3.
+- [X] **Build the day-one notebook** — **[`setup/Day_1_python_test.ipynb`](../setup/Day_1_python_test.ipynb)**, with [`cville_cars.csv`](../setup/cville_cars.csv) beside it. Both go at the root of `UU_F26`. Thirteen cells: a kernel warning up top, a name/username cell so the pushed copy identifies the student, the six imports plus the `interpreter` line, the CSV read and a price histogram, then the setup code. **Verified by executing it**: runs clean with the name cell blank *and* filled, no errors, histogram renders, last line is `SETUP CODE: UU-92-5650`. Ships unrun so the student's first commit is their own output.
+- [X] **Prepare a fallback** — **decided: Google Colab.** It's a panel on the checklist: `!git clone https://github.com/ds4e/UU.git`, then `%cd UU`, then the same paste-in cell. Colab ships all six packages, so a Colab student reaches the same `UU-92-5650`. **Ask Colab students to identify themselves today** so you can check the labs work for them before Thursday.
+- [X] **Cut Docker and Linux** from the session unless there's a reason to keep them.
 
 ---
 
@@ -151,12 +156,12 @@ There's no mathematical content to audit. What needs deciding:
 | 2 | What the course is                          | ⬛ slides   | 8 min  | `01-Intro_to_course.pptx`. Land on *foreshadow* and *AI-proof your career*                                                                       |
 | 3 | The shape of the semester                   | ⬛ slides   | 5 min  | §2's five-phase arc.**Then plant the optimization sentence**                                                                                    |
 | 4 | Logistics that matter                       | ⬛ slides   | 7 min  | Tue/Thu rhythm, pre-class videos, the collaboration policy read aloud                                                                                  |
-| 5 | **Environment setup, walked through** | 🟩 live     | 20 min | One path only. Environment, packages, verify imports                                                                                                   |
+| 5 | **Environment setup, walked through** | 🟩 live     | 20 min | **conda only.** Work the checklist's step 1 on screen while they follow on paper                                                                        |
 | 6 | **GitHub: clone and pull**            | 🟩 live     | 15 min | Scope to what's actually needed (§7)                                                                                                                  |
-| 7 | **The checkpoint**                    | 🟦 notebook | 12 min | Everyone runs one notebook end to end and produces a plot.**Do not skip this; circulate.** The students who need help are the ones who won't ask |
+| 7 | **The checkpoint**                    | 🟦 notebook | 12 min | Checklist step 3. Everyone runs the cell, gets a histogram, and shows you `UU-92-5650`.**Do not skip this; circulate.** The students who need help are the ones who won't ask |
 | 8 | What to do before Thursday                  | ⬛ talk     | 3 min  | Watch the wrangling video; finish setup if stuck; where to get help                                                                                    |
 
-**Build cost: the setup checklist (~30 min).** Everything else exists in some form.
+**Build cost: none left.** The checklist is built and verified — see §7. Everything else exists in some form.
 
 **Step 7 is the session.** Steps 2–4 could be compressed onto a slide and emailed; step 7 cannot be done remotely for the students who most need it.
 
@@ -191,6 +196,6 @@ Nothing — this is session one.
 
 - **Is a full session on intro and setup the right call?** It's a real cost — one of 26 sessions. The argument for it is that the cohort's backgrounds diverge most here and no later session has slack to fix it. The argument against is that setup could be a pre-course assignment with office hours. Worth deciding on the basis of how many students you expect to arrive without a terminal.
 - **Push or pull only?** Determines how much of step 6 is needed.
-- **Which environment manager?** Pick before the session.
+- ~~**Which environment manager?**~~ **conda.** ~~**Is there a Colab fallback?**~~ **Yes**, and it's on the checklist.
 - **Is there a pre-class video for this session?** Every other session has one; a "get set up before you arrive" video would make step 5 a check rather than a walkthrough, and would buy back fifteen minutes.
 - **Does the first quiz being Sep 8 need announcing?** The syllabus says weekly Tuesday quizzes; with Sep 1 skipped, the first one is a week later than that implies.

@@ -4,7 +4,7 @@ Every verified defect found while writing the session notes, deduplicated by **s
 
 **Nothing here is speculative.** Anything involving a number or a code path was run; where a claim rests on a computation, the observed value is quoted.
 
-**Status:** 10 of 115 fixed. *(Tick a box and the count here needs updating by hand — or run `grep -c '^- \[[xX]\]' BUGS.md`.)*
+**Status:** 10 of 122 fixed. *(Tick a box and the count here needs updating by hand — or run `grep -c '^- \[[xX]\]' BUGS.md`.)*
 
 ---
 
@@ -216,6 +216,13 @@ Each of these stops mid-sentence or is an empty heading.
 - [ ] **`sp26/04_dynamics` cell 28** — `networkx` imported for the connectivity check and not in any environment file. Confirm it's installed · *[16]*
 - [ ] **`00_bayes` cells 44–45 and `00_bayes_pymc.py` require `pymc`**, which is not a standard scientific-Python install. Confirm it's available before planning Dec 3's computational half, or run the housing example as pre-computed output. Everything else in that session runs on `scipy` alone · *[27]*
 - [ ] **`04_dynamics` uses `np.random.seed(100)`** (legacy) while `assignment_5` uses `np.random.default_rng(100)`. Inconsistent between lecture and lab · *[17]*
+- [ ] ⚠ **Pin pandas below 3.0 in the day-one environment.** An unpinned `conda create -c conda-forge ... pandas` currently resolves to **pandas 3.0.5**, while your machine and every course notebook are on **2.3.3**. pandas 3 changes defaults (copy-on-write, string dtype), so students would hit behaviour your demos don't. Verified: `conda create -n uu -c conda-forge python=3.12 numpy "pandas>=2.2,<3" matplotlib seaborn scipy statsmodels networkx jupyterlab` dry-run-solves and lands on pandas **2.3.3**, matching you exactly. `setup/setup-checklist.html` already carries the pinned form · *[01]*
+- [ ] ⚠ **Create `github.com/smgroves/UU_F26` and make it public before Aug 25.** It does not resolve yet. Students **fork** it, so it must be public. Drop in the two files from `setup/`: **`Day_1_python_test.ipynb`** and **`cville_cars.csv`**, both at the repo root — the notebook reads the CSV as a sibling, and the filename appears in the checklist's tick-boxes. Ship the notebook **unrun** (no stored outputs), so a student's first commit is their own run · *[01]*
+- [ ] **The fork workflow repeats every week**, since each lab gets its own repo. Budget five minutes of Aug 25 on *why* fork-and-upstream (their work goes to their copy, your updates come from yours) rather than only the mechanics, or you will re-teach the clicks every Thursday · *[01]*
+- [ ] ⚠ **GitHub Desktop asks how you plan to use a fork**, and the "contribute to the parent project" answer points pushes at **your** repo instead of the student's. The checklist tells them to pick the own-purposes option, but **watch for this while circulating** — it is silent until someone opens a PR against you · *[01]*
+- [ ] ⚠ **Notebook merge conflicts will bite in week 2.** Students push `.ipynb` files with outputs, which conflict badly. Harmless for individual forks this week; **for Sep 3's group lab, decide in advance** whether groups clear outputs before committing, split work across separate files, or use one designated committer · *[01]*
+- [ ] **`ipykernel` must stay in the day-one install line.** Without it VS Code cannot run a notebook against the `uu` environment, and the kernel picker simply won't offer it. This is the one new requirement that came from moving to VS Code · *[01]*
+- [ ] **`networkx` is in the day-one install line** so Oct 20 doesn't discover it's missing. Don't drop it when editing the checklist · *[01, 16]*
 - [ ] **Ship `data.csv` for the Sep 1 census activity** rather than re-fetching from the Census API — thirty students hitting it simultaneously is a bad first minute, and the Sep 3 lab draws 2000 samples from it · *[03, 03]*
 
 ---

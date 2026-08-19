@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DS 5030 — Day One Setup Checklist</title>
+<style>
+  @page { size: letter; margin: 0.4in; }
+  * { box-sizing: border-box; }
+  body {
+    font: 9.2pt/1.28 "Iowan Old Style", Charter, Georgia, serif;
+    color: #1f1d1a; background: #fbfaf7;
+    max-width: 7.7in; margin: 0 auto; padding: 0;
+  }
+  h1 { font: 700 15pt/1.05 -apple-system, "Helvetica Neue", sans-serif; margin: 0; letter-spacing: -0.01em; }
+  .eyebrow { font: 600 7.5pt/1 -apple-system, sans-serif; letter-spacing: 0.09em;
+             text-transform: uppercase; color: #b14a2e; margin: 0 0 3px; }
+  .namebar { display: flex; gap: 14px; margin: 5px 0 7px; font: 8.5pt -apple-system, sans-serif; }
+  .namebar span { flex: 1; border-bottom: 1px solid #1f1d1a; padding-bottom: 1px; }
+  .goal { border: 1.5px solid #b14a2e; background: #fde0d2; padding: 5px 9px; margin: 0 0 7px;
+          font-size: 9.5pt; page-break-inside: avoid; }
+  .goal b { font-family: "JetBrains Mono", "SF Mono", Menlo, monospace; font-size: 10pt; }
+  section { page-break-inside: avoid; margin-bottom: 7px; }
+  h2 { font: 700 10.5pt/1.15 -apple-system, sans-serif; margin: 0 0 3px;
+       border-bottom: 1px solid #d8d4c8; padding-bottom: 2px; }
+  h2 .n { display: inline-block; width: 16px; height: 16px; margin-right: 6px;
+          background: #1f1d1a; color: #fbfaf7; border-radius: 50%;
+          text-align: center; font-size: 9pt; line-height: 16px; }
+  p { margin: 3px 0; }
+  pre { font: 8.2pt/1.32 "JetBrains Mono", "SF Mono", Menlo, monospace;
+        background: #f0eee5; border-left: 2px solid #b14a2e; padding: 5px 7px;
+        margin: 4px 0; white-space: pre-wrap; word-break: break-word; }
+  .cmt { color: #5b564c; }
+  .box { display: inline-block; width: 10px; height: 10px; border: 1.3px solid #1f1d1a;
+         margin-right: 4px; vertical-align: -1px; }
+  ul.tick { padding-left: 0; margin: 4px 0; }
+  .tick li { margin: 2px 0; list-style: none; font: 8.8pt -apple-system, sans-serif; }
+  .pkgs { display: flex; flex-wrap: wrap; gap: 3px 14px; margin: 4px 0;
+          font: 8.8pt "JetBrains Mono", Menlo, monospace; }
+  .opt { border-left: 2px solid #d8d4c8; padding: 1px 0 1px 8px; margin: 5px 0; }
+  .opt .lbl { font: 700 8.8pt -apple-system, sans-serif; }
+  .opt .rec { font: 600 7.5pt -apple-system, sans-serif; color: #b14a2e;
+              text-transform: uppercase; letter-spacing: 0.06em; }
+  .cols { display: flex; gap: 12px; }
+  .cols > div { flex: 1; }
+  .aside { border: 1px solid #d8d4c8; background: #fff; padding: 7px 9px; font-size: 9pt; }
+  .aside h3 { font: 700 9.5pt -apple-system, sans-serif; margin: 0 0 4px; }
+  .aside.green { background: #d5e6dc; border-color: #7fa892; }
+  .aside p { margin: 3px 0; }
+  code { font: 8.6pt "JetBrains Mono", Menlo, monospace; background: #f0eee5; padding: 0 2px; }
+  footer { margin-top: 10px; border-top: 1px solid #d8d4c8; padding-top: 6px;
+           font-size: 8.5pt; color: #5b564c; }
+  .page2 { page-break-before: always; break-before: page; }
+  .p2head { font: 600 8pt -apple-system, sans-serif; color: #5b564c;
+            border-bottom: 1px solid #d8d4c8; padding-bottom: 3px; margin: 0 0 9px; }
+  @media screen { .page2 { margin-top: 34px; border-top: 3px double #d8d4c8; padding-top: 16px; } }
+  table.pkgtbl { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 3px 0; }
+  table.pkgtbl td { padding: 2px 6px 2px 0; vertical-align: top; border-bottom: 1px solid #f0eee5; }
+  table.pkgtbl td:first-child { font-family: "JetBrains Mono", Menlo, monospace; white-space: nowrap; width: 88px; }
+</style>
+</head>
+<body>
+
+<p class="eyebrow">DS 5030 · Understanding Uncertainty · Tuesday, August 25, 2026</p>
+<h1>Day One Setup Checklist</h1>
+<div class="namebar"><span>Name</span><span>GitHub username</span><span>Operating system</span></div>
+
+<div class="goal">
+  <b>Two things finish this: SETUP CODE: UU-92-5650 on your screen, and your commit in your own fork.</b><br>
+  Everyone gets the same setup code. Show it, and your fork on github.com, to the instructor or an IA before you leave. Nothing is graded today, but Thursday's lab assumes all of it works.
+</div>
+
+<section>
+<h2><span class="n">1</span>Make a folder for this class</h2>
+<p>Somewhere you will find again: Documents, not Downloads. Make a course folder with an empty <code>data</code> folder inside it. By the end of step 5:</p>
+<pre>DS5030/
+├── data/       <span class="cmt">← datasets you download later in the semester</span>
+└── UU_F26/     <span class="cmt">← step 5 puts your fork here</span></pre>
+<ul class="tick">
+<li><span class="box"></span>My class folder exists, and it has an empty <code>data</code> folder inside it.</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">2</span>Open the folder in VS Code, and add two extensions</h2>
+<p><b>File &gt; Open Folder</b>, and choose the folder you just made. Then open Extensions (<code>Cmd/Ctrl + Shift + X</code>) and install both (published by Microsoft):</p>
+<ul class="tick">
+<li><span class="box"></span><b>Python</b> installed &nbsp;&nbsp; <span class="box"></span><b>Jupyter</b> installed</li>
+<li><span class="box"></span>The VS Code sidebar shows my class folder, with <code>data</code> inside it.</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">3</span>Create the conda environment</h2>
+<p>An <em>environment</em> is a private Python, so this class cannot break your other projects. No conda yet? Install <b>Miniconda</b> from <code>docs.conda.io/en/latest/miniconda.html</code>, then <b>close and reopen your terminal</b>. Run these two lines, one at a time:</p>
+<pre>conda create -n uu -c conda-forge python=3.12 numpy "pandas&gt;=2.2,&lt;3" matplotlib \
+      seaborn scipy statsmodels networkx ipykernel jupyterlab
+conda activate uu</pre>
+<ul class="tick">
+<li><span class="box"></span>It finished without an error (a few minutes), and my prompt now starts with <code>(uu)</code>.</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">4</span>Point VS Code at that environment</h2>
+<p>VS Code will not find it on its own, and this is the step people skip. Press <code>Cmd/Ctrl + Shift + P</code>, type <b>Python: Select Interpreter</b>, and pick the one labelled <code>uu</code>.</p>
+<ul class="tick">
+<li><span class="box"></span>The status bar at the bottom of the VS Code window now shows <code>uu</code>.</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">5</span>Fork the repository, then clone <em>your</em> fork</h2>
+<p><b>You work in your own copy, not mine.</b> A <em>fork</em> is your own GitHub copy of my repository: you push your work to yours, and pull my updates from mine. One fresh repository per lab.</p>
+<p><b>Fork it on the web first.</b> At <code>github.com/smgroves/UU_F26</code>, click <b>Fork</b> (top right) and keep the name. You now own <code>github.com/YOUR-USERNAME/UU_F26</code>.</p>
+<div class="opt">
+<span class="lbl">Option A · GitHub Desktop</span> <span class="rec">recommended</span>
+<p>Install from <code>desktop.github.com</code> and sign in, which also settles your push permissions. Then <b>File &gt; Clone repository &gt; GitHub.com</b>, pick the <code>UU_F26</code> under <b>your own</b> username, and set the local path to your class folder. <b>If it asks how you plan to use the fork, choose the option about your own purposes</b>, not contributing to the parent: that keeps your pushes going to your fork, not mine.</p>
+</div>
+<div class="opt">
+<span class="lbl">Option B · Command line</span>
+<p>In VS Code's terminal (<b>Terminal &gt; New Terminal</b>), from your class folder, with <b>your own username</b>:</p>
+<pre>git clone https://github.com/YOUR-USERNAME/UU_F26.git</pre>
+</div>
+<p><b>Then everyone, in VS Code's terminal</b>, add my copy as <code>upstream</code> and check both remotes:</p>
+<pre>cd UU_F26
+git remote add upstream https://github.com/smgroves/UU_F26.git
+git remote -v</pre>
+<ul class="tick">
+<li><span class="box"></span><code>origin</code> shows <b>my own username</b> (where my work goes) and <code>upstream</code> shows <code>smgroves</code> (where updates come from).</li>
+<li><span class="box"></span><code>UU_F26</code> is in the VS Code sidebar next to <code>data</code>, and contains <code>Day_1_python_test.ipynb</code>.</li>
+</ul>
+</section>
+
+<!-- ======================= page 2 ======================= -->
+<div class="page2">
+<p class="p2head">DS 5030 · Day One Setup · page 2 of 2 — run the test, push your work, then fix whatever broke</p>
+
+<section>
+<h2><span class="n">6</span>Run the notebook, and check every line</h2>
+<p>Open <code>UU_F26/Day_1_python_test.ipynb</code> from the sidebar. <b>Look at the top right: the kernel must say <code>uu</code>.</b> If it says <code>base</code>, <code>Python 3</code>, or <code>Select Kernel</code>, click it and pick <code>uu</code>. Then <b>Run All</b>, and tick a box for each package that printed a version number:</p>
+<div class="pkgs">
+  <span><span class="box"></span>numpy</span>
+  <span><span class="box"></span>pandas</span>
+  <span><span class="box"></span>matplotlib</span>
+  <span><span class="box"></span>seaborn</span>
+  <span><span class="box"></span>scipy</span>
+  <span><span class="box"></span>statsmodels</span>
+</div>
+<ul class="tick">
+<li><span class="box"></span>The <code>interpreter</code> line contains <code>/uu/</code>. If not, the kernel is wrong: fix it before going on.</li>
+<li><span class="box"></span><b>A histogram appeared.</b> Not a warning, not a blank space: an actual picture.</li>
+<li><span class="box"></span>The last line reads exactly <code>SETUP CODE: UU-92-5650</code>.</li>
+</ul>
+</section>
+
+<section>
+<h2><span class="n">7</span>Push the finished notebook to your fork</h2>
+<p>Save the notebook first (<code>Cmd/Ctrl + S</code>), so the run you just did is on disk.</p>
+<div class="opt">
+<span class="lbl">Option A · GitHub Desktop</span> <span class="rec">recommended</span>
+<p>It already lists <code>Day_1_python_test.ipynb</code> as changed. Type a summary such as <code>setup complete</code>, click <b>Commit to main</b>, then <b>Push origin</b>.</p>
+</div>
+<div class="opt">
+<span class="lbl">Option B · Command line</span>
+<pre>git add Day_1_python_test.ipynb
+git commit -m "setup complete"
+git push</pre>
+</div>
+<ul class="tick">
+<li><span class="box"></span>I opened <code>github.com/YOUR-USERNAME/UU_F26</code> in a browser and <b>my commit is there</b>.</li>
+<li><span class="box"></span>I showed that page, and the setup code, to the instructor or an IA.</li>
+</ul>
+<p style="margin-top:5px"><b>Pulling my updates later.</b> Easiest route: click <b>Sync fork</b> on your fork's github.com page, then pull. From the terminal: <code>git pull upstream main</code>. Do this before every class. <b>Next week's lab is group work</b>, and we will add collaboration then.</p>
+</section>
+
+<div class="cols">
+<div class="aside">
+<h3>If it breaks</h3>
+<p><b>"conda: command not found"</b>: you did not reopen the terminal after installing Miniconda. On Windows, use the <b>Anaconda Prompt</b> rather than the default terminal.</p>
+<p><b>The kernel picker does not offer <code>uu</code></b>: quit VS Code entirely and reopen. Still missing? You left <code>ipykernel</code> out of step 3: run <code>conda install -n uu ipykernel</code>.</p>
+<p><b>No <code>/uu/</code> in the interpreter line</b>: the notebook is running a different Python than your packages went into. <b>The most common problem in this class</b>, and fixing it now beats fixing it Thursday. Redo step 4, then re-pick the kernel.</p>
+<p><b><code>origin</code> says <code>smgroves</code></b>: you cloned mine instead of your fork. Delete the folder and redo step 5 starting from the Fork button, or just repoint it: <code>git remote set-url origin https://github.com/YOUR-USERNAME/UU_F26.git</code></p>
+<p><b>"git: command not found"</b>: install GitHub Desktop, which includes git. On a new Mac you can instead run <code>xcode-select --install</code> and wait for it to finish.</p>
+<p><b>The push is rejected, or asks for a password</b>: GitHub stopped accepting passwords in 2021. Use GitHub Desktop, which handles this for you, or set up a personal access token or SSH key. Come find us rather than fighting it.</p>
+<p><b>"No such file or directory: cville_cars.csv"</b>: the notebook has to run from inside <code>UU_F26</code>. Open it from the sidebar rather than moving the file.</p>
+</div>
+<div class="aside green">
+<h3>Fallback: Google Colab</h3>
+<p>If your machine will not install anything, you can still prove the code works in the browser. Go to <code>colab.research.google.com</code>, then <b>File &gt; Open notebook &gt; GitHub</b>, and paste your own fork:</p>
+<pre style="background:#fff;border-left-color:#7fa892">YOUR-USERNAME/UU_F26</pre>
+<p>Open <code>Day_1_python_test.ipynb</code>, add <b>one new cell at the very top</b>, and run it first so the data file is there:</p>
+<pre style="background:#fff;border-left-color:#7fa892">!git clone https://github.com/YOUR-USERNAME/UU_F26.git
+%cd UU_F26</pre>
+<p>Colab has all six packages, so you should reach the same <code>UU-92-5650</code>. Tick the step 6 boxes.</p>
+<p><b>Step 7 is the catch:</b> pushing from Colab is awkward. Use <b>File &gt; Save a copy in GitHub</b>, pointing at your own fork, and <b>tell us you are on Colab today</b> so we can make sure the labs work for you before they count.</p>
+</div>
+</div>
+
+<footer>
+<b>Before Thursday (Aug 27):</b> watch the data wrangling video, and finish this checklist if you got stuck — bring the questions you could not resolve. Thursday works in the same folder, in the same environment, on the same cars data, so an unfinished setup is the one thing that will put you behind.
+</footer>
+</div>
+
+</body>
+</html>
