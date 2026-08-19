@@ -1,24 +1,24 @@
 # Week 1, Thursday (Aug 27) — Data Wrangling and EDA
 
 - **Schedule focus:** Data wrangling + EDA
-- **Day type:** Lab / Coding Day — **the cars lab starts in class**
+- **Day type:** Lab / Coding Day — **the foreign gifts lab starts in class**
 - **Sources:** `uu_fa26/Proposed schedule/Week 1/01_Tues_video_01_1_wrangling.ipynb` (12 cells), `02_Tues_guided_01_2_eda.ipynb` (17 cells), `03_Tues_activity_00_lab_filled.ipynb` (30 cells)
 - **Also:** `sp26/00_understanding_data/00_pandas_review.ipynb`; html `labs/class-01-wrangling/lecture.html`
 
 > **⚠ Read section 7 before you teach this.** There are three confirmed bugs in the source notebooks, and two of them are in code students will copy. They are present in both the ported Week 1 copies *and* the originals in `class_01/`, so both need fixing.
 >
-> **Note the day change.** This session moved from Tuesday to Thursday when intro/setup took Aug 25, so it is now a **lab day**: the foreign-gifts material becomes the in-class activity and the cars lab is what students carry home. There is no quiz — the first is Sep 8.
+> **Note the day change.** This session moved from Tuesday to Thursday when intro/setup took Aug 25, so it is now a **lab day**: the foreign-gifts material is the lab. There is no quiz — the first is Sep 8.
 
 ---
 
 ## 1. What students actually see
 
-| Artifact | File | Content |
-|---|---|---|
-| Pre-class video | `01_Tues_video_01_1_wrangling` | The six-step wrangling workflow, all markdown — no code cells at all |
-| Guided notebook | `02_Tues_guided_01_2_eda` | Statistics on single variables, then pairs. Also all markdown |
-| Activity | `03_Tues_activity_00_lab_filled` | Foreign Gifts data, 8 questions, `groupby` + plotly/seaborn |
-| Board | — | The mean, the variance, the median, and why the last one differs |
+| Artifact        | File                               | Content                                                               |
+| --------------- | ---------------------------------- | --------------------------------------------------------------------- |
+| Pre-class video | `01_Tues_video_01_1_wrangling`   | The six-step wrangling workflow, all markdown — no code cells at all |
+| Guided notebook | `02_Tues_guided_01_2_eda`        | Statistics on single variables, then pairs. Also all markdown         |
+| Activity        | `03_Tues_activity_00_lab_filled` | Foreign Gifts data, 8 questions,`groupby` + plotly/seaborn          |
+| Board           | —                                 | The mean, the variance, the median, and why the last one differs      |
 
 **Note both lecture notebooks are markdown-only.** Twelve and seventeen cells, no executable code. That's fine for a video, but it means the *guided* session has nothing to run — you'll be reading slides unless you live-code against the Foreign Gifts data or lift cells from the activity. Decide which before Tuesday.
 
@@ -92,14 +92,14 @@ The `labs/activity-min-sum-squares/` widget in this repo does exactly this inter
 
 ## 4. Assumptions that make it work
 
-| Claim | Assumption |
-|---|---|
-| The mean is a sensible summary | The distribution has a finite mean, and is not so skewed that "typical" is misleading |
-| `Σ(xᵢ−c)²` has a unique argmin | Always true — it's a strictly convex parabola in `c`. No conditions needed |
-| The median is the argmin of `Σ\|xᵢ−c\|` | True, but **not unique** for even `n` — any value between the two middle points works |
-| Median imputation is harmless | Essentially never. Requires MCAR *and* you accept variance shrinkage |
-| Dropping incomplete rows is safe | MCAR only. Under MAR or MNAR it biases everything downstream |
-| `df.describe()` is informative | The variable is already correctly typed. On an `object` column it silently reports nothing useful |
+| Claim                                     | Assumption                                                                                         |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| The mean is a sensible summary            | The distribution has a finite mean, and is not so skewed that "typical" is misleading              |
+| `Σ(xᵢ−c)²` has a unique argmin      | Always true — it's a strictly convex parabola in`c`. No conditions needed                       |
+| The median is the argmin of`Σ\|xᵢ−c\|` | True, but**not unique** for even `n` — any value between the two middle points works      |
+| Median imputation is harmless             | Essentially never. Requires MCAR*and* you accept variance shrinkage                              |
+| Dropping incomplete rows is safe          | MCAR only. Under MAR or MNAR it biases everything downstream                                       |
+| `df.describe()` is informative          | The variable is already correctly typed. On an`object` column it silently reports nothing useful |
 
 ---
 
@@ -141,6 +141,7 @@ The `labs/activity-min-sum-squares/` widget in this repo does exactly this inter
    ```python
    IQR  = np.quantile(X,.75)-np.quantile(X,.50)      # ← .50 should be .25
    ```
+
 As written this is `Q3 − median`, roughly *half* the true IQR. **Also present in `class_01/01_2_eda.ipynb` cell 10.** This one matters beyond week 1: the robust Silverman bandwidth in Week 3's KDE uses `IQR/1.34`, so a wrong IQR propagates into a wrong bandwidth.
 
 Fix all three in both the `Week 1/` copies and the `class_01/` originals, or they'll be re-introduced next time someone ports from the originals.
@@ -158,15 +159,15 @@ Fix all three in both the `Week 1/` copies and the `class_01/` originals, or the
 
 **Modes:** 🟦 notebook (student copy) · 🟩 instructor cells (pre-written, never live) · ⬛ board · 🟨 HTML widget
 
-| # | Step | Mode | Notes |
-|---|---|---|---|
-| 1 | Recap Tuesday's setup; confirm everyone can import pandas | 🟩 instructor cell | Thirty seconds. Anyone who failed the Aug 25 checkpoint surfaces here |
-| 2 | The six-step wrangling workflow | 🟦 notebook | They watched the video. Skim it, don't re-teach it |
-| 3 | **The casting trap** | 🟩 instructor cells | Strip `$`, coerce, `isna().sum()` before and after. **Highest-value five minutes of the hour, and it exists in neither notebook** — so it has to be built |
-| 4 | Mean, variance, median, IQR | ⬛ board | First math of the semester. Write the formulas properly; it sets the tone |
-| 5 | The optimization view (§3) | ⬛ board | Two lines. The one thing from today that recurs all semester |
-| 6 | Long tails: raw vs log vs arcsinh | 🟨 widget | `class-01-wrangling/wrangling.html#viz-transform` — three transforms of the same price data, side by side. Cheaper and clearer than plotting it live |
-| 7 | Foreign Gifts activity, in pairs | 🟦 notebook | Reach question 6 (mean vs median) — that's the one with the lesson |
+| # | Step                                                      | Mode                | Notes                                                                                                                                                   |
+| - | --------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Recap Tuesday's setup; confirm everyone can import pandas | 🟩 instructor cell  | Thirty seconds. Anyone who failed the Aug 25 checkpoint surfaces here                                                                                   |
+| 2 | The six-step wrangling workflow                           | 🟦 notebook         | They watched the video. Skim it, don't re-teach it                                                                                                      |
+| 3 | **The casting trap**                                | 🟩 instructor cells | Strip`$`, coerce, `isna().sum()` before and after. From Terry's video; i**mportant to rehighlight**                                                |
+| 4 | Mean, variance, median, IQR                               | ⬛ board            | First math of the semester. Write the formulas properly; it sets the tone                                                                               |
+| 5 | The optimization view (§3)                               | ⬛ board            | Two lines. The one thing from today that recurs all semester                                                                                            |
+| 6 | Long tails: raw vs log vs arcsinh                         | 🟨 widget           | `class-01-wrangling/wrangling.html#viz-transform` — three transforms of the same price data, side by side. Cheaper and clearer than plotting it live |
+| 7 | Foreign Gifts activity, in pairs                          | 🟦 notebook         | Reach question 6 (mean vs median) — that's the one with the lesson                                                                                     |
 
 Detail on the sequencing below. **Build cost for this session: the step-3 cells (~20 min).** Everything else exists.
 
